@@ -1,5 +1,5 @@
 {
-  "name": "my-turborepo",
+  "name": "ecommerce_minimart",
   "private": true,
   "scripts": {
     "build": "turbo run build",

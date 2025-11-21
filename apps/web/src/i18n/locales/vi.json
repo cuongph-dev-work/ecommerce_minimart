@@ -1,0 +1,37 @@
+{
+    "common": {
+        "home": "Trang chủ",
+        "products": "Sản phẩm",
+        "stores": "Cửa hàng",
+        "contact": "Liên hệ",
+        "cart": "Giỏ hàng",
+        "login": "Đăng nhập",
+        "search": "Tìm kiếm sản phẩm...",
+        "footer_text": "© 2024 Minimart. Bảo lưu mọi quyền.",
+        "language": "Ngôn ngữ"
+    },
+    "home": {
+        "hero_title": "Công nghệ cho cuộc sống",
+        "hero_subtitle": "Khám phá các sản phẩm công nghệ cao cấp tại Minimart",
+        "shop_now": "Mua ngay",
+        "featured_products": "Sản phẩm nổi bật",
+        "flash_sale": "Flash Sale",
+        "categories": "Danh mục"
+    },
+    "products": {
+        "filter": "Bộ lọc",
+        "sort": "Sắp xếp",
+        "price": "Giá",
+        "add_to_cart": "Thêm vào giỏ",
+        "out_of_stock": "Hết hàng"
+    },
+    "admin": {
+        "dashboard": "Tổng quan",
+        "products": "Sản phẩm",
+        "categories": "Danh mục",
+        "orders": "Đơn hàng",
+        "users": "Người dùng",
+        "settings": "Cài đặt",
+        "logout": "Đăng xuất"
+    }
+}

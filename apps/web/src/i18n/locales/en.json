@@ -1,0 +1,37 @@
+{
+    "common": {
+        "home": "Home",
+        "products": "Products",
+        "stores": "Stores",
+        "contact": "Contact",
+        "cart": "Cart",
+        "login": "Login",
+        "search": "Search products...",
+        "footer_text": "© 2024 Minimart. All rights reserved.",
+        "language": "Language"
+    },
+    "home": {
+        "hero_title": "Technology for Life",
+        "hero_subtitle": "Discover premium technology products at Minimart",
+        "shop_now": "Shop Now",
+        "featured_products": "Featured Products",
+        "flash_sale": "Flash Sale",
+        "categories": "Categories"
+    },
+    "products": {
+        "filter": "Filter",
+        "sort": "Sort",
+        "price": "Price",
+        "add_to_cart": "Add to Cart",
+        "out_of_stock": "Out of Stock"
+    },
+    "admin": {
+        "dashboard": "Dashboard",
+        "products": "Products",
+        "categories": "Categories",
+        "orders": "Orders",
+        "users": "Users",
+        "settings": "Settings",
+        "logout": "Logout"
+    }
+}

@@ -266,37 +266,76 @@ Hệ thống admin cung cấp các chức năng quản lý toàn diện cho tran
 
 ---
 
-### 2.7. QUẢN LÝ CỬA HÀNG
+### 2.7. QUẢN LÝ CỬA HÀNG / ĐỊA ĐIỂM NHẬN HÀNG
 
-**Mục đích:** Quản lý thông tin các chi nhánh cửa hàng
+**Mục đích:** Quản lý thông tin các chi nhánh cửa hàng và địa điểm nhận hàng
 
 **Chức năng:**
 
 #### 2.7.1. Danh sách cửa hàng
 - Hiển thị danh sách các chi nhánh
-- Hiển thị: Tên, Địa chỉ, Số điện thoại, Trạng thái
+- Hiển thị thông tin:
+  - Tên chi nhánh
+  - Địa chỉ
+  - Số điện thoại
+  - Trạng thái (Hoạt động / Tạm đóng)
+  - Cho phép nhận hàng (Bật / Tắt)
+  - Số đơn hàng đang chờ tại cửa hàng
+  - Thời gian chuẩn bị hàng
+- Tìm kiếm (theo tên, địa chỉ, số điện thoại)
+- Lọc theo:
+  - Trạng thái
+  - Cho phép nhận hàng
+- Sắp xếp (theo tên, số đơn hàng)
 
 #### 2.7.2. Thêm/Sửa cửa hàng
+**Thông tin cơ bản:**
 - Tên chi nhánh (bắt buộc)
-- Địa chỉ đầy đủ
+- Địa chỉ đầy đủ (bắt buộc)
 - Tọa độ (Latitude, Longitude) - để hiển thị trên bản đồ
-- Số điện thoại
+- Số điện thoại (bắt buộc)
 - Email
 - Giờ làm việc:
   - Thứ 2 - Thứ 6: Giờ bắt đầu - Giờ kết thúc
   - Thứ 7 - Chủ nhật: Giờ bắt đầu - Giờ kết thúc
-- Dịch vụ tại cửa hàng (danh sách checkbox):
+
+**Cài đặt địa điểm nhận hàng:**
+- Cho phép làm địa điểm nhận hàng (checkbox) - Bật/Tắt
+- Thời gian chuẩn bị hàng (ví dụ: 1-2 ngày làm việc)
+- Ghi chú đặc biệt (nếu có)
+
+**Dịch vụ tại cửa hàng:**
+- Danh sách checkbox:
   - Trải nghiệm sản phẩm trực tiếp
   - Tư vấn chuyên sâu từ chuyên gia
   - Hỗ trợ cài đặt và kích hoạt
   - Bảo hành và sửa chữa nhanh
   - Đổi trả trong 7 ngày
   - Miễn phí gửi xe ô tô, xe máy
-- Trạng thái (Hoạt động / Tạm đóng)
+
+**Trạng thái:**
+- Hoạt động / Tạm đóng
+
+**Thống kê:**
+- Tổng số đơn hàng đã nhận tại cửa hàng
+- Số đơn hàng đang chờ (pending, confirmed, preparing)
+- Số đơn hàng sẵn sàng nhận (ready)
 
 #### 2.7.3. Xóa cửa hàng
 - Xóa cửa hàng
+- Kiểm tra ràng buộc:
+  - Không cho phép xóa nếu có đơn hàng đang chờ tại cửa hàng
+  - Cảnh báo và đề xuất chuyển đơn hàng sang cửa hàng khác
 - Cảnh báo trước khi xóa
+
+#### 2.7.4. Quản lý đơn hàng theo cửa hàng
+- Xem danh sách đơn hàng theo từng cửa hàng
+- Lọc đơn hàng:
+  - Đang chờ xử lý
+  - Đang chuẩn bị
+  - Sẵn sàng nhận
+  - Đã nhận
+- Thống kê đơn hàng theo cửa hàng
 
 ---
 
@@ -348,25 +387,19 @@ Hệ thống admin cung cấp các chức năng quản lý toàn diện cho tran
   - Email (tùy chọn)
   - Ghi chú đơn hàng (nếu có)
 - Thông tin địa điểm nhận hàng:
-  - Phương thức nhận hàng:
-    - Nhận tại cửa hàng (chọn chi nhánh)
-    - Giao hàng tận nơi (nhập địa chỉ)
-  - Nếu nhận tại cửa hàng:
+  - Chi nhánh cửa hàng (bắt buộc - khách hàng chọn khi đặt hàng):
     - Tên chi nhánh
     - Địa chỉ chi nhánh
     - Số điện thoại chi nhánh
-  - Nếu giao hàng:
-    - Địa chỉ giao hàng đầy đủ
-    - Phường/Xã
-    - Quận/Huyện
-    - Tỉnh/Thành phố
+    - Email chi nhánh
+    - Giờ làm việc
+    - Tọa độ (Lat, Lng) - để hiển thị trên bản đồ
 - Thông tin đơn hàng:
   - Mã đơn hàng (tự động tạo)
   - Ngày đặt
   - Phương thức thanh toán (chỉ COD - Thanh toán khi nhận hàng)
-  - Phương thức vận chuyển (Nhận tại cửa hàng / Giao hàng)
+  - Địa điểm nhận hàng (tên chi nhánh)
   - Mã giảm giá (nếu có)
-  - Phí vận chuyển (nếu giao hàng)
   - Tổng tiền
 - Danh sách sản phẩm:
   - Hình ảnh, Tên, Số lượng, Giá, Thành tiền
@@ -378,18 +411,17 @@ Hệ thống admin cung cấp các chức năng quản lý toàn diện cho tran
   - Chờ xác nhận (mới tạo)
   - Đã xác nhận (admin đã xác nhận đơn hàng)
   - Đang chuẩn bị hàng
-  - Sẵn sàng nhận hàng (nếu nhận tại cửa hàng)
-  - Đang giao hàng (nếu giao hàng)
-  - Đã giao hàng / Đã nhận hàng
+  - Sẵn sàng nhận hàng (hàng đã sẵn tại cửa hàng, thông báo khách đến nhận)
+  - Đã nhận hàng (khách đã đến cửa hàng nhận và thanh toán)
   - Đã hủy
   - Hoàn trả
 - Ghi chú khi cập nhật trạng thái
 - Gửi thông báo cho khách hàng:
-  - SMS (số điện thoại)
+  - SMS (số điện thoại) - thông báo khi hàng sẵn sàng
   - Email (nếu có)
   - Zalo (nếu có số Zalo)
 - Xác nhận thanh toán:
-  - Đánh dấu đã thanh toán (khi khách thanh toán COD)
+  - Đánh dấu đã thanh toán (khi khách thanh toán COD tại cửa hàng)
   - Ghi chú số tiền đã nhận
   - Upload ảnh chứng từ (nếu cần)
 
@@ -400,9 +432,10 @@ Hệ thống admin cung cấp các chức năng quản lý toàn diện cho tran
   - Thông tin cửa hàng
   - Thông tin khách hàng
   - Danh sách sản phẩm
-  - Tổng tiền, phí vận chuyển, giảm giá
+  - Tổng tiền, giảm giá
   - Phương thức thanh toán (COD)
-  - Ngày đặt, ngày giao/nhận
+  - Địa điểm nhận hàng (tên chi nhánh, địa chỉ)
+  - Ngày đặt, ngày nhận hàng
 
 #### 2.9.5. Liên hệ khách hàng
 - Gọi điện cho khách hàng (tích hợp click-to-call)
@@ -491,10 +524,10 @@ Hệ thống admin cung cấp các chức năng quản lý toàn diện cho tran
 - Mô tả ngắn
 - Link mạng xã hội (Facebook, Instagram, Telegram, YouTube)
 
-#### 2.12.2. Cấu hình vận chuyển
-- Phí vận chuyển mặc định
-- Miễn phí vận chuyển cho đơn hàng từ X VNĐ
-- Thời gian giao hàng dự kiến
+#### 2.12.2. Cấu hình địa điểm nhận hàng
+- Danh sách các chi nhánh có thể chọn làm địa điểm nhận hàng
+- Thời gian chuẩn bị hàng dự kiến (ví dụ: 1-2 ngày làm việc)
+- Thông báo tự động khi hàng sẵn sàng
 
 #### 2.12.3. Cấu hình thanh toán
 **Lưu ý:** Hệ thống không hỗ trợ thanh toán online, chỉ hỗ trợ thanh toán offline.
@@ -555,20 +588,12 @@ Hệ thống admin cung cấp các chức năng quản lý toàn diện cho tran
 
 ### 4.1. Quy trình xử lý đơn hàng
 
-**Đối với đơn hàng nhận tại cửa hàng:**
-1. Khách hàng điền form đặt hàng (họ tên, SĐT, email, chọn cửa hàng) → Đơn hàng ở trạng thái "Chờ xác nhận"
+**Quy trình đặt hàng và nhận hàng:**
+1. Khách hàng điền form đặt hàng (họ tên, SĐT, email, chọn địa điểm nhận hàng/chi nhánh) → Đơn hàng ở trạng thái "Chờ xác nhận"
 2. Admin xác nhận đơn hàng và liên hệ khách hàng → Trạng thái "Đã xác nhận"
-3. Admin chuẩn bị hàng → Trạng thái "Đang chuẩn bị hàng"
-4. Hàng sẵn sàng → Trạng thái "Sẵn sàng nhận hàng", thông báo khách đến nhận
-5. Khách hàng đến cửa hàng nhận và thanh toán → Trạng thái "Đã nhận hàng"
-6. Hoặc khách hàng hủy → Trạng thái "Đã hủy"
-
-**Đối với đơn hàng giao hàng:**
-1. Khách hàng điền form đặt hàng (họ tên, SĐT, email, địa chỉ giao hàng) → Đơn hàng ở trạng thái "Chờ xác nhận"
-2. Admin xác nhận đơn hàng và liên hệ khách hàng → Trạng thái "Đã xác nhận"
-3. Admin chuẩn bị hàng → Trạng thái "Đang chuẩn bị hàng"
-4. Giao cho đơn vị vận chuyển hoặc nhân viên giao hàng → Trạng thái "Đang giao hàng"
-5. Khách hàng nhận hàng và thanh toán COD → Trạng thái "Đã giao hàng"
+3. Admin chuẩn bị hàng tại chi nhánh đã chọn → Trạng thái "Đang chuẩn bị hàng"
+4. Hàng sẵn sàng tại cửa hàng → Trạng thái "Sẵn sàng nhận hàng", thông báo khách đến nhận
+5. Khách hàng đến cửa hàng nhận hàng và thanh toán COD → Trạng thái "Đã nhận hàng"
 6. Hoặc khách hàng hủy → Trạng thái "Đã hủy"
 
 ### 4.2. Quy trình quản lý Flash Sale

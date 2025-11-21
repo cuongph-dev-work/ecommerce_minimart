@@ -166,27 +166,29 @@ Tạo sản phẩm mới
 ```json
 {
   "name": "Tai nghe Bluetooth Premium",
-  "description": "Mô tả ngắn",
-  "fullDescription": "Mô tả chi tiết...",
+  "description": "Mô tả sản phẩm",
   "categoryId": "1",
+  "subcategory": "Tai nghe",
   "brand": "Sony",
   "sku": "SP001",
   "price": 1890000,
-  "salePrice": 1490000,
+  "discount": 0,
   "stock": 25,
   "status": "active",
-  "featured": true,
-  "isFlashSale": false,
-  "sortOrder": 1,
+  "featured": false,
+  "isOfficial": true,
+  "warrantyPeriod": "12 tháng",
   "images": [
-    {
-      "url": "https://...",
-      "isPrimary": true,
-      "order": 1
-    }
+    "https://cdn.store.vn/images/product1.jpg",
+    "https://cdn.store.vn/images/product1-2.jpg"
   ]
 }
 ```
+
+**Note:** 
+- Hình ảnh được upload qua `/upload/images` trước, sau đó dùng URL trả về
+- `images[0]` sẽ là ảnh chính
+- `discount` là phần trăm giảm giá (0-100)
 
 #### PUT `/admin/products/:id`
 Cập nhật sản phẩm
@@ -259,20 +261,22 @@ Tạo danh mục mới
   "slug": "am-thanh",
   "icon": "Headphones",
   "parentId": null,
-  "description": "...",
+  "description": "Danh mục sản phẩm âm thanh",
   "image": "https://...",
   "status": "active",
   "sortOrder": 1,
-  "featured": true,
   "subcategories": [
-    {
-      "name": "Tai nghe",
-      "icon": "...",
-      "description": "..."
-    }
+    "Tai nghe",
+    "Loa",
+    "Micro"
   ]
 }
 ```
+
+**Note:** 
+- Nếu `parentId` là `null` hoặc không có → tạo danh mục cấp 1
+- Nếu có `parentId` → tạo danh mục con
+- `subcategories` là mảng string (tên subcategory)
 
 #### PUT `/admin/categories/:id`
 Cập nhật danh mục
@@ -300,6 +304,36 @@ Sắp xếp lại thứ tự danh mục
 #### GET `/admin/banners`
 Danh sách banner
 
+**Query Params:**
+- `page`: `1`
+- `limit`: `20`
+- `search`: `"FLASH SALE"`
+- `status`: `"active|inactive"`
+- `sortBy`: `"sortOrder|created_at"`
+- `sortOrder`: `"asc|desc"`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "banners": [
+      {
+        "id": "1",
+        "title": "FLASH SALE 12.12",
+        "description": "Giảm đến 50%...",
+        "image": "https://...",
+        "link": "/products",
+        "status": "active",
+        "sortOrder": 1,
+        "createdAt": "2025-01-27T10:00:00Z"
+      }
+    ],
+    "pagination": {...}
+  }
+}
+```
+
 #### GET `/admin/banners/:id`
 Chi tiết banner
 
@@ -310,19 +344,32 @@ Tạo banner mới
 ```json
 {
   "title": "FLASH SALE 12.12",
-  "description": "Giảm đến 50%...",
+  "description": "Giảm đến 50% cho tất cả sản phẩm - Mua ngay kẻo lỡ!",
   "image": "https://...",
   "link": "/products",
-  "colorScheme": "from-red-600 to-orange-600",
   "status": "active",
-  "sortOrder": 1,
-  "startDate": "2025-01-01T00:00:00Z",
-  "endDate": "2025-12-31T23:59:59Z"
+  "sortOrder": 1
+}
+```
+
+**Note:** Hình ảnh được upload qua endpoint `/upload/images` trước, sau đó dùng URL trả về
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "1",
+    "title": "FLASH SALE 12.12",
+    ...
+  }
 }
 ```
 
 #### PUT `/admin/banners/:id`
 Cập nhật banner
+
+**Request:** (tương tự POST)
 
 #### DELETE `/admin/banners/:id`
 Xóa banner
@@ -334,8 +381,63 @@ Xóa banner
 #### GET `/admin/flash-sales`
 Danh sách flash sale
 
+**Query Params:**
+- `page`: `1`
+- `limit`: `20`
+- `search`: `"Flash Sale"`
+- `status`: `"upcoming|active|ended"`
+- `sortBy`: `"startTime|endTime|name"`
+- `sortOrder`: `"asc|desc"`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "flashSales": [
+      {
+        "id": "fs1",
+        "name": "Flash Sale 12.12",
+        "startTime": "2025-12-12T00:00:00Z",
+        "endTime": "2025-12-12T23:59:59Z",
+        "status": "upcoming",
+        "productCount": 4,
+        "createdAt": "2025-01-27T10:00:00Z"
+      }
+    ],
+    "pagination": {...}
+  }
+}
+```
+
 #### GET `/admin/flash-sales/:id`
-Chi tiết flash sale
+Chi tiết flash sale (bao gồm danh sách sản phẩm)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "fs1",
+    "name": "Flash Sale 12.12",
+    "startTime": "2025-12-12T00:00:00Z",
+    "endTime": "2025-12-12T23:59:59Z",
+    "status": "upcoming",
+    "products": [
+      {
+        "productId": "1",
+        "productName": "Tai nghe Bluetooth Premium",
+        "productImage": "https://...",
+        "originalPrice": 1890000,
+        "salePrice": 1490000,
+        "discount": 21,
+        "total": 100,
+        "sold": 45
+      }
+    ]
+  }
+}
+```
 
 #### POST `/admin/flash-sales`
 Tạo flash sale mới
@@ -346,27 +448,68 @@ Tạo flash sale mới
   "name": "Flash Sale 12.12",
   "startTime": "2025-12-12T00:00:00Z",
   "endTime": "2025-12-12T23:59:59Z",
-  "status": "upcoming",
-  "products": [
-    {
-      "productId": "1",
-      "originalPrice": 1890000,
-      "salePrice": 1490000,
-      "total": 100,
-      "sold": 0
-    }
-  ]
+  "status": "upcoming"
 }
 ```
 
+**Note:** Sản phẩm sẽ được thêm sau khi tạo flash sale
+
 #### PUT `/admin/flash-sales/:id`
 Cập nhật flash sale
+
+**Request:**
+```json
+{
+  "name": "Flash Sale 12.12",
+  "startTime": "2025-12-12T00:00:00Z",
+  "endTime": "2025-12-12T23:59:59Z",
+  "status": "active"
+}
+```
 
 #### DELETE `/admin/flash-sales/:id`
 Xóa flash sale
 
 #### POST `/admin/flash-sales/:id/products`
 Thêm sản phẩm vào flash sale
+
+**Request:**
+```json
+{
+  "productId": "1",
+  "originalPrice": 1890000,
+  "salePrice": 1490000,
+  "total": 100
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "productId": "1",
+    "productName": "Tai nghe Bluetooth Premium",
+    "originalPrice": 1890000,
+    "salePrice": 1490000,
+    "discount": 21,
+    "total": 100,
+    "sold": 0
+  }
+}
+```
+
+#### PUT `/admin/flash-sales/:id/products/:productId`
+Cập nhật sản phẩm trong flash sale
+
+**Request:**
+```json
+{
+  "originalPrice": 1890000,
+  "salePrice": 1490000,
+  "total": 100
+}
+```
 
 #### DELETE `/admin/flash-sales/:id/products/:productId`
 Xóa sản phẩm khỏi flash sale
@@ -379,8 +522,39 @@ Xóa sản phẩm khỏi flash sale
 Danh sách voucher
 
 **Query Params:**
+- `page`: `1`
+- `limit`: `20`
 - `status`: `"active|inactive|expired"`
-- `search`: `"TECH50K"`
+- `search`: `"TECH50K"` (tìm theo mã hoặc tiêu đề)
+- `type`: `"fixed|percentage"`
+- `sortBy`: `"code|created_at|usedCount"`
+- `sortOrder`: `"asc|desc"`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "vouchers": [
+      {
+        "id": "1",
+        "code": "TECH50K",
+        "title": "Giảm 50K",
+        "description": "Cho đơn hàng từ 500K",
+        "type": "fixed",
+        "discount": 50000,
+        "minPurchase": 500000,
+        "maxUses": 1000,
+        "usedCount": 45,
+        "expiryDate": "2025-12-31",
+        "status": "active",
+        "createdAt": "2025-01-27T10:00:00Z"
+      }
+    ],
+    "pagination": {...}
+  }
+}
+```
 
 #### GET `/admin/vouchers/:id`
 Chi tiết voucher
@@ -399,20 +573,17 @@ Tạo voucher mới
   "maxDiscount": null,
   "minPurchase": 500000,
   "maxUses": 1000,
-  "usedCount": 0,
-  "expiryDate": "2025-12-31T23:59:59Z",
-  "status": "active",
-  "applicableTo": {
-    "type": "all",
-    "categoryIds": [],
-    "productIds": [],
-    "newCustomersOnly": false
-  }
+  "expiryDate": "2025-12-31",
+  "status": "active"
 }
 ```
 
+**Note:** `maxDiscount` chỉ cần khi `type` là `"percentage"`
+
 #### PUT `/admin/vouchers/:id`
 Cập nhật voucher
+
+**Request:** (tương tự POST, không cần `usedCount`)
 
 #### DELETE `/admin/vouchers/:id`
 Xóa voucher
@@ -424,8 +595,85 @@ Xóa voucher
 #### GET `/admin/stores`
 Danh sách cửa hàng
 
+**Query Params:**
+- `page`: `1`
+- `limit`: `20`
+- `search`: `"Quận 1"` (tìm theo tên, địa chỉ, SĐT)
+- `status`: `"active|inactive"`
+- `allowPickup`: `true|false`
+- `sortBy`: `"name|orderCount|created_at"`
+- `sortOrder`: `"asc|desc"`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "stores": [
+      {
+        "id": "1",
+        "name": "Chi nhánh Quận 1 - TP.HCM",
+        "address": "123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
+        "phone": "028 1234 5678",
+        "email": "quan1@store.vn",
+        "lat": 10.7769,
+        "lng": 106.7009,
+        "allowPickup": true,
+        "preparationTime": "1-2 ngày",
+        "orderCount": 15,
+        "status": "active"
+      }
+    ],
+    "pagination": {...}
+  }
+}
+```
+
 #### GET `/admin/stores/:id`
 Chi tiết cửa hàng
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "1",
+    "name": "Chi nhánh Quận 1 - TP.HCM",
+    "address": "123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
+    "phone": "028 1234 5678",
+    "email": "quan1@store.vn",
+    "lat": 10.7769,
+    "lng": 106.7009,
+    "workingHours": {
+      "weekdays": {
+        "start": "08:00",
+        "end": "21:00"
+      },
+      "weekends": {
+        "start": "09:00",
+        "end": "20:00"
+      }
+    },
+    "services": [
+      "Trải nghiệm sản phẩm trực tiếp",
+      "Tư vấn chuyên sâu từ chuyên gia",
+      "Hỗ trợ cài đặt và kích hoạt",
+      "Bảo hành và sửa chữa nhanh",
+      "Đổi trả trong 7 ngày",
+      "Miễn phí gửi xe ô tô, xe máy"
+    ],
+    "allowPickup": true,
+    "preparationTime": "1-2 ngày",
+    "status": "active",
+    "orderCount": 15,
+    "stats": {
+      "totalOrders": 1250,
+      "pendingOrders": 5,
+      "readyOrders": 10
+    }
+  }
+}
+```
 
 #### POST `/admin/stores`
 Tạo cửa hàng mới
@@ -452,11 +700,10 @@ Tạo cửa hàng mới
   "services": [
     "Trải nghiệm sản phẩm trực tiếp",
     "Tư vấn chuyên sâu từ chuyên gia",
-    "Hỗ trợ cài đặt và kích hoạt",
-    "Bảo hành và sửa chữa nhanh",
-    "Đổi trả trong 7 ngày",
-    "Miễn phí gửi xe ô tô, xe máy"
+    "Hỗ trợ cài đặt và kích hoạt"
   ],
+  "allowPickup": true,
+  "preparationTime": "1-2 ngày",
   "status": "active"
 }
 ```
@@ -464,8 +711,20 @@ Tạo cửa hàng mới
 #### PUT `/admin/stores/:id`
 Cập nhật cửa hàng
 
+**Request:** (tương tự POST)
+
 #### DELETE `/admin/stores/:id`
 Xóa cửa hàng
+
+**Note:** Chỉ cho phép xóa khi không có đơn hàng đang chờ tại cửa hàng
+
+#### GET `/admin/stores/:id/orders`
+Danh sách đơn hàng theo cửa hàng
+
+**Query Params:**
+- `page`: `1`
+- `limit`: `20`
+- `status`: `"pending|confirmed|preparing|ready|received|cancelled"`
 
 ---
 
@@ -478,7 +737,7 @@ Danh sách đơn hàng
 - `page`: `1`
 - `limit`: `20`
 - `search`: `"ORD001"` (mã đơn, tên KH, SĐT)
-- `status`: `"pending|confirmed|preparing|ready|shipping|delivered|cancelled"`
+- `status`: `"pending|confirmed|preparing|ready|received|cancelled"`
 - `paymentMethod`: `"cod"`
 - `startDate`: `"2025-01-01"`
 - `endDate`: `"2025-01-31"`
@@ -499,8 +758,8 @@ Danh sách đơn hàng
         "total": 5490000,
         "status": "pending",
         "paymentMethod": "cod",
-        "deliveryMethod": "store_pickup",
-        "storeId": "1",
+        "pickupStoreId": "1",
+        "pickupStoreName": "Chi nhánh Quận 1 - TP.HCM",
         "createdAt": "2025-01-27T10:00:00Z"
       }
     ],
@@ -525,15 +784,18 @@ Chi tiết đơn hàng
       "email": "nguyenvana@email.com",
       "notes": "Giao vào buổi sáng"
     },
-    "delivery": {
-      "method": "store_pickup",
-      "store": {
-        "id": "1",
-        "name": "Chi nhánh Quận 1 - TP.HCM",
-        "address": "...",
-        "phone": "..."
-      },
-      "address": null
+    "pickupLocation": {
+      "storeId": "1",
+      "storeName": "Chi nhánh Quận 1 - TP.HCM",
+      "storeAddress": "123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
+      "storePhone": "028 1234 5678",
+      "storeEmail": "quan1@store.vn",
+      "storeLat": 10.7769,
+      "storeLng": 106.7009,
+      "workingHours": {
+        "weekdays": "8:00 - 21:00",
+        "weekends": "9:00 - 20:00"
+      }
     },
     "items": [
       {
@@ -550,7 +812,6 @@ Chi tiết đơn hàng
       "discount": 50000
     },
     "subtotal": 5490000,
-    "shippingFee": 0,
     "discount": 50000,
     "total": 5440000,
     "status": "pending",
@@ -609,6 +870,20 @@ Ghi chú liên hệ với khách hàng
 {
   "type": "call|sms|email|zalo",
   "note": "Đã gọi xác nhận đơn hàng, khách sẽ đến nhận vào chiều nay"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "contact1",
+    "type": "call",
+    "note": "Đã gọi xác nhận đơn hàng...",
+    "createdAt": "2025-01-27T10:30:00Z",
+    "createdBy": "admin1"
+  }
 }
 ```
 
@@ -726,15 +1001,32 @@ Xóa admin
 #### GET `/admin/settings`
 Lấy tất cả cấu hình
 
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "storeInfo": {...},
+    "pickupLocations": {...},
+    "payment": {...},
+    "policies": {...}
+  }
+}
+```
+
 #### GET `/admin/settings/:key`
 Lấy cấu hình theo key
+
+**Keys:**
+- `store_info`
+- `pickup_locations`
+- `payment`
+- `policies`
 
 #### PUT `/admin/settings/:key`
 Cập nhật cấu hình
 
-**Ví dụ cấu hình:**
-
-**Store Info:**
+**Store Info (`store_info`):**
 ```json
 {
   "key": "store_info",
@@ -743,31 +1035,30 @@ Cập nhật cấu hình
     "logo": "https://...",
     "phone": "1900 xxxx",
     "email": "support@store.vn",
-    "address": "...",
-    "description": "...",
+    "address": "123 Nguyễn Huệ, Quận 1, TP.HCM",
+    "description": "Cửa hàng công nghệ uy tín...",
     "socialMedia": {
-      "facebook": "https://...",
-      "instagram": "https://...",
-      "telegram": "https://...",
-      "youtube": "https://..."
+      "facebook": "https://facebook.com/...",
+      "instagram": "https://instagram.com/...",
+      "telegram": "https://t.me/...",
+      "youtube": "https://youtube.com/..."
     }
   }
 }
 ```
 
-**Shipping:**
+**Pickup Locations (`pickup_locations`):**
 ```json
 {
-  "key": "shipping",
+  "key": "pickup_locations",
   "value": {
-    "defaultFee": 30000,
-    "freeShippingThreshold": 500000,
-    "estimatedDays": "1-3"
+    "preparationTime": "1-2 ngày làm việc",
+    "autoNotify": true
   }
 }
 ```
 
-**Payment:**
+**Payment (`payment`):**
 ```json
 {
   "key": "payment",
@@ -777,8 +1068,22 @@ Cập nhật cấu hình
       "accountNumber": "1234567890",
       "accountName": "Công ty TNHH...",
       "bankName": "Vietcombank",
-      "branch": "Chi nhánh HCM"
+      "branch": "Chi nhánh HCM",
+      "transferNote": "Nội dung: [Mã đơn hàng]"
     }
+  }
+}
+```
+
+**Policies (`policies`):**
+```json
+{
+  "key": "policies",
+  "value": {
+    "warrantyPolicy": "Nội dung chính sách bảo hành...",
+    "returnPolicy": "Nội dung chính sách đổi trả...",
+    "shoppingGuide": "Hướng dẫn mua hàng...",
+    "faq": "Câu hỏi thường gặp..."
   }
 }
 ```
@@ -926,8 +1231,7 @@ Danh sách banner đang active
       "title": "FLASH SALE 12.12",
       "description": "Giảm đến 50%...",
       "image": "https://...",
-      "link": "/products",
-      "colorScheme": "from-red-600 to-orange-600"
+      "link": "/products"
     }
   ]
 }
@@ -1062,12 +1366,9 @@ Tạo đơn hàng mới
     "name": "Nguyễn Văn A",
     "phone": "0912345678",
     "email": "nguyenvana@email.com",
-    "notes": "Giao vào buổi sáng"
+    "notes": "Nhận vào buổi sáng"
   },
-  "delivery": {
-    "method": "store_pickup",
-    "storeId": "1"
-  },
+  "pickupStoreId": "1",
   "items": [
     {
       "productId": "2",
@@ -1096,6 +1397,27 @@ Tra cứu đơn hàng (không cần auth)
 
 **Query Params:**
 - `phone`: `"0912345678"` (để xác thực)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "orderNumber": "ORD001",
+    "customerName": "Nguyễn Văn A",
+    "status": "pending",
+    "total": 5440000,
+    "pickupLocation": {
+      "storeName": "Chi nhánh Quận 1 - TP.HCM",
+      "storeAddress": "123 Nguyễn Huệ...",
+      "storePhone": "028 1234 5678"
+    },
+    "orderDate": "2025-01-27T10:00:00Z"
+  }
+}
+```
+
+**Note:** Chỉ hiển thị thông tin cơ bản, không hiển thị chi tiết đầy đủ như admin API
 
 ---
 
@@ -1178,8 +1500,8 @@ Tìm kiếm sản phẩm
 #### GET `/settings/store-info`
 Thông tin cửa hàng (public)
 
-#### GET `/settings/shipping`
-Cấu hình vận chuyển (public)
+#### GET `/settings/pickup-locations`
+Danh sách địa điểm nhận hàng (public)
 
 #### GET `/settings/payment`
 Cấu hình thanh toán (public)
@@ -1194,8 +1516,12 @@ Cấu hình thanh toán (public)
 Upload hình ảnh
 
 **Request:** `multipart/form-data`
-- `file`: File image
-- `type`: `"product|banner|category|store"`
+- `file`: File image (bắt buộc)
+- `type`: `"product|banner|category|store"` (bắt buộc)
+
+**Headers:**
+- `Content-Type: multipart/form-data`
+- `Authorization: Bearer {token}` (cho admin APIs)
 
 **Response:**
 ```json
@@ -1203,8 +1529,34 @@ Upload hình ảnh
   "success": true,
   "data": {
     "url": "https://cdn.store.vn/images/xxx.jpg",
-    "thumbnail": "https://cdn.store.vn/images/thumbnails/xxx.jpg"
+    "thumbnail": "https://cdn.store.vn/images/thumbnails/xxx.jpg",
+    "filename": "xxx.jpg",
+    "size": 1024000,
+    "width": 1920,
+    "height": 1080
   }
+}
+```
+
+**Lưu ý:**
+- Hỗ trợ các định dạng: JPG, PNG, WebP
+- Kích thước tối đa: 5MB
+- Tự động resize và tạo thumbnail
+- Banner images được tối ưu cho slider (tỷ lệ 16:9 khuyến nghị)
+- Product images: tự động tạo nhiều kích thước (thumbnail, medium, large)
+- Category images: tự động crop về tỷ lệ vuông
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "message": "File too large",
+  "errors": [
+    {
+      "field": "file",
+      "message": "File size exceeds 5MB limit"
+    }
+  ]
 }
 ```
 
@@ -1273,6 +1625,36 @@ Các API danh sách hỗ trợ:
 
 ---
 
+## 9. NOTES & BEST PRACTICES
+
+### 9.1. Image Upload
+- Luôn upload ảnh trước khi tạo/sửa sản phẩm, banner, category
+- Sử dụng URL trả về từ `/upload/images` trong request body
+- Hỗ trợ upload nhiều ảnh cùng lúc (sử dụng array trong form-data)
+
+### 9.2. Order Status Flow
+- `pending` → `confirmed` → `preparing` → `ready` → `received`
+- Không thể chuyển ngược lại trạng thái đã qua
+- Chỉ có thể hủy từ `pending` hoặc `confirmed`
+
+### 9.3. Flash Sale Products
+- Sản phẩm có thể tham gia nhiều flash sale khác nhau (nếu không trùng thời gian)
+- Giá khuyến mãi trong flash sale không ảnh hưởng đến giá gốc của sản phẩm
+- Khi flash sale kết thúc, giá sản phẩm trở về giá gốc
+
+### 9.4. Voucher Validation
+- Kiểm tra `minPurchase` trước khi áp dụng
+- Kiểm tra `maxUses` và `usedCount`
+- Kiểm tra `expiryDate`
+- Tự động cập nhật `usedCount` khi voucher được sử dụng
+
+### 9.5. Store Pickup
+- Chỉ hiển thị các cửa hàng có `allowPickup: true` và `status: "active"` cho khách hàng
+- Khi xóa cửa hàng, cần chuyển các đơn hàng đang chờ sang cửa hàng khác
+
+---
+
 **Ngày tạo:** 2025-01-27  
-**Phiên bản:** 1.0
+**Ngày cập nhật:** 2025-01-27  
+**Phiên bản:** 1.1
 

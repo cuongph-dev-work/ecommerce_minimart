@@ -446,6 +446,7 @@ export function CategoriesPage() {
             <Button 
               variant="destructive" 
               onClick={() => categoryToDelete && handleDeleteClick(categoryToDelete)}
+              className="bg-rose-600 hover:bg-rose-700"
             >
               Xóa
             </Button>

@@ -1,135 +1,128 @@
-# Turborepo starter
+# E-commerce Minimart - Turborepo Monorepo
 
-This Turborepo starter is maintained by the Turborepo core team.
+A modern e-commerce platform built with Turborepo, featuring a React frontend and NestJS backend.
 
-## Using this example
+## 🏗️ Project Structure
 
-Run the following command:
-
-```sh
-npx create-turbo@latest
+```
+ecommerce_minimart/
+├── apps/
+│   ├── web/          # React + Vite frontend (Tailwind CSS v4)
+│   └── api/          # NestJS backend API
+├── packages/         # Shared packages (if any)
+└── turbo.json        # Turborepo configuration
 ```
 
-## What's inside?
+## 🚀 Getting Started
 
-This Turborepo includes the following packages/apps:
+### Prerequisites
 
-### Apps and Packages
+- Node.js >= 18
+- npm 10.9.2 or higher
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+### Installation
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+```bash
+npm install --legacy-peer-deps
+```
 
-### Utilities
+> **Note**: We use `--legacy-peer-deps` due to React 19 compatibility with some dependencies.
 
-This Turborepo has some additional tools already setup for you:
+### Development
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+Run both applications in development mode:
+
+```bash
+npm run dev
+```
+
+This will start:
+- **Web App**: http://localhost:5173 (Vite dev server)
+- **API**: http://localhost:3001 (NestJS server)
+
+Run individual apps:
+
+```bash
+# Web app only
+npm run dev --filter=@ecommerce/web
+
+# API only
+npm run dev --filter=@ecommerce/api
+```
 
 ### Build
 
-To build all apps and packages, run the following command:
+Build all applications:
 
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+```bash
+npm run build
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+Build individual apps:
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+```bash
+# Web app only
+npm run build --filter=@ecommerce/web
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+# API only
+npm run build --filter=@ecommerce/api
 ```
 
-### Develop
+### Other Commands
 
-To develop all apps and packages, run the following command:
+```bash
+# Lint all apps
+npm run lint
 
-```
-cd my-turborepo
+# Type check all apps
+npm run check-types
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+# Format code
+npm run format
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## 📦 Applications
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+### Web App (`apps/web`)
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+- **Framework**: React 19
+- **Build Tool**: Vite 6
+- **Styling**: Tailwind CSS v4
+- **UI Components**: Radix UI
+- **Icons**: Lucide React
+- **Routing**: React Router v6
 
-### Remote Caching
+### API (`apps/api`)
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+- **Framework**: NestJS 10
+- **Runtime**: Node.js
+- **Language**: TypeScript
+- **Port**: 3001
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+**Endpoints**:
+- `GET /` - Welcome message
+- `GET /health` - Health check
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+## 🔧 Technology Stack
 
-```
-cd my-turborepo
+- **Monorepo**: Turborepo
+- **Package Manager**: npm workspaces
+- **TypeScript**: 5.x
+- **Testing**: Jest (API)
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+## 📝 Development Notes
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+- The web app uses React 19, which may have peer dependency warnings with some packages
+- CORS is enabled on the API for `localhost:5173` and `localhost:3000`
+- Turborepo caching is configured for optimal build performance
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+## 🤝 Contributing
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+1. Create a new branch
+2. Make your changes
+3. Run `npm run lint` and `npm run check-types`
+4. Submit a pull request
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+## 📄 License
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+Private - All rights reserved

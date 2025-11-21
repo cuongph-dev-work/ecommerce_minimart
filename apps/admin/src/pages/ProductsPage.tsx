@@ -535,7 +535,7 @@ export function ProductsPage() {
             <Button 
               variant="destructive" 
               onClick={() => productToDelete && handleDeleteProduct(productToDelete)}
-              className="bg-rose-600 hover:bg-rose-700"
+              className="bg-rose-600 hover:bg-rose-700 text-white"
             >
               Xóa
             </Button>

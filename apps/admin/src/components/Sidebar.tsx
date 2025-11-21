@@ -7,6 +7,12 @@ import {
   Users,
   LogOut,
   ChevronRight,
+  Image,
+  Zap,
+  Ticket,
+  MapPin,
+  Star,
+  Settings,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
@@ -33,14 +39,44 @@ export function Sidebar() {
       path: '/categories',
     },
     {
+      icon: Image,
+      label: 'Banners',
+      path: '/banners',
+    },
+    {
+      icon: Zap,
+      label: 'Flash Sale',
+      path: '/flash-sales',
+    },
+    {
+      icon: Ticket,
+      label: 'Vouchers',
+      path: '/vouchers',
+    },
+    {
+      icon: MapPin,
+      label: 'Cửa hàng',
+      path: '/stores',
+    },
+    {
       icon: ShoppingCart,
       label: t('admin.orders'),
       path: '/orders',
     },
     {
+      icon: Star,
+      label: 'Đánh giá',
+      path: '/reviews',
+    },
+    {
       icon: Users,
       label: t('admin.users'),
       path: '/users',
+    },
+    {
+      icon: Settings,
+      label: 'Cấu hình',
+      path: '/settings',
     },
   ];
 

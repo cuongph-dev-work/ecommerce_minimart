@@ -1,0 +1,154 @@
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
+import { EntityManager } from '@mikro-orm/core';
+import { Product } from '../../entities/product.entity';
+import { Category } from '../../entities/category.entity';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
+import { QueryProductDto } from './dto/query-product.dto';
+import { createPaginatedResponse } from '../../common/utils/pagination.util';
+
+@Injectable()
+export class ProductsService {
+  constructor(private readonly em: EntityManager) {}
+
+  async create(createProductDto: CreateProductDto): Promise<Product> {
+    // Check SKU uniqueness
+    const existingSku = await this.em.findOne(Product, { sku: createProductDto.sku });
+    if (existingSku) {
+      throw new ConflictException('SKU already exists');
+    }
+
+    // Check category exists
+    const category = await this.em.findOne(Category, { id: createProductDto.categoryId });
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    const product = this.em.create(Product, {
+      ...createProductDto,
+      category,
+    });
+
+    await this.em.persistAndFlush(product);
+    return product;
+  }
+
+  async findAll(query: QueryProductDto) {
+    const { page = 1, limit = 20, search, category, brand, status, sortBy = 'created_at', sortOrder = 'desc' } = query;
+
+    const qb = this.em.createQueryBuilder(Product, 'p');
+    
+    qb.leftJoinAndSelect('p.category', 'c');
+
+    // Search
+    if (search) {
+      qb.andWhere({
+        $or: [
+          { name: { $ilike: `%${search}%` } },
+          { sku: { $ilike: `%${search}%` } },
+          { brand: { $ilike: `%${search}%` } },
+        ],
+      });
+    }
+
+    // Filter by category
+    if (category) {
+      qb.andWhere({ category: category });
+    }
+
+    // Filter by brand
+    if (brand) {
+      qb.andWhere({ brand });
+    }
+
+    // Filter by status
+    if (status) {
+      qb.andWhere({ status });
+    }
+
+    // Sort
+    const orderByField = sortBy === 'created_at' ? 'createdAt' : sortBy;
+    qb.orderBy({ [orderByField]: sortOrder === 'asc' ? 'ASC' : 'DESC' });
+
+    // Pagination
+    const offset = (page - 1) * limit;
+    qb.limit(limit).offset(offset);
+
+    const [products, total] = await qb.getResultAndCount();
+
+    return createPaginatedResponse(products, page, limit, total);
+  }
+
+  async findOne(id: string): Promise<Product> {
+    const product = await this.em.findOne(
+      Product,
+      { id },
+      { populate: ['category'] },
+    );
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return product;
+  }
+
+  async update(id: string, updateProductDto: UpdateProductDto): Promise<Product> {
+    const product = await this.findOne(id);
+
+    // Check SKU uniqueness if updating
+    if (updateProductDto.sku && updateProductDto.sku !== product.sku) {
+      const existingSku = await this.em.findOne(Product, { sku: updateProductDto.sku });
+      if (existingSku) {
+        throw new ConflictException('SKU already exists');
+      }
+    }
+
+    // Update category if provided
+    if (updateProductDto.categoryId) {
+      const category = await this.em.findOne(Category, { id: updateProductDto.categoryId });
+      if (!category) {
+        throw new NotFoundException('Category not found');
+      }
+      product.category = category;
+    }
+
+    this.em.assign(product, updateProductDto);
+    await this.em.flush();
+
+    return product;
+  }
+
+  async remove(id: string): Promise<void> {
+    const product = await this.findOne(id);
+    await this.em.removeAndFlush(product);
+  }
+
+  async bulkDelete(ids: string[]): Promise<{ deleted: number }> {
+    const products = await this.em.find(Product, { id: { $in: ids } });
+
+    if (products.length === 0) {
+      throw new BadRequestException('No products found with provided IDs');
+    }
+
+    await this.em.removeAndFlush(products);
+
+    return { deleted: products.length };
+  }
+
+  async export(): Promise<any> {
+    // TODO: Implement export to Excel/CSV
+    throw new BadRequestException('Export not implemented yet');
+  }
+
+  async import(file: any): Promise<any> {
+    // TODO: Implement import from Excel/CSV
+    throw new BadRequestException('Import not implemented yet');
+  }
+}
+

@@ -33,12 +33,84 @@ export interface Category {
   productCount?: number;
 }
 
+// Order Status Types
+export type OrderStatus = 
+  | 'pending'           // Chờ xác nhận
+  | 'confirmed'         // Đã xác nhận
+  | 'preparing'         // Đang chuẩn bị hàng
+  | 'ready_for_pickup'  // Sẵn sàng nhận hàng
+  | 'completed'         // Đã hoàn thành (khách đã nhận)
+  | 'cancelled'         // Đã hủy
+  | 'returned';         // Hoàn trả
+
+export type PaymentMethod = 'cod'; // Only COD supported
+export type PaymentStatus = 'unpaid' | 'paid';
+
+// Order Item
+export interface OrderItem {
+  id: string;
+  productId: string;
+  productName: string;
+  productImage: string;
+  quantity: number;
+  price: number;
+  subtotal: number;
+}
+
+// Order Status History
+export interface OrderStatusHistory {
+  status: OrderStatus;
+  timestamp: string;
+  notes?: string;
+  updatedBy?: string; // Admin name
+}
+
+// Pickup Location Information
+export interface PickupLocation {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  district?: string;
+  city?: string;
+}
+
+// Delivery Address
+export interface DeliveryAddress {
+  fullAddress: string;
+  ward: string;      // Phường/Xã
+  district: string;  // Quận/Huyện
+  city: string;      // Tỉnh/Thành phố
+}
+
+// Main Order Interface
 export interface Order {
   id: string;
+  
+  // Customer Information
   customerName: string;
-  customerEmail: string;
+  customerPhone: string;
+  customerEmail?: string;
+  customerNotes?: string;
+  
+  // Pickup Location (customer selects where to pick up)
+  pickupLocation: PickupLocation;
+  
+  // Order Details
+  orderDate: string;
+  items: OrderItem[];
+  
+  // Pricing
+  subtotal: number;
+  discount: number;
+  voucherCode?: string;
   total: number;
-  status: 'pending' | 'processing' | 'delivered' | 'cancelled';
-  date: string;
-  items: number;
+  
+  // Payment
+  paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus;
+  
+  // Status
+  status: OrderStatus;
+  statusHistory: OrderStatusHistory[];
 }

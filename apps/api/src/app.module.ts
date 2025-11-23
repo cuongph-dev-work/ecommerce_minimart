@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -11,20 +13,36 @@ import { UploadModule } from './modules/upload/upload.module';
 import { StoresModule } from './modules/stores/stores.module';
 import { VouchersModule } from './modules/vouchers/vouchers.module';
 import { BannersModule } from './modules/banners/banners.module';
+import { FlashSalesModule } from './modules/flash-sales/flash-sales.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
+import { UsersModule } from './modules/users/users.module';
+import { AdminsModule } from './modules/admins/admins.module';
+import { SettingsModule } from './modules/settings/settings.module';
+import { OrdersModule } from './modules/orders/orders.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
-import uploadConfig from './config/upload.config';
+import uploadConfig, { minioConfig } from './config/upload.config';
 import redisConfig from './config/redis.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, jwtConfig, uploadConfig, redisConfig],
+      load: [databaseConfig, jwtConfig, uploadConfig, minioConfig, redisConfig],
     }),
+    // Rate limiting
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 60 seconds
+        limit: 100, // 100 requests
+      },
+    ]),
+    // Task scheduling
+    ScheduleModule.forRoot(),
     DatabaseModule,
     AuthModule,
     ProductsModule,
@@ -33,6 +51,13 @@ import redisConfig from './config/redis.config';
     StoresModule,
     VouchersModule,
     BannersModule,
+    FlashSalesModule,
+    ReviewsModule,
+    UsersModule,
+    AdminsModule,
+    SettingsModule,
+    OrdersModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [

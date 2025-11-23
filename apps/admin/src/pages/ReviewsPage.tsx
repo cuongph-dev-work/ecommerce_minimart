@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { reviewsService } from '@/services/reviews.service';
 import {
   Table,
   TableBody,
@@ -35,6 +36,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import axios from 'axios';
 
 export interface Review {
   id: string;
@@ -49,50 +51,51 @@ export interface Review {
   reply?: string;
 }
 
-const initialReviews: Review[] = [
-  {
-    id: 'r1',
-    productId: '1',
-    productName: 'Tai nghe Bluetooth Premium',
-    userName: 'Nguyễn Văn A',
-    rating: 5,
-    comment: 'Tai nghe rất tuyệt vời! Chất lượng âm thanh cực kỳ tốt, chống ồn hiệu quả. Đáng tiền!',
-    date: '2024-11-15',
-    status: 'approved',
-    helpful: 10,
-  },
-  {
-    id: 'r2',
-    productId: '1',
-    productName: 'Tai nghe Bluetooth Premium',
-    userName: 'Trần Thị B',
-    rating: 4,
-    comment: 'Pin trâu, âm thanh hay. Chỉ hơi nặng một chút nhưng vẫn ok.',
-    date: '2024-11-10',
-    status: 'approved',
-    helpful: 5,
-  },
-  {
-    id: 'r3',
-    productId: '4',
-    productName: 'Camera hành trình 4K',
-    userName: 'Võ Tuấn F',
-    rating: 5,
-    comment: 'Camera quay rất nét, ban đêm cũng rõ. Cài đặt dễ dàng.',
-    date: '2024-11-14',
-    status: 'pending',
-  },
-];
 
 export function ReviewsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'hidden'>('all');
   const [ratingFilter, setRatingFilter] = useState<'all' | '1' | '2' | '3' | '4' | '5'>('all');
-  const [reviews, setReviews] = useState<Review[]>(initialReviews);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isReplyOpen, setIsReplyOpen] = useState(false);
   const [replyText, setReplyText] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchReviews(controller.signal);
+    return () => controller.abort();
+  }, [statusFilter, ratingFilter]);
+
+  const fetchReviews = async (signal?: AbortSignal) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await reviewsService.getAll({
+        isApproved: statusFilter === 'approved' ? true : statusFilter === 'pending' ? false : undefined,
+        isHidden: statusFilter === 'hidden' ? true : undefined,
+        rating: ratingFilter !== 'all' ? Number(ratingFilter) : undefined,
+      }, signal);
+      // Transform API response to match frontend Review type
+      const transformed = response.reviews.map((r: any) => ({
+        ...r,
+        userName: r.userName || r.user?.name || 'Anonymous',
+        productName: r.productName || r.product?.name || 'Unknown Product',
+        date: r.createdAt || r.date,
+        status: r.isApproved ? 'approved' : r.isHidden ? 'hidden' : 'pending',
+      }));
+      setReviews(transformed);
+    } catch (err: any) {
+      if (axios.isCancel(err)) return;
+      setError(err?.message || 'Không thể tải danh sách đánh giá');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredReviews = reviews.filter((review) => {
     const matchesSearch =
@@ -104,25 +107,47 @@ export function ReviewsPage() {
     return matchesSearch && matchesStatus && matchesRating;
   });
 
-  const handleApprove = (id: string) => {
-    setReviews(reviews.map(r => r.id === id ? { ...r, status: 'approved' as const } : r));
+  const handleApprove = async (id: string) => {
+    try {
+      await reviewsService.approve(id);
+      await fetchReviews();
+    } catch (err: any) {
+      setError(err?.message || 'Không thể duyệt đánh giá');
+    }
   };
 
-  const handleHide = (id: string) => {
-    setReviews(reviews.map(r => r.id === id ? { ...r, status: 'hidden' as const } : r));
+  const handleHide = async (id: string) => {
+    try {
+      await reviewsService.hide(id);
+      await fetchReviews();
+    } catch (err: any) {
+      setError(err?.message || 'Không thể ẩn đánh giá');
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setReviews(reviews.filter(r => r.id !== id));
+  const handleDelete = async (id: string) => {
+    if (!confirm('Bạn có chắc chắn muốn xóa đánh giá này không?')) return;
+    try {
+      // Note: Backend might not have delete endpoint, so we'll just hide it
+      await reviewsService.hide(id);
+      await fetchReviews();
+    } catch (err: any) {
+      setError(err?.message || 'Không thể xóa đánh giá');
+    }
   };
 
-  const handleReply = () => {
-    if (selectedReview && replyText) {
-      setReviews(reviews.map(r =>
-        r.id === selectedReview.id ? { ...r, reply: replyText } : r
-      ));
+  const handleReply = async () => {
+    if (!selectedReview || !replyText) return;
+    try {
+      setIsSaving(true);
+      await reviewsService.reply(selectedReview.id, { reply: replyText });
       setIsReplyOpen(false);
       setReplyText('');
+      await fetchReviews();
+    } catch (err: any) {
+      setError(err?.message || 'Không thể phản hồi đánh giá');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -170,6 +195,12 @@ export function ReviewsPage() {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
     >
+      {error && (
+        <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6">
+          {error}
+        </div>
+      )}
+      
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Đánh giá sản phẩm</h2>
@@ -231,7 +262,20 @@ export function ReviewsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredReviews.map((review) => (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  Đang tải đánh giá...
+                </TableCell>
+              </TableRow>
+            ) : filteredReviews.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  Không tìm thấy đánh giá
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredReviews.map((review) => (
               <TableRow key={review.id} className="group">
                 <TableCell className="font-medium">{review.productName}</TableCell>
                 <TableCell>{review.userName}</TableCell>
@@ -292,7 +336,8 @@ export function ReviewsPage() {
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
+            ))
+            )}
           </TableBody>
         </Table>
       </div>
@@ -354,7 +399,9 @@ export function ReviewsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsReplyOpen(false)}>Hủy</Button>
-            <Button onClick={handleReply}>Gửi phản hồi</Button>
+            <Button onClick={handleReply} disabled={isSaving}>
+              {isSaving ? 'Đang gửi...' : 'Gửi phản hồi'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

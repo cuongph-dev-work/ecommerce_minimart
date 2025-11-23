@@ -29,8 +29,8 @@ export class Review {
   @Property()
   userName!: string;
 
-  @Property({ type: 'int', min: 1, max: 5 })
-  rating!: number;
+  @Property({ type: 'int' })
+  rating!: number; // 1-5, validated in DTO
 
   @Property({ nullable: true })
   comment?: string;

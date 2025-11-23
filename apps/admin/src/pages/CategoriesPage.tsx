@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import {
   Table,
   TableBody,
@@ -10,7 +10,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Edit, Trash2, MoreHorizontal, Package, ChevronDown, ChevronRight } from 'lucide-react';
-import { categories as initialCategories } from '@/data/categories';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   DropdownMenu,
@@ -37,6 +36,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { categoriesService } from '@/services/categories.service';
+import axios from 'axios';
+import { extractApiError, getFieldError, type ValidationError } from '@/lib/error-handler';
 
 const AVAILABLE_ICONS = [
   'Package',
@@ -60,12 +62,16 @@ const AVAILABLE_ICONS = [
 export function CategoriesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [editingSubcategory, setEditingSubcategory] = useState<{ parentId: string, index: number, name: string } | null>(null);
+  const [editingSubcategory, setEditingSubcategory] = useState<{ id: string, parentId: string, name: string } | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const [subcategoryToDelete, setSubcategoryToDelete] = useState<{ id: string; name: string } | null>(null);
   
   // Form state
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -73,9 +79,85 @@ export function CategoriesPage() {
   const [newCategoryIcon, setNewCategoryIcon] = useState('Package');
   const [selectedParentId, setSelectedParentId] = useState<string>('none');
 
-  const filteredCategories = categories.filter((category) =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchCategories(controller.signal);
+    return () => controller.abort();
+  }, []);
+
+  const fetchCategories = async (signal?: AbortSignal, forceRefresh = false) => {
+    try {
+      setIsLoading(true);
+      // Add cache busting timestamp if force refresh
+      const params = forceRefresh ? { _t: Date.now() } : {};
+      const data = await categoriesService.getAll(signal, params);
+      // Transform API response to match frontend Category type
+      const transformed = data.map((cat: any) => ({
+        ...cat,
+        icon: cat.icon || 'Package',
+        // Use children from API (subcategories as Category records)
+        children: cat.children && Array.isArray(cat.children) ? cat.children : [],
+        // Keep subcategories for backward compatibility (array of names)
+        subcategories: cat.children && Array.isArray(cat.children) && cat.children.length > 0
+          ? cat.children.map((child: any) => child.name)
+          : (cat.subcategories && Array.isArray(cat.subcategories) ? cat.subcategories : []),
+        productCount: cat.products?.length || cat.productCount || 0,
+      }));
+      setCategories(transformed);
+    } catch (err: any) {
+      if (axios.isCancel(err)) return;
+      // Silently fail for fetch operations
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredCategories = categories.filter((category) => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    // Check if category name matches
+    if (category.name.toLowerCase().includes(searchLower)) {
+      return true;
+    }
+    
+    // Check if any subcategory (child) name matches
+    if (category.children && category.children.length > 0) {
+      return category.children.some(child => 
+        child.name.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    return false;
+  });
+
+  // Auto-expand categories that have matching subcategories when searching
+  useEffect(() => {
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      const categoriesToExpand = categories
+        .filter(cat => {
+          // Don't expand if category name itself matches
+          if (cat.name.toLowerCase().includes(searchLower)) return false;
+          // Expand if any subcategory matches
+          return cat.children?.some(child => 
+            child.name.toLowerCase().includes(searchLower)
+          );
+        })
+        .map(cat => cat.id);
+      
+      if (categoriesToExpand.length > 0) {
+        setExpandedCategories(prev => {
+          const combined = [...new Set([...prev, ...categoriesToExpand])];
+          return combined;
+        });
+      }
+    } else {
+      // Clear expanded categories when search is cleared
+      setExpandedCategories([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
 
   const toggleExpand = (id: string) => {
     setExpandedCategories(prev => 
@@ -83,84 +165,113 @@ export function CategoriesPage() {
     );
   };
 
-  const handleSaveCategory = () => {
-    if (editingSubcategory) {
-      // Edit existing subcategory
-      setCategories(categories.map(cat => {
-        if (cat.id === editingSubcategory.parentId) {
-          const newSubcategories = [...(cat.subcategories || [])];
-          if (newSubcategories[editingSubcategory.index] !== undefined) {
-            newSubcategories[editingSubcategory.index] = newCategoryName;
-          }
-          return { ...cat, subcategories: newSubcategories };
-        }
-        return cat;
-      }));
-      setEditingSubcategory(null);
-    } else if (editingCategory) {
-      // Edit existing category
-      setCategories(categories.map(cat => 
-        cat.id === editingCategory.id 
-          ? { 
-              ...cat, 
-              name: newCategoryName, 
-              description: newCategoryDescription, 
-              icon: newCategoryIcon 
-            } 
-          : cat
-      ));
-      setEditingCategory(null);
-    } else {
-      // Add new category
-      if (selectedParentId && selectedParentId !== 'none') {
-        // Add as subcategory
-        setCategories(categories.map(cat => {
-          if (cat.id === selectedParentId) {
-            return {
-              ...cat,
-              subcategories: [...(cat.subcategories || []), newCategoryName]
-            };
-          }
-          return cat;
-        }));
-      } else {
-        // Add as new parent category
-        const newCategory: Category = {
-          id: Math.random().toString(36).substr(2, 9),
-          name: newCategoryName,
-          slug: newCategoryName.toLowerCase().replace(/\s+/g, '-'),
-          description: newCategoryDescription,
-          icon: newCategoryIcon,
-          productCount: 0,
-          subcategories: [],
-        };
-        setCategories([newCategory, ...categories]);
-      }
+  const handleSaveCategory = async () => {
+    // Frontend validation
+    if (!newCategoryName || newCategoryName.trim().length === 0) {
+      setValidationErrors([{ field: 'name', message: 'Tên danh mục không được để trống' }]);
+      return;
     }
 
-    setIsAddDialogOpen(false);
-    resetForm();
+    if (newCategoryName.length > 100) {
+      setValidationErrors([{ field: 'name', message: 'Tên danh mục không được vượt quá 100 ký tự' }]);
+      return;
+    }
+
+    if (newCategoryDescription && newCategoryDescription.length > 500) {
+      setValidationErrors([{ field: 'description', message: 'Mô tả không được vượt quá 500 ký tự' }]);
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setValidationErrors([]);
+
+      if (editingSubcategory) {
+        // Subcategory editing - update subcategory as a Category record
+        await categoriesService.update(editingSubcategory.id, {
+          name: newCategoryName,
+        });
+        setEditingSubcategory(null);
+      } else if (editingCategory) {
+        // Edit existing category (parent cannot be changed)
+        await categoriesService.update(editingCategory.id, {
+          name: newCategoryName,
+          description: newCategoryDescription,
+          icon: newCategoryIcon,
+        });
+        setEditingCategory(null);
+      } else {
+        // Add new category
+        await categoriesService.create({
+          name: newCategoryName,
+          description: newCategoryDescription,
+          icon: newCategoryIcon,
+          parentId: selectedParentId !== 'none' ? selectedParentId : undefined,
+        });
+      }
+
+      setIsAddDialogOpen(false);
+      resetForm();
+      // Force refresh to bypass cache
+      await fetchCategories(undefined, true);
+    } catch (err: any) {
+      const apiError = extractApiError(err);
+      if (apiError.errors) {
+        setValidationErrors(apiError.errors);
+      } else {
+        // If no specific field errors, show general error in name field
+        setValidationErrors([{ field: 'name', message: apiError.message }]);
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleEditClick = (category: Category) => {
+    // Reset subcategory editing state when editing a category
+    setEditingSubcategory(null);
     setEditingCategory(category);
     setNewCategoryName(category.name);
     setNewCategoryDescription(category.description || '');
     setNewCategoryIcon(category.icon);
-    setSelectedParentId('none'); // Editing top-level categories for now
+    // Set parentId if category has a parent (check if it's a subcategory)
+    // We need to find the parent by checking if any category has this as a child
+    const parentCategory = categories.find(cat => 
+      cat.children?.some(child => child.id === category.id)
+    );
+    setSelectedParentId(parentCategory?.id || 'none');
     setIsAddDialogOpen(true);
   };
 
-  const handleEditSubcategory = (parentId: string, index: number, name: string) => {
-    setEditingSubcategory({ parentId, index, name });
+  const handleEditSubcategory = (subcategoryId: string, parentId: string, name: string) => {
+    setEditingSubcategory({ id: subcategoryId, parentId, name });
     setNewCategoryName(name);
     setSelectedParentId(parentId); // Set parent to show context, though we might hide the select
     setIsAddDialogOpen(true);
   };
 
-  const handleDeleteClick = (id: string) => {
-    setCategories(categories.filter(c => c.id !== id));
-    setCategoryToDelete(null);
+  const handleDeleteSubcategory = async (id: string) => {
+    try {
+      await categoriesService.delete(id);
+      setSubcategoryToDelete(null);
+      // Force refresh to bypass cache
+      await fetchCategories(undefined, true);
+    } catch (err: any) {
+      // Silently fail or show toast notification
+      console.error('Failed to delete subcategory:', err);
+    }
+  };
+
+  const handleDeleteClick = async (id: string) => {
+    try {
+      await categoriesService.delete(id);
+      setCategoryToDelete(null);
+      // Force refresh to bypass cache
+      await fetchCategories(undefined, true);
+    } catch (err: any) {
+      // Silently fail or show toast notification
+      console.error('Failed to delete category:', err);
+    }
   };
 
   const resetForm = () => {
@@ -170,6 +281,7 @@ export function CategoriesPage() {
     setSelectedParentId('none');
     setEditingCategory(null);
     setEditingSubcategory(null);
+    setValidationErrors([]);
   };
 
   // Helper to render dynamic icon
@@ -186,42 +298,48 @@ export function CategoriesPage() {
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Categories</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Danh mục</h2>
           <p className="text-muted-foreground mt-1">
-            Manage product categories and subcategories.
+            Quản lý danh mục sản phẩm và danh mục con.
           </p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+          if (open) {
+            // Reset form when opening dialog to ensure clean state for "Add" mode
+            resetForm();
+          }
           setIsAddDialogOpen(open);
-          if (!open) resetForm();
+          if (!open) {
+            resetForm();
+          }
         }}>
           <DialogTrigger asChild>
             <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
-              <Plus className="mr-2 h-4 w-4" /> Add Category
+              <Plus className="mr-2 h-4 w-4" /> Thêm danh mục
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>
-                {editingSubcategory ? 'Edit Subcategory' : editingCategory ? 'Edit Category' : 'Add Category'}
+                {editingSubcategory ? 'Sửa danh mục con' : editingCategory ? 'Sửa danh mục' : 'Thêm danh mục'}
               </DialogTitle>
               <DialogDescription>
-                {editingSubcategory ? 'Update subcategory name.' : editingCategory ? 'Update category details.' : 'Create a new category or subcategory.'}
+                {editingSubcategory ? 'Cập nhật tên danh mục con.' : editingCategory ? 'Cập nhật thông tin danh mục.' : 'Tạo danh mục hoặc danh mục con mới.'}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               {!editingCategory && !editingSubcategory && (
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="parent" className="text-right">
-                    Parent
+                    Danh mục cha
                   </Label>
                   <div className="col-span-3">
                     <Select value={selectedParentId} onValueChange={setSelectedParentId}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select parent category" />
+                        <SelectValue placeholder="Chọn danh mục cha" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">None (Top Level)</SelectItem>
+                        <SelectItem value="none">Không (Cấp cao nhất)</SelectItem>
                         {categories.map((cat) => (
                           <SelectItem key={cat.id} value={cat.id}>
                             {cat.name}
@@ -234,38 +352,52 @@ export function CategoriesPage() {
               )}
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name" className="text-right">
-                  Name
+                  Tên <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="name"
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  className="col-span-3"
-                  placeholder={selectedParentId !== 'none' && !editingCategory ? "Subcategory Name" : "Category Name"}
-                />
+                <div className="col-span-3">
+                  <Input
+                    id="name"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    className={getFieldError(validationErrors, 'name') ? 'border-destructive' : 'col-span-3'}
+                    placeholder={selectedParentId !== 'none' && !editingCategory ? "Tên danh mục con" : "Tên danh mục"}
+                  />
+                  {getFieldError(validationErrors, 'name') && (
+                    <p className="text-sm text-destructive mt-1">
+                      {getFieldError(validationErrors, 'name')}
+                    </p>
+                  )}
+                </div>
               </div>
               
-              {(selectedParentId === 'none' || editingCategory) && !editingSubcategory && (
+              {!editingSubcategory && (
                 <>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="description" className="text-right">
-                      Description
+                      Mô tả
                     </Label>
-                    <Input
-                      id="description"
-                      value={newCategoryDescription}
-                      onChange={(e) => setNewCategoryDescription(e.target.value)}
-                      className="col-span-3"
-                    />
+                    <div className="col-span-3">
+                      <Input
+                        id="description"
+                        value={newCategoryDescription}
+                        onChange={(e) => setNewCategoryDescription(e.target.value)}
+                        className={getFieldError(validationErrors, 'description') ? 'border-destructive' : ''}
+                      />
+                      {getFieldError(validationErrors, 'description') && (
+                        <p className="text-sm text-destructive mt-1">
+                          {getFieldError(validationErrors, 'description')}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="icon" className="text-right">
-                      Icon
+                      Biểu tượng
                     </Label>
                     <div className="col-span-3">
                       <Select value={newCategoryIcon} onValueChange={setNewCategoryIcon}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select an icon" />
+                          <SelectValue placeholder="Chọn biểu tượng" />
                         </SelectTrigger>
                         <SelectContent>
                           {AVAILABLE_ICONS.map((icon) => (
@@ -284,7 +416,12 @@ export function CategoriesPage() {
               )}
             </div>
             <DialogFooter>
-              <Button type="submit" onClick={handleSaveCategory}>Save changes</Button>
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isSaving}>
+                Hủy
+              </Button>
+              <Button type="submit" onClick={handleSaveCategory} disabled={isSaving}>
+                {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -294,7 +431,7 @@ export function CategoriesPage() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search categories..."
+            placeholder="Tìm kiếm danh mục..."
             className="pl-10 bg-muted/30 border-transparent focus:bg-background focus:border-primary transition-all"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -307,19 +444,32 @@ export function CategoriesPage() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[50px]"></TableHead>
-              <TableHead className="w-[80px]">Icon</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Subcategories</TableHead>
-              <TableHead>Products</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-[80px]">Biểu tượng</TableHead>
+              <TableHead>Tên</TableHead>
+              <TableHead>Danh mục con</TableHead>
+              <TableHead>Sản phẩm</TableHead>
+              <TableHead className="text-right">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredCategories.map((category) => (
-              <>
-                <TableRow key={category.id} className="group hover:bg-muted/30">
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  Loading categories...
+                </TableCell>
+              </TableRow>
+            ) : filteredCategories.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  No categories found
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredCategories.map((category) => (
+              <Fragment key={category.id}>
+                <TableRow className="group hover:bg-muted/30">
                   <TableCell>
-                    {category.subcategories && category.subcategories.length > 0 && (
+                    {category.children && category.children.length > 0 && (
                       <Button 
                         variant="ghost" 
                         size="icon" 
@@ -347,14 +497,14 @@ export function CategoriesPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {category.subcategories?.slice(0, 3).map((sub, idx) => (
-                        <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary text-secondary-foreground">
-                          {sub}
+                      {(category.children || []).slice(0, 3).map((child) => (
+                        <span key={child.id} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary text-secondary-foreground">
+                          {child.name}
                         </span>
                       ))}
-                      {category.subcategories && category.subcategories.length > 3 && (
+                      {category.children && category.children.length > 3 && (
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground">
-                          +{category.subcategories.length - 3} more
+                          +{category.children.length - 3} more
                         </span>
                       )}
                     </div>
@@ -392,7 +542,7 @@ export function CategoriesPage() {
                   </TableCell>
                 </TableRow>
                 <AnimatePresence>
-                  {expandedCategories.includes(category.id) && category.subcategories && (
+                  {expandedCategories.includes(category.id) && category.children && category.children.length > 0 && (
                     <TableRow className="bg-muted/20 hover:bg-muted/20">
                       <TableCell colSpan={6} className="p-0">
                         <motion.div
@@ -402,20 +552,30 @@ export function CategoriesPage() {
                           className="overflow-hidden"
                         >
                           <div className="p-4 pl-16 grid grid-cols-2 md:grid-cols-3 gap-2">
-                            {category.subcategories.map((sub, idx) => (
-                              <div key={idx} className="group/sub flex items-center justify-between gap-2 text-sm text-muted-foreground p-2 rounded-md hover:bg-background border border-transparent hover:border-border transition-colors">
+                            {category.children.map((child) => (
+                              <div key={child.id} className="group/sub flex items-center justify-between gap-2 text-sm text-muted-foreground p-2 rounded-md hover:bg-background border border-transparent hover:border-border transition-colors">
                                 <div className="flex items-center gap-2">
                                   <div className="w-1.5 h-1.5 rounded-full bg-primary/50" />
-                                  {sub}
+                                  {child.name}
                                 </div>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-6 w-6 opacity-0 group-hover/sub:opacity-100 transition-opacity"
-                                  onClick={() => handleEditSubcategory(category.id, idx, sub)}
-                                >
-                                  <Edit className="h-3 w-3" />
-                                </Button>
+                                <div className="flex items-center gap-1 opacity-0 group-hover/sub:opacity-100 transition-opacity">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-6 w-6"
+                                    onClick={() => handleEditSubcategory(child.id, category.id, child.name)}
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-6 w-6 text-destructive hover:text-destructive"
+                                    onClick={() => setSubcategoryToDelete({ id: child.id, name: child.name })}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -424,13 +584,14 @@ export function CategoriesPage() {
                     </TableRow>
                   )}
                 </AnimatePresence>
-              </>
-            ))}
+              </Fragment>
+            ))
+            )}
           </TableBody>
         </Table>
       </div>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Category Confirmation Dialog */}
       <Dialog open={!!categoryToDelete} onOpenChange={(open) => !open && setCategoryToDelete(null)}>
         <DialogContent>
           <DialogHeader>
@@ -446,6 +607,30 @@ export function CategoriesPage() {
             <Button 
               variant="destructive" 
               onClick={() => categoryToDelete && handleDeleteClick(categoryToDelete)}
+              className="bg-rose-600 hover:bg-rose-700 text-white"
+            >
+              Xóa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Subcategory Confirmation Dialog */}
+      <Dialog open={!!subcategoryToDelete} onOpenChange={(open) => !open && setSubcategoryToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xác nhận xóa danh mục con</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc chắn muốn xóa danh mục con "{subcategoryToDelete?.name}"? Hành động này không thể hoàn tác.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSubcategoryToDelete(null)}>
+              Hủy
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => subcategoryToDelete && handleDeleteSubcategory(subcategoryToDelete.id)}
               className="bg-rose-600 hover:bg-rose-700 text-white"
             >
               Xóa

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
+import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
@@ -8,6 +9,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
+        driver: PostgreSqlDriver,
         host: configService.get<string>('database.host'),
         port: configService.get<number>('database.port'),
         user: configService.get<string>('database.user'),
@@ -23,7 +25,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       }),
     }),
   ],
-  exports: [MikroOrmModule],
 })
 export class DatabaseModule {}
 

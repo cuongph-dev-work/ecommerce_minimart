@@ -31,37 +31,38 @@ export class VouchersService {
   async findAll(query: QueryVoucherDto) {
     const { page = 1, limit = 20, search, status, type, sortBy = 'created_at', sortOrder = 'desc' } = query;
 
-    const qb = this.em.createQueryBuilder(Voucher, 'v');
+    const where: any = {};
 
     // Search
     if (search) {
-      qb.andWhere({
-        $or: [
-          { code: { $ilike: `%${search}%` } },
-          { title: { $ilike: `%${search}%` } },
-        ],
-      });
+      where.$or = [
+        { code: { $ilike: `%${search}%` } },
+        { title: { $ilike: `%${search}%` } },
+      ];
     }
 
     // Filter by status
     if (status) {
-      qb.andWhere({ status });
+      where.status = status;
     }
 
     // Filter by type
     if (type) {
-      qb.andWhere({ type });
+      where.type = type;
     }
 
     // Sort
     const orderByField = sortBy === 'created_at' ? 'createdAt' : sortBy;
-    qb.orderBy({ [orderByField]: sortOrder === 'asc' ? 'ASC' : 'DESC' });
+    const orderBy: any = { [orderByField]: sortOrder === 'asc' ? 'ASC' : 'DESC' };
 
     // Pagination
     const offset = (page - 1) * limit;
-    qb.limit(limit).offset(offset);
 
-    const [vouchers, total] = await qb.getResultAndCount();
+    const [vouchers, total] = await this.em.findAndCount(Voucher, where, {
+      orderBy,
+      limit,
+      offset,
+    });
 
     return createPaginatedResponse(vouchers, page, limit, total);
   }

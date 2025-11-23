@@ -5,37 +5,33 @@ import {
   Tags,
   ShoppingCart,
   Users,
-  LogOut,
   ChevronRight,
   Image,
-  Zap,
-  Ticket,
+  // Zap, // Tạm thời comment do chưa implement Flash Sale
+  // Ticket, // Tạm thời comment do chưa implement Vouchers
   MapPin,
-  Star,
+  // Star, // Tạm thời comment do chưa implement Reviews
   Settings,
 } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { motion } from 'motion/react';
-
 export function Sidebar() {
-  const { t } = useTranslation();
   const location = useLocation();
 
   const menuItems = [
     {
       icon: LayoutDashboard,
-      label: t('admin.dashboard'),
+      label: 'Tổng quan',
       path: '/',
     },
     {
       icon: Package,
-      label: t('admin.products'),
+      label: 'Sản phẩm',
       path: '/products',
     },
     {
       icon: Tags,
-      label: t('admin.categories'),
+      label: 'Danh mục',
       path: '/categories',
     },
     {
@@ -43,16 +39,17 @@ export function Sidebar() {
       label: 'Banners',
       path: '/banners',
     },
-    {
-      icon: Zap,
-      label: 'Flash Sale',
-      path: '/flash-sales',
-    },
-    {
-      icon: Ticket,
-      label: 'Vouchers',
-      path: '/vouchers',
-    },
+    // Tạm thời ẩn Flash Sale và Vouchers do chưa implement
+    // {
+    //   icon: Zap,
+    //   label: 'Flash Sale',
+    //   path: '/flash-sales',
+    // },
+    // {
+    //   icon: Ticket,
+    //   label: 'Vouchers',
+    //   path: '/vouchers',
+    // },
     {
       icon: MapPin,
       label: 'Cửa hàng',
@@ -60,19 +57,21 @@ export function Sidebar() {
     },
     {
       icon: ShoppingCart,
-      label: t('admin.orders'),
+      label: 'Đơn hàng',
       path: '/orders',
     },
-    {
-      icon: Star,
-      label: 'Đánh giá',
-      path: '/reviews',
-    },
-    {
-      icon: Users,
-      label: t('admin.users'),
-      path: '/users',
-    },
+    // Tạm thời ẩn Đánh giá do chưa implement
+    // {
+    //   icon: Star,
+    //   label: 'Đánh giá',
+    //   path: '/reviews',
+    // },
+    // Tạm thời ẩn tab Người dùng do chưa có chức năng đăng ký user
+    // {
+    //   icon: Users,
+    //   label: 'Người dùng',
+    //   path: '/users',
+    // },
     {
       icon: Settings,
       label: 'Cấu hình',
@@ -125,12 +124,6 @@ export function Sidebar() {
         </nav>
       </div>
 
-      <div className="mt-auto p-6 border-t border-border">
-        <button className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors group">
-          <LogOut className="w-5 h-5 group-hover:text-destructive" />
-          <span className="font-medium">{t('admin.logout')}</span>
-        </button>
-      </div>
     </motion.div>
   );
 }

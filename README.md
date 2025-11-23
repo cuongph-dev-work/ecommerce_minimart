@@ -23,10 +23,8 @@ ecommerce_minimart/
 ### Installation
 
 ```bash
-npm install --legacy-peer-deps
+npm install
 ```
-
-> **Note**: We use `--legacy-peer-deps` due to React 19 compatibility with some dependencies.
 
 ### Development
 
@@ -112,7 +110,6 @@ npm run format
 
 ## 📝 Development Notes
 
-- The web app uses React 19, which may have peer dependency warnings with some packages
 - CORS is enabled on the API for `localhost:5173` and `localhost:3000`
 - Turborepo caching is configured for optimal build performance
 

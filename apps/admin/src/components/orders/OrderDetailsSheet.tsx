@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Order, OrderStatus } from '@/types';
 import {
   Sheet,
@@ -20,16 +20,19 @@ import {
   Truck,
   Printer,
   MessageSquare,
+  Loader2,
 } from 'lucide-react';
 import {
   formatCurrency,
   getStatusLabel,
   getStatusColor,
-  getDeliveryMethodLabel,
   formatOrderDate,
 } from '@/lib/order-utils';
 import { cn } from '@/lib/utils';
 import { OrderStatusUpdate } from './OrderStatusUpdate';
+import { OrderPaymentUpdate } from './OrderPaymentUpdate';
+import { ordersService } from '@/services/orders.service';
+import axios from 'axios';
 
 interface OrderDetailsSheetProps {
   order: Order | null;
@@ -40,6 +43,39 @@ interface OrderDetailsSheetProps {
 
 export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate }: OrderDetailsSheetProps) {
   const [statusUpdateOpen, setStatusUpdateOpen] = useState(false);
+  const [paymentUpdateOpen, setPaymentUpdateOpen] = useState(false);
+  const [orderDetail, setOrderDetail] = useState<Order | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open && order?.id) {
+      fetchOrderDetail();
+    } else {
+      setOrderDetail(null);
+      setError(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, order?.id]);
+
+  const fetchOrderDetail = async () => {
+    if (!order?.id) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const abortController = new AbortController();
+      const detail = await ordersService.getById(order.id, abortController.signal);
+      setOrderDetail(detail);
+    } catch (err: unknown) {
+      if (axios.isCancel(err)) return;
+      setError(err instanceof Error ? err.message : 'Không thể tải chi tiết đơn hàng');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const displayOrder = orderDetail || order;
 
   if (!order) return null;
 
@@ -55,16 +91,32 @@ export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate }:
         <SheetHeader>
           <SheetTitle className="text-2xl">Chi tiết đơn hàng</SheetTitle>
           <SheetDescription>
-            Mã đơn: <span className="font-mono font-semibold">{order.id}</span>
+            Mã đơn: <span className="font-mono font-semibold">{displayOrder?.orderNumber || displayOrder?.id}</span>
           </SheetDescription>
         </SheetHeader>
 
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : error ? (
+          <div className="py-12 text-center">
+            <p className="text-sm text-destructive">{error}</p>
+            <Button variant="outline" size="sm" className="mt-4" onClick={fetchOrderDetail}>
+              Thử lại
+            </Button>
+          </div>
+        ) : !displayOrder ? (
+          <div className="py-12 text-center text-sm text-muted-foreground">
+            Không tìm thấy đơn hàng
+          </div>
+        ) : (
         <div className="mt-6 space-y-6">
           {/* Status */}
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Trạng thái</span>
-            <Badge className={cn("border", getStatusColor(order.status))}>
-              {getStatusLabel(order.status)}
+            <Badge className={cn("border", getStatusColor(displayOrder.status))}>
+              {getStatusLabel(displayOrder.status)}
             </Badge>
           </div>
 
@@ -79,25 +131,25 @@ export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate }:
             <div className="space-y-2 bg-muted/30 p-4 rounded-lg">
               <div className="flex items-start gap-2">
                 <div className="font-medium min-w-[100px]">Họ tên:</div>
-                <div>{order.customerName}</div>
+                <div>{displayOrder.customerName}</div>
               </div>
               <div className="flex items-start gap-2">
                 <Phone className="h-4 w-4 mt-0.5 text-muted-foreground" />
                 <div className="font-medium min-w-[100px]">Số điện thoại:</div>
-                <div>{order.customerPhone}</div>
+                <div>{displayOrder.customerPhone}</div>
               </div>
-              {order.customerEmail && (
+              {displayOrder.customerEmail && (
                 <div className="flex items-start gap-2">
                   <Mail className="h-4 w-4 mt-0.5 text-muted-foreground" />
                   <div className="font-medium min-w-[100px]">Email:</div>
-                  <div>{order.customerEmail}</div>
+                  <div>{displayOrder.customerEmail}</div>
                 </div>
               )}
-              {order.customerNotes && (
+              {(displayOrder.notes || displayOrder.customerNotes) && (
                 <div className="flex items-start gap-2">
                   <MessageSquare className="h-4 w-4 mt-0.5 text-muted-foreground" />
                   <div className="font-medium min-w-[100px]">Ghi chú:</div>
-                  <div className="text-muted-foreground italic">{order.customerNotes}</div>
+                  <div className="text-muted-foreground italic">{displayOrder.notes || displayOrder.customerNotes}</div>
                 </div>
               )}
             </div>
@@ -114,37 +166,45 @@ export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate }:
             <div className="space-y-2 bg-muted/30 p-4 rounded-lg">
               <div className="flex items-start gap-2">
                 <div className="font-medium min-w-[120px]">Phương thức:</div>
-                <div>{getDeliveryMethodLabel(order.deliveryMethod)}</div>
+                <div>Nhận tại cửa hàng</div>
               </div>
               
-              {order.deliveryMethod === 'pickup' && order.storeInfo && (
+              {(displayOrder.pickupStore || displayOrder.pickupLocation) && (
                 <>
                   <div className="flex items-start gap-2">
                     <Store className="h-4 w-4 mt-0.5 text-muted-foreground" />
                     <div className="font-medium min-w-[120px]">Cửa hàng:</div>
-                    <div>{order.storeInfo.name}</div>
+                    <div>
+                      {typeof displayOrder.pickupStore === 'object' 
+                        ? displayOrder.pickupStore?.name 
+                        : typeof displayOrder.pickupLocation === 'object' 
+                          ? displayOrder.pickupLocation.name 
+                          : (displayOrder.pickupLocation as string) || 'N/A'}
+                    </div>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                    <div className="font-medium min-w-[120px]">Địa chỉ:</div>
-                    <div className="text-sm">{order.storeInfo.address}</div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Phone className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                    <div className="font-medium min-w-[120px]">Điện thoại:</div>
-                    <div>{order.storeInfo.phone}</div>
-                  </div>
+                  {((typeof displayOrder.pickupStore === 'object' && displayOrder.pickupStore?.address) ||
+                    (typeof displayOrder.pickupLocation === 'object' && displayOrder.pickupLocation?.address)) && (
+                    <div className="flex items-start gap-2">
+                      <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                      <div className="font-medium min-w-[120px]">Địa chỉ:</div>
+                      <div className="text-sm">
+                        {(typeof displayOrder.pickupStore === 'object' ? displayOrder.pickupStore?.address : '') || 
+                         (typeof displayOrder.pickupLocation === 'object' ? displayOrder.pickupLocation?.address : '')}
+                      </div>
+                    </div>
+                  )}
+                  {((typeof displayOrder.pickupStore === 'object' && displayOrder.pickupStore?.phone) ||
+                    (typeof displayOrder.pickupLocation === 'object' && displayOrder.pickupLocation?.phone)) && (
+                    <div className="flex items-start gap-2">
+                      <Phone className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                      <div className="font-medium min-w-[120px]">Điện thoại:</div>
+                      <div>
+                        {(typeof displayOrder.pickupStore === 'object' ? displayOrder.pickupStore?.phone : '') || 
+                         (typeof displayOrder.pickupLocation === 'object' ? displayOrder.pickupLocation?.phone : '')}
+                      </div>
+                    </div>
+                  )}
                 </>
-              )}
-
-              {order.deliveryMethod === 'delivery' && order.deliveryAddress && (
-                <div className="flex items-start gap-2">
-                  <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                  <div className="font-medium min-w-[120px]">Địa chỉ giao:</div>
-                  <div className="text-sm">
-                    {order.deliveryAddress.fullAddress}, {order.deliveryAddress.ward}, {order.deliveryAddress.district}, {order.deliveryAddress.city}
-                  </div>
-                </div>
               )}
             </div>
           </div>
@@ -155,22 +215,38 @@ export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate }:
           <div className="space-y-3">
             <h3 className="font-semibold text-lg">Sản phẩm</h3>
             <div className="space-y-3">
-              {order.items.map((item) => (
-                <div key={item.id} className="flex gap-3 p-3 bg-muted/30 rounded-lg">
-                  <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center overflow-hidden">
-                    <Package className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm">{item.productName}</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Số lượng: {item.quantity} × {formatCurrency(item.price)}
+              {displayOrder.items && displayOrder.items.length > 0 ? (
+                displayOrder.items.map((item) => {
+                  const product = item.product || null;
+                  const productName = product?.name || item.productName || 'Sản phẩm';
+                  const productImage = product?.images?.[0];
+                  
+                  return (
+                    <div key={item.id} className="flex gap-3 p-3 bg-muted/30 rounded-lg">
+                      <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center overflow-hidden shrink-0">
+                        {productImage ? (
+                          <img src={productImage} alt={productName} className="w-full h-full object-cover" />
+                        ) : (
+                          <Package className="h-8 w-8 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm">{productName}</div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Số lượng: {item.quantity} × {formatCurrency(item.price)}
+                        </div>
+                      </div>
+                      <div className="font-semibold text-sm">
+                        {formatCurrency(item.subtotal || item.price * item.quantity)}
+                      </div>
                     </div>
-                  </div>
-                  <div className="font-semibold text-sm">
-                    {formatCurrency(item.subtotal)}
-                  </div>
+                  );
+                })
+              ) : (
+                <div className="text-sm text-muted-foreground p-4 text-center">
+                  Không có sản phẩm nào
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -185,22 +261,22 @@ export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate }:
             <div className="space-y-2 bg-muted/30 p-4 rounded-lg">
               <div className="flex justify-between text-sm">
                 <span>Tạm tính:</span>
-                <span>{formatCurrency(order.subtotal)}</span>
+                <span>{formatCurrency(displayOrder.subtotal || 0)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Phí vận chuyển:</span>
-                <span>{formatCurrency(order.shippingFee)}</span>
+                <span>{formatCurrency(displayOrder.shippingFee || 0)}</span>
               </div>
-              {order.discount > 0 && (
+              {(displayOrder.discount || 0) > 0 && (
                 <div className="flex justify-between text-sm text-emerald-600">
-                  <span>Giảm giá {order.voucherCode && `(${order.voucherCode})`}:</span>
-                  <span>-{formatCurrency(order.discount)}</span>
+                  <span>Giảm giá {displayOrder.voucherCode && `(${displayOrder.voucherCode})`}:</span>
+                  <span>-{formatCurrency(displayOrder.discount || 0)}</span>
                 </div>
               )}
               <Separator />
               <div className="flex justify-between font-bold text-lg">
                 <span>Tổng cộng:</span>
-                <span className="text-primary">{formatCurrency(order.total)}</span>
+                <span className="text-primary">{formatCurrency(displayOrder.total || 0)}</span>
               </div>
               <div className="flex justify-between text-sm mt-2">
                 <span>Phương thức thanh toán:</span>
@@ -208,10 +284,28 @@ export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate }:
               </div>
               <div className="flex justify-between text-sm">
                 <span>Trạng thái thanh toán:</span>
-                <Badge variant={order.paymentStatus === 'paid' ? 'default' : 'secondary'}>
-                  {order.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}
+                <Badge variant={displayOrder.paymentStatus === 'paid' ? 'default' : 'secondary'}>
+                  {displayOrder.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}
                 </Badge>
               </div>
+              {((displayOrder.receiptImages && displayOrder.receiptImages.length > 0) || displayOrder.receiptImage) && (
+                <div className="space-y-2 text-sm">
+                  <span>Ảnh biên lai:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {(displayOrder.receiptImages || (displayOrder.receiptImage ? [displayOrder.receiptImage] : [])).map((img, index) => (
+                      <a
+                        key={index}
+                        href={img}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline text-xs"
+                      >
+                        Ảnh {index + 1}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -221,7 +315,7 @@ export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate }:
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Ngày đặt hàng:</span>
-              <span className="font-medium">{formatOrderDate(order.orderDate)}</span>
+              <span className="font-medium">{formatOrderDate(displayOrder.orderDate || displayOrder.createdAt || '')}</span>
             </div>
           </div>
 
@@ -237,19 +331,46 @@ export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate }:
             </Button>
           </div>
 
-          <Button className="w-full" size="lg" onClick={() => setStatusUpdateOpen(true)}>
-            Cập nhật trạng thái
-          </Button>
+          <div className="flex gap-2">
+            <Button className="flex-1" size="lg" onClick={() => setStatusUpdateOpen(true)}>
+              Cập nhật trạng thái
+            </Button>
+            <Button className="flex-1" size="lg" variant="outline" onClick={() => setPaymentUpdateOpen(true)}>
+              Cập nhật thanh toán
+            </Button>
+          </div>
         </div>
+        )}
       </SheetContent>
 
       {/* Status Update Dialog */}
-      <OrderStatusUpdate
-        order={order}
-        open={statusUpdateOpen}
-        onOpenChange={setStatusUpdateOpen}
-        onUpdate={handleStatusUpdate}
-      />
+      {displayOrder && (
+        <>
+          <OrderStatusUpdate
+            order={displayOrder}
+            open={statusUpdateOpen}
+            onOpenChange={setStatusUpdateOpen}
+            onUpdate={(orderId, newStatus, notes) => {
+              handleStatusUpdate(orderId, newStatus, notes);
+              // Refresh order detail after status update
+              if (orderId === displayOrder.id) {
+                fetchOrderDetail();
+              }
+            }}
+          />
+          <OrderPaymentUpdate
+            order={displayOrder}
+            open={paymentUpdateOpen}
+            onOpenChange={setPaymentUpdateOpen}
+            onUpdate={(orderId) => {
+              // Refresh order detail after payment update
+              if (orderId === displayOrder.id) {
+                fetchOrderDetail();
+              }
+            }}
+          />
+        </>
+      )}
     </Sheet>
   );
 }

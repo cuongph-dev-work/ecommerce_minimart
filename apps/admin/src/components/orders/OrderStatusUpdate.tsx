@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Order, OrderStatus } from '@/types';
 import {
   Dialog,
@@ -19,30 +19,64 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { getValidNextStatuses, getStatusLabel } from '@/lib/order-utils';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import { ordersService } from '@/services/orders.service';
 
 interface OrderStatusUpdateProps {
   order: Order | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (orderId: string, newStatus: OrderStatus, notes: string) => void;
+  onUpdate?: (orderId: string, newStatus: OrderStatus, notes: string) => void;
 }
 
 export function OrderStatusUpdate({ order, open, onOpenChange, onUpdate }: OrderStatusUpdateProps) {
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | null>(null);
   const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setSelectedStatus(null);
+      setNotes('');
+      setError(null);
+    }
+  }, [open]);
 
   if (!order) return null;
 
-  const validStatuses = getValidNextStatuses(order.status, order.deliveryMethod);
+  const validStatuses = getValidNextStatuses(order.status);
 
-  const handleSubmit = () => {
-    if (selectedStatus) {
-      onUpdate(order.id, selectedStatus, notes);
-      // Reset form
+  const handleSubmit = async () => {
+    if (!selectedStatus) return;
+
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      
+      // Call API
+      await ordersService.updateStatus(order.id, {
+        status: selectedStatus,
+        notes: notes.trim() || undefined,
+      });
+
+      // Call callback if provided
+      if (onUpdate) {
+        onUpdate(order.id, selectedStatus, notes);
+      }
+
+      // Reset form and close
       setSelectedStatus(null);
       setNotes('');
       onOpenChange(false);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : (err as { response?: { data?: { message?: string } } })?.response?.data?.message 
+        || 'Không thể cập nhật trạng thái đơn hàng';
+      setError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -110,23 +144,37 @@ export function OrderStatusUpdate({ order, open, onOpenChange, onUpdate }: Order
             />
           </div>
 
-          {/* Delivery Method Info */}
+          {/* Error Message */}
+          {error && (
+            <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+              <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
+              <div className="text-sm text-destructive">{error}</div>
+            </div>
+          )}
+
+          {/* Info */}
           <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-md">
-            <strong>Lưu ý:</strong> Đơn hàng này là{' '}
-            {order.deliveryMethod === 'pickup' ? 'nhận tại cửa hàng' : 'giao hàng tận nơi'}.
-            Các trạng thái khả dụng phụ thuộc vào phương thức giao nhận.
+            <strong>Lưu ý:</strong> Đơn hàng này là nhận tại cửa hàng.
+            Các trạng thái khả dụng phụ thuộc vào trạng thái hiện tại.
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
+          <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
             Hủy
           </Button>
           <Button 
             onClick={handleSubmit}
-            disabled={!selectedStatus}
+            disabled={!selectedStatus || isSubmitting}
           >
-            Cập nhật trạng thái
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Đang cập nhật...
+              </>
+            ) : (
+              'Cập nhật trạng thái'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

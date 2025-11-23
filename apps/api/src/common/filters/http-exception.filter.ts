@@ -12,7 +12,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const status = exception.getStatus();
+    let status = exception.getStatus();
     const exceptionResponse = exception.getResponse();
 
     const errorResponse: any = {
@@ -26,6 +26,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
       
       if (responseObj.message) {
         if (Array.isArray(responseObj.message)) {
+          // Validation errors - return 422 instead of 400
+          status = HttpStatus.UNPROCESSABLE_ENTITY;
           errorResponse.errors = responseObj.message.map((msg: string) => ({
             message: msg,
           }));

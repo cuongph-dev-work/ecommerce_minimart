@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { storesService, type Store as StoreServiceType } from '@/services/stores.service';
+import axios from 'axios';
 import {
   Table,
   TableBody,
@@ -29,7 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Search, Edit, Trash2, MoreHorizontal, MapPin, Phone, Mail, Clock } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, MoreHorizontal, Phone, Mail } from 'lucide-react';
 import { motion } from 'motion/react';
 import {
   DropdownMenu,
@@ -37,51 +39,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
+import { extractApiError, getFieldError, type ValidationError } from '@/lib/error-handler';
+import { storeSchema } from '@/schemas/store.schema';
+import { safeParse } from 'valibot';
 
-export interface Store {
-  id: string;
-  name: string;
-  address: string;
-  phone: string;
-  email: string;
-  lat: number;
-  lng: number;
-  workingHours: {
-    weekdays: { start: string; end: string };
-    weekends: { start: string; end: string };
-  };
-  services: string[];
-  allowPickup: boolean;
-  preparationTime: string;
-  status: 'active' | 'inactive';
-  orderCount?: number;
-}
-
-const initialStores: Store[] = [
-  {
-    id: '1',
-    name: 'Chi nhánh Quận 1 - TP.HCM',
-    address: '123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh',
-    phone: '028 1234 5678',
-    email: 'quan1@store.vn',
-    lat: 10.7769,
-    lng: 106.7009,
-    workingHours: {
-      weekdays: { start: '08:00', end: '21:00' },
-      weekends: { start: '09:00', end: '20:00' },
-    },
-    services: [
-      'Trải nghiệm sản phẩm trực tiếp',
-      'Tư vấn chuyên sâu từ chuyên gia',
-      'Hỗ trợ cài đặt và kích hoạt',
-    ],
-    allowPickup: true,
-    preparationTime: '1-2 ngày',
-    status: 'active',
-    orderCount: 15,
-  },
-];
+type Store = StoreServiceType;
 
 const availableServices = [
   'Trải nghiệm sản phẩm trực tiếp',
@@ -94,10 +56,39 @@ const availableServices = [
 
 export function StoresPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [stores, setStores] = useState<Store[]>(initialStores);
+  const [stores, setStores] = useState<Store[]>([]);
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
   const [editingStore, setEditingStore] = useState<Store | null>(null);
   const [storeToDelete, setStoreToDelete] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [statusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchStores(controller.signal);
+    return () => controller.abort();
+  }, [statusFilter]);
+
+  const fetchStores = async (signal?: AbortSignal) => {
+    try {
+      setIsLoading(true);
+      const response = await storesService.getAll(undefined, signal);
+      
+      let filtered: Store[] = response.stores;
+      if (statusFilter !== 'all') {
+        filtered = response.stores.filter((store: Store) => store.status === statusFilter);
+      }
+      
+      setStores(filtered as Store[]);
+    } catch (err: unknown) {
+      if (axios.isCancel(err)) return;
+      // Silently fail for fetch
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Form state
   const [newStoreName, setNewStoreName] = useState('');
@@ -128,38 +119,51 @@ export function StoresPage() {
     );
   };
 
-  const handleSaveStore = () => {
-    if (editingStore) {
-      setStores(stores.map(s =>
-        s.id === editingStore.id
-          ? {
-              ...s,
-              name: newStoreName,
-              address: newStoreAddress,
-              phone: newStorePhone,
-              email: newStoreEmail,
-              lat: Number(newStoreLat),
-              lng: Number(newStoreLng),
-              workingHours: {
-                weekdays: { start: newStoreWeekdaysStart, end: newStoreWeekdaysEnd },
-                weekends: { start: newStoreWeekendsStart, end: newStoreWeekendsEnd },
-              },
-              services: newStoreServices,
-              allowPickup: newStoreAllowPickup,
-              preparationTime: newStorePreparationTime,
-              status: newStoreStatus,
-            }
-          : s
-      ));
-    } else {
-      const newStore: Store = {
-        id: Math.random().toString(36).substr(2, 9),
+  const handleSaveStore = async () => {
+    // Frontend validation using Valibot schema
+    const formData: Record<string, unknown> = {
+      name: newStoreName.trim(),
+      address: newStoreAddress.trim(),
+      phone: newStorePhone.trim(),
+      email: newStoreEmail?.trim() || undefined,
+      lat: newStoreLat ? Number(newStoreLat) : undefined,
+      lng: newStoreLng ? Number(newStoreLng) : undefined,
+      workingHours: {
+        weekdays: { start: newStoreWeekdaysStart, end: newStoreWeekdaysEnd },
+        weekends: { start: newStoreWeekendsStart, end: newStoreWeekendsEnd },
+      },
+      services: newStoreServices,
+      allowPickup: newStoreAllowPickup,
+      preparationTime: newStorePreparationTime,
+      status: newStoreStatus,
+    };
+
+    const result = safeParse(storeSchema, formData);
+    
+    if (!result.success) {
+      // Convert Valibot errors to ValidationError format
+      const errors: ValidationError[] = result.issues.map((issue) => {
+        const field = issue.path?.[0]?.key as string || 'name';
+        return {
+          field,
+          message: issue.message,
+        };
+      });
+      setValidationErrors(errors);
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setValidationErrors([]);
+
+      const storeData = {
         name: newStoreName,
         address: newStoreAddress,
         phone: newStorePhone,
-        email: newStoreEmail,
-        lat: Number(newStoreLat),
-        lng: Number(newStoreLng),
+        email: newStoreEmail || undefined,
+        lat: newStoreLat ? Number(newStoreLat) : undefined,
+        lng: newStoreLng ? Number(newStoreLng) : undefined,
         workingHours: {
           weekdays: { start: newStoreWeekdaysStart, end: newStoreWeekdaysEnd },
           weekends: { start: newStoreWeekendsStart, end: newStoreWeekendsEnd },
@@ -168,12 +172,28 @@ export function StoresPage() {
         allowPickup: newStoreAllowPickup,
         preparationTime: newStorePreparationTime,
         status: newStoreStatus,
-        orderCount: 0,
       };
-      setStores([newStore, ...stores]);
+
+      if (editingStore) {
+        await storesService.update(editingStore.id, storeData);
+      } else {
+        await storesService.create(storeData);
+      }
+
+      setIsAddSheetOpen(false);
+      resetForm();
+      await fetchStores();
+    } catch (err: unknown) {
+      const apiError = extractApiError(err);
+      if (apiError.errors) {
+        setValidationErrors(apiError.errors);
+      } else {
+        setValidationErrors([{ field: 'name', message: apiError.message }]);
+      }
+      // Không set error state nữa, chỉ dùng validationErrors
+    } finally {
+      setIsSaving(false);
     }
-    setIsAddSheetOpen(false);
-    resetForm();
   };
 
   const handleEditStore = (store: Store) => {
@@ -181,23 +201,28 @@ export function StoresPage() {
     setNewStoreName(store.name);
     setNewStoreAddress(store.address);
     setNewStorePhone(store.phone);
-    setNewStoreEmail(store.email);
-    setNewStoreLat(store.lat.toString());
-    setNewStoreLng(store.lng.toString());
-    setNewStoreWeekdaysStart(store.workingHours.weekdays.start);
-    setNewStoreWeekdaysEnd(store.workingHours.weekdays.end);
-    setNewStoreWeekendsStart(store.workingHours.weekends.start);
-    setNewStoreWeekendsEnd(store.workingHours.weekends.end);
-    setNewStoreServices(store.services);
-    setNewStoreAllowPickup(store.allowPickup);
-    setNewStorePreparationTime(store.preparationTime);
-    setNewStoreStatus(store.status);
+    setNewStoreEmail(store.email || '');
+    setNewStoreLat(store.lat?.toString() || '');
+    setNewStoreLng(store.lng?.toString() || '');
+    setNewStoreWeekdaysStart(store.workingHours?.weekdays?.start || '08:00');
+    setNewStoreWeekdaysEnd(store.workingHours?.weekdays?.end || '21:00');
+    setNewStoreWeekendsStart(store.workingHours?.weekends?.start || '09:00');
+    setNewStoreWeekendsEnd(store.workingHours?.weekends?.end || '20:00');
+    setNewStoreServices(store.services || []);
+    setNewStoreAllowPickup(store.allowPickup ?? true);
+    setNewStorePreparationTime(store.preparationTime || '1-2 ngày');
+    setNewStoreStatus((store.status as 'active' | 'inactive') || 'active');
     setIsAddSheetOpen(true);
   };
 
-  const handleDeleteStore = (id: string) => {
-    setStores(stores.filter(s => s.id !== id));
-    setStoreToDelete(null);
+  const handleDeleteStore = async (id: string) => {
+    try {
+      await storesService.delete(id);
+      setStoreToDelete(null);
+      await fetchStores();
+    } catch (err: unknown) {
+      console.error('Failed to delete store:', err);
+    }
   };
 
   const resetForm = () => {
@@ -216,6 +241,7 @@ export function StoresPage() {
     setNewStoreAllowPickup(true);
     setNewStorePreparationTime('1-2 ngày');
     setNewStoreStatus('active');
+    setValidationErrors([]);
   };
 
   return (
@@ -252,19 +278,40 @@ export function StoresPage() {
                 <Label>Tên chi nhánh *</Label>
                 <Input
                   value={newStoreName}
-                  onChange={(e) => setNewStoreName(e.target.value)}
+                  onChange={(e) => {
+                    setNewStoreName(e.target.value);
+                    if (getFieldError(validationErrors, 'name')) {
+                      setValidationErrors(validationErrors.filter(err => err.field !== 'name'));
+                    }
+                  }}
                   placeholder="Chi nhánh Quận 1 - TP.HCM"
+                  className={getFieldError(validationErrors, 'name') ? 'border-destructive' : ''}
                 />
+                {getFieldError(validationErrors, 'name') && (
+                  <p className="text-sm text-destructive mt-1">
+                    {getFieldError(validationErrors, 'name')}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label>Địa chỉ *</Label>
                 <Textarea
                   value={newStoreAddress}
-                  onChange={(e) => setNewStoreAddress(e.target.value)}
+                  onChange={(e) => {
+                    setNewStoreAddress(e.target.value);
+                    if (getFieldError(validationErrors, 'address')) {
+                      setValidationErrors(validationErrors.filter(err => err.field !== 'address'));
+                    }
+                  }}
                   placeholder="123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
-                  className="min-h-[80px]"
+                  className={`min-h-[80px] ${getFieldError(validationErrors, 'address') ? 'border-destructive' : ''}`}
                 />
+                {getFieldError(validationErrors, 'address') && (
+                  <p className="text-sm text-destructive mt-1">
+                    {getFieldError(validationErrors, 'address')}
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -272,9 +319,20 @@ export function StoresPage() {
                   <Label>Số điện thoại *</Label>
                   <Input
                     value={newStorePhone}
-                    onChange={(e) => setNewStorePhone(e.target.value)}
+                    onChange={(e) => {
+                      setNewStorePhone(e.target.value);
+                      if (getFieldError(validationErrors, 'phone')) {
+                        setValidationErrors(validationErrors.filter(err => err.field !== 'phone'));
+                      }
+                    }}
                     placeholder="028 1234 5678"
+                    className={getFieldError(validationErrors, 'phone') ? 'border-destructive' : ''}
                   />
+                  {getFieldError(validationErrors, 'phone') && (
+                    <p className="text-sm text-destructive mt-1">
+                      {getFieldError(validationErrors, 'phone')}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -282,9 +340,20 @@ export function StoresPage() {
                   <Input
                     type="email"
                     value={newStoreEmail}
-                    onChange={(e) => setNewStoreEmail(e.target.value)}
+                    onChange={(e) => {
+                      setNewStoreEmail(e.target.value);
+                      if (getFieldError(validationErrors, 'email')) {
+                        setValidationErrors(validationErrors.filter(err => err.field !== 'email'));
+                      }
+                    }}
                     placeholder="quan1@store.vn"
+                    className={getFieldError(validationErrors, 'email') ? 'border-destructive' : ''}
                   />
+                  {getFieldError(validationErrors, 'email') && (
+                    <p className="text-sm text-destructive mt-1">
+                      {getFieldError(validationErrors, 'email')}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -405,9 +474,14 @@ export function StoresPage() {
               </div>
             </div>
             <SheetFooter>
-              <Button variant="outline" onClick={() => setIsAddSheetOpen(false)}>Hủy</Button>
-              <Button onClick={handleSaveStore}>
-                {editingStore ? 'Cập nhật' : 'Lưu'}
+              <Button variant="outline" onClick={() => {
+                resetForm();
+                setIsAddSheetOpen(false);
+              }} disabled={isSaving}>
+                Hủy
+              </Button>
+              <Button onClick={handleSaveStore} disabled={isSaving}>
+                {isSaving ? 'Đang lưu...' : editingStore ? 'Cập nhật' : 'Lưu'}
               </Button>
             </SheetFooter>
           </SheetContent>
@@ -440,7 +514,20 @@ export function StoresPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredStores.map((store) => (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  Đang tải cửa hàng...
+                </TableCell>
+              </TableRow>
+            ) : filteredStores.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  Không tìm thấy cửa hàng
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredStores.map((store) => (
               <TableRow key={store.id} className="group">
                 <TableCell className="font-medium">{store.name}</TableCell>
                 <TableCell className="text-sm text-muted-foreground max-w-[250px] truncate">
@@ -468,7 +555,7 @@ export function StoresPage() {
                     <span className="text-xs text-muted-foreground">Không</span>
                   )}
                 </TableCell>
-                <TableCell>{store.orderCount || 0}</TableCell>
+                <TableCell>{(store as Store & { orderCount?: number }).orderCount || 0}</TableCell>
                 <TableCell>
                   {store.status === 'active' ? (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600">
@@ -501,7 +588,8 @@ export function StoresPage() {
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
+            ))
+            )}
           </TableBody>
         </Table>
       </div>

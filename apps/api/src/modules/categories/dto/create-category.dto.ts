@@ -14,8 +14,8 @@ export class CreateCategoryDto {
   name!: string;
 
   @IsString()
-  @IsNotEmpty()
-  slug!: string;
+  @IsOptional()
+  slug?: string;
 
   @IsString()
   @IsOptional()
@@ -32,11 +32,6 @@ export class CreateCategoryDto {
   @IsString()
   @IsOptional()
   parentId?: string;
-
-  @IsArray()
-  @IsString({ each: true })
-  @IsOptional()
-  subcategories?: string[];
 
   @IsEnum(CategoryStatus)
   @IsOptional()

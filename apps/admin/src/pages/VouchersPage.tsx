@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { vouchersService } from '@/services/vouchers.service';
+import axios from 'axios';
 import {
   Table,
   TableBody,
@@ -27,7 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Search, Edit, Trash2, MoreHorizontal, Tag } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, MoreHorizontal } from 'lucide-react';
 import { motion } from 'motion/react';
 import {
   DropdownMenu,
@@ -36,6 +38,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { extractApiError, getFieldError, type ValidationError } from '@/lib/error-handler';
 
 export interface Voucher {
   id: string;
@@ -84,10 +87,49 @@ const initialVouchers: Voucher[] = [
 
 export function VouchersPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [vouchers, setVouchers] = useState<Voucher[]>(initialVouchers);
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState<Voucher | null>(null);
   const [voucherToDelete, setVoucherToDelete] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'expired'>('all');
+
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchVouchers(controller.signal);
+    return () => controller.abort();
+  }, [statusFilter]);
+
+  const fetchVouchers = async (signal?: AbortSignal) => {
+    try {
+      setIsLoading(true);
+      const data = await vouchersService.getAll(signal);
+      
+      // Transform API response to match frontend Voucher type
+      const transformed = data.map((v: any) => ({
+        ...v,
+        title: v.code,
+        description: v.description || '',
+        expiryDate: v.endDate,
+        usedCount: v.usedCount || 0,
+      }));
+
+      let filtered = transformed;
+      if (statusFilter !== 'all') {
+        filtered = transformed.filter((voucher: any) => voucher.status === statusFilter);
+      }
+      
+      setVouchers(filtered);
+    } catch (err: any) {
+      if (axios.isCancel(err)) return;
+      // Silently fail for fetch
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Form state
   const [newVoucherCode, setNewVoucherCode] = useState('');
@@ -106,44 +148,94 @@ export function VouchersPage() {
     voucher.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleSaveVoucher = () => {
-    if (editingVoucher) {
-      setVouchers(vouchers.map(v =>
-        v.id === editingVoucher.id
-          ? {
-              ...v,
-              code: newVoucherCode,
-              title: newVoucherTitle,
-              description: newVoucherDescription,
-              type: newVoucherType,
-              discount: Number(newVoucherDiscount),
-              maxDiscount: newVoucherMaxDiscount ? Number(newVoucherMaxDiscount) : undefined,
-              minPurchase: Number(newVoucherMinPurchase),
-              maxUses: Number(newVoucherMaxUses),
-              expiryDate: newVoucherExpiryDate,
-              status: newVoucherStatus,
-            }
-          : v
-      ));
-    } else {
-      const newVoucher: Voucher = {
-        id: Math.random().toString(36).substr(2, 9),
+  const handleSaveVoucher = async () => {
+    // Frontend validation
+    const errors: ValidationError[] = [];
+
+    // Validate code
+    if (!newVoucherCode || newVoucherCode.trim().length === 0) {
+      errors.push({ field: 'code', message: 'Mã voucher không được để trống' });
+    } else if (newVoucherCode.length < 3 || newVoucherCode.length > 20) {
+      errors.push({ field: 'code', message: 'Mã voucher phải từ 3-20 ký tự' });
+    } else if (!/^[A-Z0-9]+$/.test(newVoucherCode)) {
+      errors.push({ field: 'code', message: 'Mã voucher chỉ được chứa chữ in hoa và số' });
+    }
+
+    // Validate discount
+    if (!newVoucherDiscount || isNaN(Number(newVoucherDiscount))) {
+      errors.push({ field: 'discount', message: 'Giá trị giảm giá phải là số hợp lệ' });
+    } else if (Number(newVoucherDiscount) < 0) {
+      errors.push({ field: 'discount', message: 'Giá trị giảm giá phải >= 0' });
+    }
+
+    // Validate minPurchase
+    if (!newVoucherMinPurchase || isNaN(Number(newVoucherMinPurchase))) {
+      errors.push({ field: 'minPurchase', message: 'Đơn hàng tối thiểu phải là số hợp lệ' });
+    } else if (Number(newVoucherMinPurchase) < 0) {
+      errors.push({ field: 'minPurchase', message: 'Đơn hàng tối thiểu phải >= 0' });
+    }
+
+    // Validate maxDiscount (optional)
+    if (newVoucherMaxDiscount && isNaN(Number(newVoucherMaxDiscount))) {
+      errors.push({ field: 'maxDiscount', message: 'Giảm tối đa phải là số hợp lệ' });
+    } else if (newVoucherMaxDiscount && Number(newVoucherMaxDiscount) < 0) {
+      errors.push({ field: 'maxDiscount', message: 'Giảm tối đa phải >= 0' });
+    }
+
+    // Validate maxUses (optional)
+    if (newVoucherMaxUses && isNaN(Number(newVoucherMaxUses))) {
+      errors.push({ field: 'maxUses', message: 'Số lượt sử dụng phải là số hợp lệ' });
+    } else if (newVoucherMaxUses && Number(newVoucherMaxUses) < 1) {
+      errors.push({ field: 'maxUses', message: 'Số lượt sử dụng phải >= 1' });
+    } else if (newVoucherMaxUses && !Number.isInteger(Number(newVoucherMaxUses))) {
+      errors.push({ field: 'maxUses', message: 'Số lượt sử dụng phải là số nguyên' });
+    }
+
+    // Validate expiryDate
+    if (!newVoucherExpiryDate || newVoucherExpiryDate.trim().length === 0) {
+      errors.push({ field: 'expiryDate', message: 'Vui lòng chọn ngày hết hạn' });
+    }
+
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setValidationErrors([]);
+
+      const voucherData = {
         code: newVoucherCode,
-        title: newVoucherTitle,
-        description: newVoucherDescription,
         type: newVoucherType,
-        discount: Number(newVoucherDiscount),
+        value: Number(newVoucherDiscount),
         maxDiscount: newVoucherMaxDiscount ? Number(newVoucherMaxDiscount) : undefined,
-        minPurchase: Number(newVoucherMinPurchase),
-        maxUses: Number(newVoucherMaxUses),
-        usedCount: 0,
-        expiryDate: newVoucherExpiryDate,
+        minOrderValue: Number(newVoucherMinPurchase),
+        usageLimit: newVoucherMaxUses ? Number(newVoucherMaxUses) : undefined,
+        startDate: new Date().toISOString(),
+        endDate: newVoucherExpiryDate,
         status: newVoucherStatus,
       };
-      setVouchers([newVoucher, ...vouchers]);
+
+      if (editingVoucher) {
+        await vouchersService.update(editingVoucher.id, voucherData);
+      } else {
+        await vouchersService.create(voucherData);
+      }
+
+      setIsAddSheetOpen(false);
+      resetForm();
+      await fetchVouchers();
+    } catch (err: any) {
+      const apiError = extractApiError(err);
+      if (apiError.errors) {
+        setValidationErrors(apiError.errors);
+      } else {
+        setValidationErrors([{ field: 'code', message: apiError.message }]);
+      }
+    } finally {
+      setIsSaving(false);
     }
-    setIsAddSheetOpen(false);
-    resetForm();
   };
 
   const handleEditVoucher = (voucher: Voucher) => {
@@ -161,9 +253,14 @@ export function VouchersPage() {
     setIsAddSheetOpen(true);
   };
 
-  const handleDeleteVoucher = (id: string) => {
-    setVouchers(vouchers.filter(v => v.id !== id));
-    setVoucherToDelete(null);
+  const handleDeleteVoucher = async (id: string) => {
+    try {
+      await vouchersService.delete(id);
+      setVoucherToDelete(null);
+      await fetchVouchers();
+    } catch (err: any) {
+      setError(err?.message || 'Không thể xóa voucher');
+    }
   };
 
   const resetForm = () => {
@@ -238,7 +335,7 @@ export function VouchersPage() {
             <div className="grid gap-6 py-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Mã voucher *</Label>
+                  <Label>Mã voucher <span className="text-destructive">*</span></Label>
                   <Input
                     value={newVoucherCode}
                     onChange={(e) => setNewVoucherCode(e.target.value.toUpperCase())}
@@ -279,7 +376,7 @@ export function VouchersPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Giá trị giảm giá *</Label>
+                  <Label>Giá trị giảm giá <span className="text-destructive">*</span></Label>
                   <Input
                     type="number"
                     value={newVoucherDiscount}
@@ -303,7 +400,7 @@ export function VouchersPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Đơn hàng tối thiểu (VNĐ)</Label>
+                  <Label>Đơn hàng tối thiểu (VNĐ) <span className="text-destructive">*</span></Label>
                   <Input
                     type="number"
                     value={newVoucherMinPurchase}
@@ -325,7 +422,7 @@ export function VouchersPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Ngày hết hạn</Label>
+                  <Label>Ngày hết hạn <span className="text-destructive">*</span></Label>
                   <Input
                     type="date"
                     value={newVoucherExpiryDate}
@@ -348,9 +445,11 @@ export function VouchersPage() {
               </div>
             </div>
             <SheetFooter>
-              <Button variant="outline" onClick={() => setIsAddSheetOpen(false)}>Hủy</Button>
-              <Button onClick={handleSaveVoucher}>
-                {editingVoucher ? 'Cập nhật' : 'Lưu'}
+              <Button variant="outline" onClick={() => setIsAddSheetOpen(false)} disabled={isSaving}>
+                Hủy
+              </Button>
+              <Button onClick={handleSaveVoucher} disabled={isSaving}>
+                {isSaving ? 'Đang lưu...' : editingVoucher ? 'Cập nhật' : 'Lưu'}
               </Button>
             </SheetFooter>
           </SheetContent>
@@ -383,7 +482,20 @@ export function VouchersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredVouchers.map((voucher) => (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  Đang tải voucher...
+                </TableCell>
+              </TableRow>
+            ) : filteredVouchers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  Không tìm thấy voucher
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredVouchers.map((voucher) => (
               <TableRow key={voucher.id} className="group">
                 <TableCell className="font-mono font-medium">{voucher.code}</TableCell>
                 <TableCell>
@@ -435,7 +547,8 @@ export function VouchersPage() {
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
+            ))
+            )}
           </TableBody>
         </Table>
       </div>

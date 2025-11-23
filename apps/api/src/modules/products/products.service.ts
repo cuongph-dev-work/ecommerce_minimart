@@ -11,6 +11,8 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
 import { createPaginatedResponse } from '../../common/utils/pagination.util';
+import { PaginatedResponse } from '../../common/dto/pagination.dto';
+import { getThumbnailUrl } from '../../common/utils/image.util';
 
 @Injectable()
 export class ProductsService {
@@ -29,66 +31,108 @@ export class ProductsService {
       throw new NotFoundException('Category not found');
     }
 
+    // Check subcategory exists if provided
+    let subcategory: Category | undefined;
+    if (createProductDto.subcategoryId) {
+      subcategory = await this.em.findOne(Category, { id: createProductDto.subcategoryId });
+      if (!subcategory) {
+        throw new NotFoundException('Subcategory not found');
+      }
+      // Verify subcategory is a child of the main category
+      if (subcategory.parent?.id !== category.id) {
+        throw new BadRequestException('Subcategory must be a child of the selected category');
+      }
+    }
+
+    const { categoryId, subcategoryId, ...productData } = createProductDto;
     const product = this.em.create(Product, {
-      ...createProductDto,
+      ...productData,
       category,
+      subcategory,
     });
 
     await this.em.persistAndFlush(product);
     return product;
   }
 
-  async findAll(query: QueryProductDto) {
+  async findAll(query: QueryProductDto): Promise<PaginatedResponse<any>> {
     const { page = 1, limit = 20, search, category, brand, status, sortBy = 'created_at', sortOrder = 'desc' } = query;
 
-    const qb = this.em.createQueryBuilder(Product, 'p');
-    
-    qb.leftJoinAndSelect('p.category', 'c');
+    const where: any = {};
 
     // Search
     if (search) {
-      qb.andWhere({
-        $or: [
-          { name: { $ilike: `%${search}%` } },
-          { sku: { $ilike: `%${search}%` } },
-          { brand: { $ilike: `%${search}%` } },
-        ],
-      });
+      where.$or = [
+        { name: { $ilike: `%${search}%` } },
+        { sku: { $ilike: `%${search}%` } },
+        { brand: { $ilike: `%${search}%` } },
+      ];
     }
 
     // Filter by category
     if (category) {
-      qb.andWhere({ category: category });
+      where.category = category;
     }
 
     // Filter by brand
     if (brand) {
-      qb.andWhere({ brand });
+      where.brand = brand;
     }
 
     // Filter by status
     if (status) {
-      qb.andWhere({ status });
+      where.status = status;
     }
 
     // Sort
     const orderByField = sortBy === 'created_at' ? 'createdAt' : sortBy;
-    qb.orderBy({ [orderByField]: sortOrder === 'asc' ? 'ASC' : 'DESC' });
+    const orderBy: any = { [orderByField]: sortOrder === 'asc' ? 'ASC' : 'DESC' };
 
     // Pagination
     const offset = (page - 1) * limit;
-    qb.limit(limit).offset(offset);
 
-    const [products, total] = await qb.getResultAndCount();
+    const [products, total] = await this.em.findAndCount(Product, where, {
+      populate: ['category', 'subcategory'],
+      orderBy,
+      limit,
+      offset,
+    });
 
-    return createPaginatedResponse(products, page, limit, total);
+    // Transform products to include thumbnail URLs for list view
+    const transformedProducts = products.map((product) => {
+      return {
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        discount: product.discount,
+        stock: product.stock,
+        category: product.category,
+        subcategory: product.subcategory,
+        brand: product.brand,
+        sku: product.sku,
+        images: product.images, // Original images for detail view
+        thumbnailUrls: product.images.map((img) => getThumbnailUrl(img)), // Thumbnail URLs for list view
+        status: product.status,
+        featured: product.featured,
+        isOfficial: product.isOfficial,
+        warrantyPeriod: product.warrantyPeriod,
+        rating: product.rating,
+        reviewCount: product.reviewCount,
+        soldCount: product.soldCount,
+        createdAt: product.createdAt,
+        updatedAt: product.updatedAt,
+      };
+    });
+
+    return createPaginatedResponse(transformedProducts, page, limit, total);
   }
 
   async findOne(id: string): Promise<Product> {
     const product = await this.em.findOne(
       Product,
       { id },
-      { populate: ['category'] },
+      { populate: ['category', 'subcategory'] },
     );
 
     if (!product) {
@@ -118,7 +162,25 @@ export class ProductsService {
       product.category = category;
     }
 
-    this.em.assign(product, updateProductDto);
+    // Update subcategory if provided
+    if (updateProductDto.subcategoryId !== undefined) {
+      if (updateProductDto.subcategoryId === null || updateProductDto.subcategoryId === '') {
+        product.subcategory = undefined;
+      } else {
+        const subcategory = await this.em.findOne(Category, { id: updateProductDto.subcategoryId });
+        if (!subcategory) {
+          throw new NotFoundException('Subcategory not found');
+        }
+        // Verify subcategory is a child of the main category
+        if (subcategory.parent?.id !== product.category.id) {
+          throw new BadRequestException('Subcategory must be a child of the selected category');
+        }
+        product.subcategory = subcategory;
+      }
+    }
+
+    const { categoryId, subcategoryId, ...updateData } = updateProductDto;
+    this.em.assign(product, updateData);
     await this.em.flush();
 
     return product;

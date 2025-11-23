@@ -29,9 +29,9 @@ export function getValidNextStatuses(currentStatus: OrderStatus): OrderStatus[] 
   const statusFlow: Record<OrderStatus, OrderStatus[]> = {
     pending: ['confirmed', 'cancelled'],
     confirmed: ['preparing', 'cancelled'],
-    preparing: ['ready_for_pickup', 'cancelled'],
-    ready_for_pickup: ['completed', 'cancelled'],
-    completed: ['returned'],
+    preparing: ['ready', 'cancelled'],
+    ready: ['received', 'cancelled'],
+    received: ['returned'],
     cancelled: [],
     returned: [],
   };
@@ -61,8 +61,8 @@ export function getStatusColor(status: OrderStatus): string {
     pending: 'bg-amber-500/10 text-amber-600 border-amber-200',
     confirmed: 'bg-blue-500/10 text-blue-600 border-blue-200',
     preparing: 'bg-purple-500/10 text-purple-600 border-purple-200',
-    ready_for_pickup: 'bg-cyan-500/10 text-cyan-600 border-cyan-200',
-    completed: 'bg-emerald-500/10 text-emerald-600 border-emerald-200',
+    ready: 'bg-cyan-500/10 text-cyan-600 border-cyan-200',
+    received: 'bg-emerald-500/10 text-emerald-600 border-emerald-200',
     cancelled: 'bg-rose-500/10 text-rose-600 border-rose-200',
     returned: 'bg-orange-500/10 text-orange-600 border-orange-200',
   };
@@ -78,8 +78,8 @@ export function getStatusLabel(status: OrderStatus): string {
     pending: 'Chờ xác nhận',
     confirmed: 'Đã xác nhận',
     preparing: 'Đang chuẩn bị',
-    ready_for_pickup: 'Sẵn sàng nhận hàng',
-    completed: 'Đã hoàn thành',
+    ready: 'Sẵn sàng nhận hàng',
+    received: 'Đã hoàn thành',
     cancelled: 'Đã hủy',
     returned: 'Hoàn trả',
   };
@@ -107,8 +107,8 @@ export function getStatusIcon(status: OrderStatus): string {
     pending: '⏳',
     confirmed: '✅',
     preparing: '📦',
-    ready_for_pickup: '🏪',
-    completed: '✨',
+    ready: '🏪',
+    received: '✨',
     cancelled: '❌',
     returned: '↩️',
   };

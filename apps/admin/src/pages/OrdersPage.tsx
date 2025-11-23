@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -9,8 +9,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Eye, MoreHorizontal, Download, Plus, Calendar } from 'lucide-react';
-import { orders } from '@/data/orders';
+import { Search, Eye, MoreHorizontal, Download, Plus, Calendar, X, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import {
   DropdownMenu,
@@ -28,9 +27,30 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import type { Order, OrderStatus } from '@/types';
+import type { Order, OrderStatus, Product } from '@/types';
 import { getStatusColor, getStatusLabel, formatCurrency, getDeliveryMethodLabel } from '@/lib/order-utils';
 import { OrderDetailsSheet } from '@/components/orders/OrderDetailsSheet';
+import { ordersService } from '@/services/orders.service';
+import { productsService } from '@/services/products.service';
+import { storesService, type Store } from '@/services/stores.service';
+import axios from 'axios';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 export function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,26 +59,123 @@ export function OrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [ordersData, setOrdersData] = useState<Order[]>(orders);
+  const [ordersData, setOrdersData] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [ordersPagination, setOrdersPagination] = useState<{ total: number; totalPages: number; page: number; limit: number } | null>(null);
   const itemsPerPage = 10;
 
-  // Filter orders
-  const filteredOrders = ordersData.filter((order) => {
-    const matchesSearch = 
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerPhone.includes(searchTerm);
-    
-    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+  // Create order form state
+  const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [stores, setStores] = useState<Store[]>([]);
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerNotes, setCustomerNotes] = useState('');
+  const [selectedStoreId, setSelectedStoreId] = useState('');
+  const [selectedProducts, setSelectedProducts] = useState<Array<{ productId: string; quantity: number; product: Product }>>([]);
+  const [voucherCode, setVoucherCode] = useState('');
+  const [isLoadingProductsStores, setIsLoadingProductsStores] = useState(false);
+  const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
+  const [productSearchTerm, setProductSearchTerm] = useState('');
+  const [productPage, setProductPage] = useState(1);
+  const [productPagination, setProductPagination] = useState<{ total: number; totalPages: number; page: number; limit: number } | null>(null);
+  
+  // Date range filter
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [tempStartDate, setTempStartDate] = useState<string>('');
+  const [tempEndDate, setTempEndDate] = useState<string>('');
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
-    return matchesSearch && matchesStatus;
-  });
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchOrders(controller.signal);
+    return () => controller.abort();
+  }, [statusFilter, currentPage, searchTerm, startDate, endDate]);
 
-  // Pagination
-  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+  useEffect(() => {
+    if (isCreateSheetOpen) {
+      const controller = new AbortController();
+      fetchProductsAndStores(controller.signal);
+      return () => controller.abort();
+    }
+  }, [isCreateSheetOpen]);
+
+  useEffect(() => {
+    if (isProductDialogOpen) {
+      const controller = new AbortController();
+      fetchProductsForDialog(controller.signal);
+      return () => controller.abort();
+    } else {
+      // Reset when dialog closes
+      setProductPage(1);
+      setProductSearchTerm('');
+    }
+  }, [isProductDialogOpen, productPage, productSearchTerm]);
+
+  const fetchProductsForDialog = async (signal?: AbortSignal) => {
+    try {
+      setIsLoadingProductsStores(true);
+      const productsRes = await productsService.getAll({ 
+        page: productPage, 
+        limit: 12,
+        search: productSearchTerm || undefined,
+      }, signal);
+      setProducts(productsRes.products || []);
+      setProductPagination(productsRes.pagination || null);
+    } catch (err) {
+      if (axios.isCancel(err)) return;
+      console.error('Failed to load products:', err);
+      setError('Không thể tải danh sách sản phẩm');
+    } finally {
+      setIsLoadingProductsStores(false);
+    }
+  };
+
+  const fetchProductsAndStores = async (signal?: AbortSignal) => {
+    try {
+      setIsLoadingProductsStores(true);
+      const storesRes = await storesService.getAll({ page: 1, limit: 100 }, signal);
+      setStores(storesRes.stores || []);
+    } catch (err) {
+      if (axios.isCancel(err)) return;
+      console.error('Failed to load stores:', err);
+      setError('Không thể tải danh sách cửa hàng');
+    } finally {
+      setIsLoadingProductsStores(false);
+    }
+  };
+
+  const fetchOrders = async (signal?: AbortSignal) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await ordersService.getAll({
+        page: currentPage,
+        limit: itemsPerPage,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        search: searchTerm || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+      }, signal);
+      // Transform API response to match frontend Order type
+      const transformed = response.orders.map((order: any) => ({
+        ...order,
+        orderDate: order.createdAt || order.orderDate,
+        pickupLocation: order.pickupStore || order.pickupLocation,
+      }));
+      setOrdersData(transformed);
+      setOrdersPagination(response.pagination || null);
+    } catch (err: any) {
+      if (axios.isCancel(err)) return;
+      setError(err?.message || 'Failed to load orders');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Reset to page 1 when filters change
   const handleFilterChange = () => {
@@ -72,34 +189,115 @@ export function OrdersPage() {
   };
 
   // Update order status
-  const handleStatusUpdate = (orderId: string, newStatus: OrderStatus, notes: string) => {
-    setOrdersData(prevOrders => 
-      prevOrders.map(order => {
-        if (order.id === orderId) {
-          const updatedOrder = {
-            ...order,
-            status: newStatus,
-            statusHistory: [
-              ...order.statusHistory,
-              {
-                status: newStatus,
-                timestamp: new Date().toISOString(),
-                notes: notes || undefined,
-              },
-            ],
-          };
-          // Update selected order if it's the one being updated
-          if (selectedOrder?.id === orderId) {
-            setSelectedOrder(updatedOrder);
-          }
-          return updatedOrder;
-        }
-        return order;
-      })
-    );
+  const handleStatusUpdate = async (orderId: string, newStatus: OrderStatus, notes: string) => {
+    try {
+      const updatedOrder = await ordersService.updateStatus(orderId, {
+        status: newStatus,
+        notes,
+      });
+      // Update local state
+      setOrdersData(prevOrders => 
+        prevOrders.map(order => 
+          order.id === orderId ? { ...order, ...updatedOrder } : order
+        )
+      );
+      // Update selected order if it's the one being updated
+      if (selectedOrder?.id === orderId) {
+        setSelectedOrder({ ...selectedOrder, ...updatedOrder });
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Failed to update order status');
+    }
+  };
 
-    // Show success message (you can replace with toast notification)
-    console.log(`Đơn hàng ${orderId} đã được cập nhật sang trạng thái: ${newStatus}`);
+  // Add product to order
+  const handleAddProduct = (product: Product) => {
+    const existing = selectedProducts.find(sp => sp.productId === product.id);
+    if (existing) {
+      setSelectedProducts(selectedProducts.map(sp =>
+        sp.productId === product.id ? { ...sp, quantity: sp.quantity + 1 } : sp
+      ));
+    } else {
+      setSelectedProducts([...selectedProducts, { productId: product.id, quantity: 1, product }]);
+    }
+    setIsProductDialogOpen(false);
+    setProductSearchTerm('');
+  };
+
+  // Filter products that are in stock
+  const availableProducts = products.filter(p => p.stock > 0);
+
+  // Remove product from order
+  const handleRemoveProduct = (productId: string) => {
+    setSelectedProducts(selectedProducts.filter(sp => sp.productId !== productId));
+  };
+
+  // Update product quantity
+  const handleUpdateQuantity = (productId: string, quantity: number) => {
+    if (quantity <= 0) {
+      handleRemoveProduct(productId);
+      return;
+    }
+    setSelectedProducts(selectedProducts.map(sp =>
+      sp.productId === productId ? { ...sp, quantity } : sp
+    ));
+  };
+
+  // Calculate totals
+  const calculateTotals = () => {
+    const subtotal = selectedProducts.reduce((sum, sp) => {
+      return sum + (sp.product.price * sp.quantity);
+    }, 0);
+    // TODO: Apply voucher discount if voucherCode is provided
+    const discount = 0;
+    const total = subtotal - discount;
+    return { subtotal, discount, total };
+  };
+
+  // Reset create order form
+  const resetCreateForm = () => {
+    setCustomerName('');
+    setCustomerPhone('');
+    setCustomerEmail('');
+    setCustomerNotes('');
+    setSelectedStoreId('');
+    setSelectedProducts([]);
+    setVoucherCode('');
+  };
+
+  // Create order
+  const handleCreateOrder = async () => {
+    if (!customerName || !customerPhone || !selectedStoreId || selectedProducts.length === 0) {
+      setError('Vui lòng điền đầy đủ thông tin');
+      return;
+    }
+
+    try {
+      setIsCreating(true);
+      setError(null);
+
+      const orderData = {
+        customerName,
+        customerPhone,
+        customerEmail: customerEmail || undefined,
+        notes: customerNotes || undefined,
+        pickupStoreId: selectedStoreId,
+        items: selectedProducts.map(sp => ({
+          productId: sp.productId,
+          quantity: sp.quantity,
+        })),
+        voucherCode: voucherCode || undefined,
+      };
+
+      await ordersService.create(orderData);
+      setIsCreateSheetOpen(false);
+      resetCreateForm();
+      await fetchOrders();
+    } catch (err: any) {
+      setError(err?.message || 'Failed to create order');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   return (
@@ -117,11 +315,15 @@ export function OrdersPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
+          {/* Temporarily hidden - Excel export feature */}
+          {/* <Button variant="outline">
             <Download className="mr-2 h-4 w-4" />
             Xuất Excel
-          </Button>
-          <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
+          </Button> */}
+          <Button 
+            className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+            onClick={() => setIsCreateSheetOpen(true)}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Tạo đơn hàng
           </Button>
@@ -139,7 +341,7 @@ export function OrdersPage() {
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
-              handleFilterChange();
+              setCurrentPage(1); // Reset to page 1 when search changes
             }}
           />
         </div>
@@ -149,7 +351,7 @@ export function OrdersPage() {
           value={statusFilter} 
           onValueChange={(value) => {
             setStatusFilter(value as OrderStatus | 'all');
-            handleFilterChange();
+            setCurrentPage(1); // Reset to page 1 when filter changes
           }}
         >
           <SelectTrigger className="w-full sm:w-[180px]">
@@ -160,43 +362,220 @@ export function OrdersPage() {
             <SelectItem value="pending">Chờ xác nhận</SelectItem>
             <SelectItem value="confirmed">Đã xác nhận</SelectItem>
             <SelectItem value="preparing">Đang chuẩn bị</SelectItem>
-            <SelectItem value="ready_for_pickup">Sẵn sàng nhận</SelectItem>
-            <SelectItem value="shipping">Đang giao</SelectItem>
-            <SelectItem value="delivered">Đã giao</SelectItem>
+            <SelectItem value="ready">Sẵn sàng nhận</SelectItem>
+            <SelectItem value="received">Đã nhận hàng</SelectItem>
             <SelectItem value="cancelled">Đã hủy</SelectItem>
             <SelectItem value="returned">Hoàn trả</SelectItem>
           </SelectContent>
         </Select>
 
-        {/* Date Range (placeholder for now) */}
-        <Button variant="outline" className="w-full sm:w-auto">
-          <Calendar className="mr-2 h-4 w-4" />
-          Chọn ngày
-        </Button>
+        {/* Date Range Picker */}
+        <DropdownMenu 
+          open={isDatePickerOpen} 
+          onOpenChange={(open) => {
+            setIsDatePickerOpen(open);
+            if (open) {
+              // Initialize temp values when opening
+              setTempStartDate(startDate);
+              setTempEndDate(endDate);
+            }
+          }}
+        >
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="w-full sm:w-auto relative">
+              <Calendar className="mr-2 h-4 w-4 shrink-0" />
+              <span className="flex-1 text-left">
+                {startDate || endDate 
+                  ? `${startDate ? new Date(startDate).toLocaleDateString('vi-VN') : '...'} - ${endDate ? new Date(endDate).toLocaleDateString('vi-VN') : '...'}`
+                  : 'Chọn ngày'
+                }
+              </span>
+              {(startDate || endDate) && (
+                <X 
+                  className="ml-2 h-4 w-4 shrink-0" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setStartDate('');
+                    setEndDate('');
+                    setTempStartDate('');
+                    setTempEndDate('');
+                    setCurrentPage(1);
+                  }}
+                />
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-auto p-0" align="end" onCloseAutoFocus={(e) => e.preventDefault()}>
+            <div className="p-4">
+              {/* Quick Select Buttons */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => {
+                    const today = new Date();
+                    const start = new Date(today);
+                    start.setDate(today.getDate() - 6); // 7 days ago
+                    setTempStartDate(start.toISOString().split('T')[0]);
+                    setTempEndDate(today.toISOString().split('T')[0]);
+                  }}
+                >
+                  7 ngày qua
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => {
+                    const today = new Date();
+                    const start = new Date(today);
+                    start.setDate(today.getDate() - 29); // 30 days ago
+                    setTempStartDate(start.toISOString().split('T')[0]);
+                    setTempEndDate(today.toISOString().split('T')[0]);
+                  }}
+                >
+                  30 ngày qua
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => {
+                    const today = new Date();
+                    const start = new Date(today.getFullYear(), today.getMonth(), 1);
+                    setTempStartDate(start.toISOString().split('T')[0]);
+                    setTempEndDate(today.toISOString().split('T')[0]);
+                  }}
+                >
+                  Tháng này
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => {
+                    const today = new Date();
+                    const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    const end = new Date(today.getFullYear(), today.getMonth(), 0);
+                    setTempStartDate(start.toISOString().split('T')[0]);
+                    setTempEndDate(end.toISOString().split('T')[0]);
+                  }}
+                >
+                  Tháng trước
+                </Button>
+              </div>
+
+              <div className="border-t pt-4 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="start-date" className="text-sm font-medium">Từ ngày</Label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <Input
+                        id="start-date"
+                        type="date"
+                        value={tempStartDate}
+                        onChange={(e) => {
+                          setTempStartDate(e.target.value);
+                        }}
+                        max={tempEndDate || undefined}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="end-date" className="text-sm font-medium">Đến ngày</Label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <Input
+                        id="end-date"
+                        type="date"
+                        value={tempEndDate}
+                        onChange={(e) => {
+                          setTempEndDate(e.target.value);
+                        }}
+                        min={tempStartDate || undefined}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Selected Range Display */}
+                {(tempStartDate || tempEndDate) && (
+                  <div className="bg-muted/50 rounded-md p-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">Khoảng thời gian:</span>
+                      <span className="font-medium">
+                        {tempStartDate 
+                          ? new Date(tempStartDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                          : '...'
+                        }
+                        {' - '}
+                        {tempEndDate 
+                          ? new Date(tempEndDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                          : '...'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      setTempStartDate('');
+                      setTempEndDate('');
+                    }}
+                  >
+                    Xóa
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      setStartDate(tempStartDate);
+                      setEndDate(tempEndDate);
+                      setCurrentPage(1);
+                      setIsDatePickerOpen(false);
+                    }}
+                  >
+                    Áp dụng
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-card p-4 rounded-xl border border-border">
           <p className="text-sm text-muted-foreground">Tổng đơn</p>
-          <p className="text-2xl font-bold mt-1">{orders.length}</p>
+          <p className="text-2xl font-bold mt-1">{ordersData.length}</p>
         </div>
         <div className="bg-card p-4 rounded-xl border border-border">
           <p className="text-sm text-muted-foreground">Chờ xử lý</p>
           <p className="text-2xl font-bold mt-1 text-amber-600">
-            {orders.filter(o => o.status === 'pending').length}
+            {ordersData.filter(o => o.status === 'pending').length}
           </p>
         </div>
         <div className="bg-card p-4 rounded-xl border border-border">
           <p className="text-sm text-muted-foreground">Đang xử lý</p>
           <p className="text-2xl font-bold mt-1 text-blue-600">
-            {orders.filter(o => o.status === 'confirmed' || o.status === 'preparing' || o.status === 'ready_for_pickup').length}
+            {ordersData.filter(o => o.status === 'confirmed' || o.status === 'preparing' || o.status === 'ready').length}
           </p>
         </div>
         <div className="bg-card p-4 rounded-xl border border-border">
           <p className="text-sm text-muted-foreground">Hoàn thành</p>
           <p className="text-2xl font-bold mt-1 text-emerald-600">
-            {orders.filter(o => o.status === 'completed').length}
+            {ordersData.filter(o => o.status === 'received').length}
           </p>
         </div>
       </div>
@@ -217,17 +596,23 @@ export function OrdersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedOrders.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  Loading orders...
+                </TableCell>
+              </TableRow>
+            ) : ordersData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   Không tìm thấy đơn hàng nào
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedOrders.map((order) => (
+              ordersData.map((order) => (
                 <TableRow key={order.id} className="group">
                   <TableCell className="font-medium font-mono text-sm">
-                    {order.id}
+                    {order.orderNumber || order.id}
                   </TableCell>
                   <TableCell>
                     <div className="font-medium text-foreground">{order.customerName}</div>
@@ -243,11 +628,11 @@ export function OrdersPage() {
                     })}
                   </TableCell>
                   <TableCell className="text-sm">
-                    {order.items.length} sản phẩm
+                    {order.items?.length || 0} sản phẩm
                   </TableCell>
                   <TableCell>
                     <span className="text-xs px-2 py-1 rounded-full bg-muted">
-                      {order.pickupLocation.name}
+                      {order.pickupLocation?.name || 'N/A'}
                     </span>
                   </TableCell>
                   <TableCell className="font-semibold">
@@ -279,10 +664,11 @@ export function OrdersPage() {
                           <Eye className="mr-2 h-4 w-4" />
                           Xem chi tiết
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        {/* Temporarily hidden - Print invoice feature */}
+                        {/* <DropdownMenuItem>
                           <Download className="mr-2 h-4 w-4" />
                           In hóa đơn
-                        </DropdownMenuItem>
+                        </DropdownMenuItem> */}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -293,38 +679,51 @@ export function OrdersPage() {
         </Table>
 
         {/* Pagination */}
-        {totalPages > 1 && (
+        {ordersPagination && ordersPagination.totalPages > 1 && (
           <div className="flex items-center justify-between px-6 py-4 border-t border-border">
             <div className="text-sm text-muted-foreground">
-              Hiển thị {startIndex + 1} - {Math.min(endIndex, filteredOrders.length)} trong tổng số {filteredOrders.length} đơn hàng
+              Trang {ordersPagination.page} / {ordersPagination.totalPages} ({ordersPagination.total} đơn hàng)
             </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
+                disabled={currentPage === 1 || isLoading}
               >
                 Trước
               </Button>
               <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentPage(page)}
-                    className="w-8 h-8 p-0"
-                  >
-                    {page}
-                  </Button>
-                ))}
+                {Array.from({ length: Math.min(5, ordersPagination.totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (ordersPagination.totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= ordersPagination.totalPages - 2) {
+                    pageNum = ordersPagination.totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                      disabled={isLoading}
+                      className="w-8 h-8 p-0"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(prev => Math.min(ordersPagination.totalPages, prev + 1))}
+                disabled={currentPage === ordersPagination.totalPages || isLoading}
               >
                 Sau
               </Button>
@@ -340,6 +739,336 @@ export function OrdersPage() {
         onOpenChange={setDetailsOpen}
         onStatusUpdate={handleStatusUpdate}
       />
+
+      {/* Create Order Sheet */}
+      <Sheet open={isCreateSheetOpen} onOpenChange={(open) => {
+        setIsCreateSheetOpen(open);
+        if (!open) resetCreateForm();
+      }}>
+        <SheetContent className="sm:max-w-2xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Tạo đơn hàng mới</SheetTitle>
+            <SheetDescription>
+              Nhập thông tin khách hàng và chọn sản phẩm để tạo đơn hàng
+            </SheetDescription>
+          </SheetHeader>
+          <div className="grid gap-6 py-6">
+            {/* Customer Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Thông tin khách hàng</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="customerName">Tên khách hàng <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="customerName"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Nguyễn Văn A"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="customerPhone">Số điện thoại <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="customerPhone"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    placeholder="0901234567"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="customerEmail">Email</Label>
+                  <Input
+                    id="customerEmail"
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    placeholder="customer@example.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pickupStore">Cửa hàng nhận <span className="text-destructive">*</span></Label>
+                  <Select value={selectedStoreId} onValueChange={setSelectedStoreId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn cửa hàng" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {stores.map((store) => (
+                        <SelectItem key={store.id} value={store.id}>
+                          {store.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="customerNotes">Ghi chú</Label>
+                <Textarea
+                  id="customerNotes"
+                  value={customerNotes}
+                  onChange={(e) => setCustomerNotes(e.target.value)}
+                  placeholder="Ghi chú đặc biệt..."
+                  className="min-h-[80px]"
+                />
+              </div>
+            </div>
+
+            {/* Products Selection */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Sản phẩm</h3>
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsProductDialogOpen(true)}
+                  disabled={isLoadingProductsStores}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Thêm sản phẩm
+                </Button>
+              </div>
+
+              {selectedProducts.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                  Chưa có sản phẩm nào
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {selectedProducts.map((sp) => (
+                    <div key={sp.productId} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="font-medium">{sp.product.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {formatCurrency(sp.product.price)} x {sp.quantity} = {formatCurrency(sp.product.price * sp.quantity)}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleUpdateQuantity(sp.productId, sp.quantity - 1)}
+                        >
+                          -
+                        </Button>
+                        <Input
+                          type="number"
+                          value={sp.quantity}
+                          onChange={(e) => handleUpdateQuantity(sp.productId, parseInt(e.target.value) || 0)}
+                          className="w-16 text-center"
+                          min={1}
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleUpdateQuantity(sp.productId, sp.quantity + 1)}
+                        >
+                          +
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveProduct(sp.productId)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Voucher */}
+            <div className="space-y-2">
+              <Label htmlFor="voucherCode">Mã giảm giá (tùy chọn)</Label>
+              <Input
+                id="voucherCode"
+                value={voucherCode}
+                onChange={(e) => setVoucherCode(e.target.value)}
+                placeholder="Nhập mã voucher"
+              />
+            </div>
+
+            {/* Totals */}
+            {selectedProducts.length > 0 && (
+              <div className="space-y-2 p-4 bg-muted rounded-lg">
+                <div className="flex justify-between">
+                  <span>Tạm tính:</span>
+                  <span>{formatCurrency(calculateTotals().subtotal)}</span>
+                </div>
+                {calculateTotals().discount > 0 && (
+                  <div className="flex justify-between text-destructive">
+                    <span>Giảm giá:</span>
+                    <span>-{formatCurrency(calculateTotals().discount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                  <span>Tổng cộng:</span>
+                  <span>{formatCurrency(calculateTotals().total)}</span>
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div className="p-3 bg-destructive/10 text-destructive rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+          </div>
+          <SheetFooter>
+            <Button variant="outline" onClick={() => setIsCreateSheetOpen(false)} disabled={isCreating}>
+              Hủy
+            </Button>
+            <Button onClick={handleCreateOrder} disabled={isCreating || selectedProducts.length === 0}>
+              {isCreating ? 'Đang tạo...' : 'Tạo đơn hàng'}
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      {/* Product Selection Dialog */}
+      <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Chọn sản phẩm</DialogTitle>
+            <DialogDescription>
+              Tìm kiếm và chọn sản phẩm để thêm vào đơn hàng
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Tìm kiếm theo tên, SKU, thương hiệu..."
+                className="pl-10"
+                value={productSearchTerm}
+                onChange={(e) => {
+                  setProductSearchTerm(e.target.value);
+                  setProductPage(1); // Reset to page 1 when search changes
+                }}
+              />
+            </div>
+
+            {/* Products Grid */}
+            {isLoadingProductsStores ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Đang tải sản phẩm...
+              </div>
+            ) : availableProducts.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                {productSearchTerm ? 'Không tìm thấy sản phẩm' : 'Chưa có sản phẩm nào'}
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {availableProducts.map((product) => {
+                  const isSelected = selectedProducts.some(sp => sp.productId === product.id);
+                  return (
+                    <button
+                      key={product.id}
+                      type="button"
+                      onClick={() => handleAddProduct(product)}
+                      disabled={isSelected}
+                      className={cn(
+                        "relative p-3 border rounded-lg hover:border-primary transition-all text-left",
+                        isSelected && "opacity-50 cursor-not-allowed bg-muted"
+                      )}
+                    >
+                      {/* Product Image */}
+                      <div className="aspect-square w-full rounded-lg overflow-hidden bg-muted mb-2">
+                        <img
+                          src={product.image || product.images?.[0] || '/placeholder.png'}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/placeholder.png';
+                          }}
+                        />
+                      </div>
+                      
+                      {/* Product Info */}
+                      <div className="space-y-1">
+                        <div className="font-medium text-sm line-clamp-2">{product.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {product.sku && `SKU: ${product.sku}`}
+                        </div>
+                        <div className="font-semibold text-primary">
+                          {formatCurrency(product.price)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Tồn kho: {product.stock}
+                        </div>
+                      </div>
+
+                      {/* Selected Badge */}
+                      {isSelected && (
+                        <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
+                          Đã chọn
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+                </div>
+
+                {/* Pagination */}
+                {productPagination && productPagination.totalPages > 1 && (
+                  <div className="flex items-center justify-between pt-4 border-t">
+                    <div className="text-sm text-muted-foreground">
+                      Trang {productPagination.page} / {productPagination.totalPages} ({productPagination.total} sản phẩm)
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setProductPage(prev => Math.max(1, prev - 1))}
+                        disabled={productPage === 1 || isLoadingProductsStores}
+                      >
+                        Trước
+                      </Button>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, productPagination.totalPages) }, (_, i) => {
+                          let pageNum;
+                          if (productPagination.totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (productPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (productPage >= productPagination.totalPages - 2) {
+                            pageNum = productPagination.totalPages - 4 + i;
+                          } else {
+                            pageNum = productPage - 2 + i;
+                          }
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={productPage === pageNum ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setProductPage(pageNum)}
+                              disabled={isLoadingProductsStores}
+                              className="w-8 h-8 p-0"
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setProductPage(prev => Math.min(productPagination.totalPages, prev + 1))}
+                        disabled={productPage === productPagination.totalPages || isLoadingProductsStores}
+                      >
+                        Sau
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

@@ -1,14 +1,20 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DiskStorageService } from './services/disk-storage.service';
+import { MinioStorageService } from './services/minio-storage.service';
 import { UploadResultDto } from './dto/upload-result.dto';
 
 @Injectable()
 export class UploadService {
+  private readonly storageType: string;
+
   constructor(
     private readonly configService: ConfigService,
     private readonly diskStorage: DiskStorageService,
-  ) {}
+    private readonly minioStorage: MinioStorageService,
+  ) {
+    this.storageType = this.configService.get<string>('upload.storageType') || 'disk';
+  }
 
   async uploadImage(
     file: Express.Multer.File,
@@ -31,12 +37,20 @@ export class UploadService {
       throw new BadRequestException(`File size exceeds ${maxSize / 1024 / 1024}MB limit`);
     }
 
-    // Save file
-    return this.diskStorage.saveFile(file, type);
+    // Save file using configured storage
+    if (this.storageType === 'minio') {
+      return this.minioStorage.saveFile(file, type);
+    } else {
+      return this.diskStorage.saveFile(file, type);
+    }
   }
 
   async deleteImage(filePath: string): Promise<void> {
-    await this.diskStorage.deleteFile(filePath);
+    if (this.storageType === 'minio') {
+      await this.minioStorage.deleteFile(filePath);
+    } else {
+      await this.diskStorage.deleteFile(filePath);
+    }
   }
 }
 

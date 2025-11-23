@@ -41,9 +41,6 @@ export class Category {
   @OneToMany(() => Category, (category) => category.parent)
   children = new Collection<Category>(this);
 
-  @Property({ type: 'json', nullable: true })
-  subcategories?: string[];
-
   @Enum(() => CategoryStatus)
   status: CategoryStatus = CategoryStatus.ACTIVE;
 

@@ -80,6 +80,9 @@ export class Order {
   voucherCode?: string;
 
   @Property({ type: 'json', nullable: true })
+  receiptImages?: string[]; // Array of receipt image URLs
+
+  @Property({ type: 'json', nullable: true })
   statusHistory?: Array<{
     status: string;
     note: string;

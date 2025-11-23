@@ -20,38 +20,39 @@ export class StoresService {
   async findAll(query: QueryStoreDto) {
     const { page = 1, limit = 20, search, status, allowPickup, sortBy = 'created_at', sortOrder = 'desc' } = query;
 
-    const qb = this.em.createQueryBuilder(Store, 's');
+    const where: any = {};
 
     // Search
     if (search) {
-      qb.andWhere({
-        $or: [
-          { name: { $ilike: `%${search}%` } },
-          { address: { $ilike: `%${search}%` } },
-          { phone: { $ilike: `%${search}%` } },
-        ],
-      });
+      where.$or = [
+        { name: { $ilike: `%${search}%` } },
+        { address: { $ilike: `%${search}%` } },
+        { phone: { $ilike: `%${search}%` } },
+      ];
     }
 
     // Filter by status
     if (status) {
-      qb.andWhere({ status });
+      where.status = status;
     }
 
     // Filter by allowPickup
     if (allowPickup !== undefined) {
-      qb.andWhere({ allowPickup });
+      where.allowPickup = allowPickup;
     }
 
     // Sort
     const orderByField = sortBy === 'created_at' ? 'createdAt' : sortBy;
-    qb.orderBy({ [orderByField]: sortOrder === 'asc' ? 'ASC' : 'DESC' });
+    const orderBy: any = { [orderByField]: sortOrder === 'asc' ? 'ASC' : 'DESC' };
 
     // Pagination
     const offset = (page - 1) * limit;
-    qb.limit(limit).offset(offset);
 
-    const [stores, total] = await qb.getResultAndCount();
+    const [stores, total] = await this.em.findAndCount(Store, where, {
+      orderBy,
+      limit,
+      offset,
+    });
 
     return createPaginatedResponse(stores, page, limit, total);
   }

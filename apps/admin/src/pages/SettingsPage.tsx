@@ -1,13 +1,62 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'motion/react';
-import { Save, Store, Truck, CreditCard, FileText } from 'lucide-react';
+import { Save, Store, CreditCard, FileText } from 'lucide-react';
+import { settingsService } from '@/services/settings.service';
 
 export function SettingsPage() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [settings, setSettings] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchSettings(controller.signal);
+    return () => controller.abort();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      setIsLoading(true);
+      const data = await settingsService.getAll();
+      // API trả về object Record<string, any>, không phải array
+      const settingsMap: Record<string, string> = Array.isArray(data) 
+        ? data.reduce((acc: Record<string, string>, setting: any) => {
+            acc[setting.key] = setting.value;
+            return acc;
+          }, {})
+        : (data as Record<string, string>);
+      setSettings(settingsMap);
+      // Initialize form state from settings
+      setStoreName(settingsMap.store_name || '');
+      setStorePhone(settingsMap.store_phone || '');
+      setStoreEmail(settingsMap.store_email || '');
+      setStoreAddress(settingsMap.store_address || '');
+      setStoreDescription(settingsMap.store_description || '');
+      setFacebookLink(settingsMap.facebook_link || '');
+      setInstagramLink(settingsMap.instagram_link || '');
+      setTelegramLink(settingsMap.telegram_link || '');
+      setYoutubeLink(settingsMap.youtube_link || '');
+      setBankAccount(settingsMap.bank_account || '');
+      setAccountName(settingsMap.account_name || '');
+      setBankName(settingsMap.bank_name || '');
+      setBankBranch(settingsMap.bank_branch || '');
+      setTransferNote(settingsMap.transfer_note || '');
+      setWarrantyPolicy(settingsMap.warranty_policy || '');
+      setReturnPolicy(settingsMap.return_policy || '');
+      setShoppingGuide(settingsMap.shopping_guide || '');
+      setFaq(settingsMap.faq || '');
+    } catch (err: any) {
+      setError(err?.message || 'Failed to load settings');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   // Store Info
   const [storeName, setStoreName] = useState('M Tech Store');
   const [storeLogo, setStoreLogo] = useState('');
@@ -20,9 +69,6 @@ export function SettingsPage() {
   const [telegramLink, setTelegramLink] = useState('');
   const [youtubeLink, setYoutubeLink] = useState('');
 
-  // Pickup Locations
-  const [preparationTime, setPreparationTime] = useState('1-2 ngày làm việc');
-  const [autoNotify, setAutoNotify] = useState(true);
 
   // Payment
   const [bankAccount, setBankAccount] = useState('');
@@ -37,9 +83,45 @@ export function SettingsPage() {
   const [shoppingGuide, setShoppingGuide] = useState('');
   const [faq, setFaq] = useState('');
 
-  const handleSave = () => {
-    // Save logic here
-    console.log('Settings saved');
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      setError(null);
+
+      const settingsToUpdate = [
+        { key: 'store_name', value: storeName },
+        { key: 'store_phone', value: storePhone },
+        { key: 'store_email', value: storeEmail },
+        { key: 'store_address', value: storeAddress },
+        { key: 'store_description', value: storeDescription },
+        { key: 'facebook_link', value: facebookLink },
+        { key: 'instagram_link', value: instagramLink },
+        { key: 'telegram_link', value: telegramLink },
+        { key: 'youtube_link', value: youtubeLink },
+        { key: 'bank_account', value: bankAccount },
+        { key: 'account_name', value: accountName },
+        { key: 'bank_name', value: bankName },
+        { key: 'bank_branch', value: bankBranch },
+        { key: 'transfer_note', value: transferNote },
+        { key: 'warranty_policy', value: warrantyPolicy },
+        { key: 'return_policy', value: returnPolicy },
+        { key: 'shopping_guide', value: shoppingGuide },
+        { key: 'faq', value: faq },
+      ];
+
+      // Update all settings
+      await Promise.all(
+        settingsToUpdate.map(({ key, value }) =>
+          settingsService.update(key, { value })
+        )
+      );
+
+      await fetchSettings();
+    } catch (err: any) {
+      setError(err?.message || 'Failed to save settings');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -55,15 +137,22 @@ export function SettingsPage() {
         </p>
       </div>
 
+      {error && (
+        <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="text-center py-8 text-muted-foreground">
+          Loading settings...
+        </div>
+      ) : (
       <Tabs defaultValue="store" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="store">
             <Store className="w-4 h-4 mr-2" />
             Thông tin cửa hàng
-          </TabsTrigger>
-          <TabsTrigger value="pickup">
-            <Truck className="w-4 h-4 mr-2" />
-            Địa điểm nhận hàng
           </TabsTrigger>
           <TabsTrigger value="payment">
             <CreditCard className="w-4 h-4 mr-2" />
@@ -169,39 +258,6 @@ export function SettingsPage() {
                   />
                 </div>
               </div>
-            </div>
-
-            <Button onClick={handleSave} className="w-full sm:w-auto">
-              <Save className="mr-2 h-4 w-4" />
-              Lưu thay đổi
-            </Button>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="pickup" className="space-y-6">
-          <div className="bg-card p-6 rounded-xl shadow-sm border border-border space-y-6">
-            <h3 className="text-xl font-semibold">Cấu hình địa điểm nhận hàng</h3>
-            
-            <div className="space-y-2">
-              <Label>Thời gian chuẩn bị hàng dự kiến</Label>
-              <Input
-                value={preparationTime}
-                onChange={(e) => setPreparationTime(e.target.value)}
-                placeholder="1-2 ngày làm việc"
-              />
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="autoNotify"
-                checked={autoNotify}
-                onChange={(e) => setAutoNotify(e.target.checked)}
-                className="w-4 h-4"
-              />
-              <Label htmlFor="autoNotify" className="font-normal cursor-pointer">
-                Thông báo tự động khi hàng sẵn sàng
-              </Label>
             </div>
 
             <Button onClick={handleSave} className="w-full sm:w-auto">
@@ -322,13 +378,14 @@ export function SettingsPage() {
               </div>
             </div>
 
-            <Button onClick={handleSave} className="w-full sm:w-auto">
+            <Button onClick={handleSave} className="w-full sm:w-auto" disabled={isSaving}>
               <Save className="mr-2 h-4 w-4" />
-              Lưu thay đổi
+              {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
             </Button>
           </div>
         </TabsContent>
       </Tabs>
+      )}
     </motion.div>
   );
 }

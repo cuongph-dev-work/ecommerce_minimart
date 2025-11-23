@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { flashSalesService } from '@/services/flash-sales.service';
+import type { FlashSale, FlashSaleProduct } from '@/services/flash-sales.service';
 import {
   Table,
   TableBody,
@@ -27,7 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Search, Edit, Trash2, MoreHorizontal, Clock, X, Package } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, MoreHorizontal, Clock } from 'lucide-react';
 import { motion } from 'motion/react';
 import {
   DropdownMenu,
@@ -35,52 +37,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { products } from '@/data/products';
 import { cn } from '@/lib/utils';
+import { productsService } from '@/services/products.service';
+import type { Product } from '@/types';
+import axios from 'axios';
 
-export interface FlashSale {
-  id: string;
-  name: string;
-  startTime: string;
-  endTime: string;
-  status: 'upcoming' | 'active' | 'ended';
-  products: FlashSaleProduct[];
-}
 
-export interface FlashSaleProduct {
-  productId: string;
-  productName: string;
-  originalPrice: number;
-  salePrice: number;
-  discount: number;
-  total: number;
-  sold: number;
-}
 
-const initialFlashSales: FlashSale[] = [
-  {
-    id: 'fs1',
-    name: 'Flash Sale 12.12',
-    startTime: '2025-12-12T00:00:00Z',
-    endTime: '2025-12-12T23:59:59Z',
-    status: 'upcoming',
-    products: [
-      {
-        productId: '1',
-        productName: 'Tai nghe Bluetooth Premium',
-        originalPrice: 1890000,
-        salePrice: 1490000,
-        discount: 21,
-        total: 100,
-        sold: 45,
-      },
-    ],
-  },
-];
 
 export function FlashSalesPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [flashSales, setFlashSales] = useState<FlashSale[]>(initialFlashSales);
+  const [flashSales, setFlashSales] = useState<FlashSale[]>([]);
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
   const [editingFlashSale, setEditingFlashSale] = useState<FlashSale | null>(null);
   const [flashSaleToDelete, setFlashSaleToDelete] = useState<string | null>(null);
@@ -89,6 +56,45 @@ export function FlashSalesPage() {
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<FlashSaleProduct | null>(null);
   const [productToRemove, setProductToRemove] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchFlashSales(controller.signal);
+    fetchProducts();
+    return () => controller.abort();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await productsService.getAll({ limit: 1000 });
+      setProducts(response.products);
+    } catch (err: any) {
+      console.error('Failed to load products:', err);
+    }
+  };
+
+  const fetchFlashSales = async (signal?: AbortSignal) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await flashSalesService.getAll(signal);
+      // Cast status to match expected type
+      const transformed = data.map((item: any) => ({
+        ...item,
+        status: item.status as 'active' | 'upcoming' | 'ended'
+      }));
+      setFlashSales(transformed);
+    } catch (err: any) {
+      if (axios.isCancel(err)) return;
+      setError(err?.message || 'Failed to load flash sales');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Form state for adding/editing product
   const [selectedProductId, setSelectedProductId] = useState('');
@@ -106,32 +112,37 @@ export function FlashSalesPage() {
     fs.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleSaveFlashSale = () => {
-    if (editingFlashSale) {
-      setFlashSales(flashSales.map(fs =>
-        fs.id === editingFlashSale.id
-          ? {
-              ...fs,
-              name: newFlashSaleName,
-              startTime: newFlashSaleStartTime,
-              endTime: newFlashSaleEndTime,
-              status: newFlashSaleStatus,
-            }
-          : fs
-      ));
-    } else {
-      const newFlashSale: FlashSale = {
-        id: Math.random().toString(36).substr(2, 9),
+  const handleSaveFlashSale = async () => {
+    if (!newFlashSaleName || !newFlashSaleStartTime || !newFlashSaleEndTime) {
+      setError('Vui lòng điền đầy đủ thông tin bắt buộc');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setError(null);
+
+      const flashSaleData = {
         name: newFlashSaleName,
         startTime: newFlashSaleStartTime,
         endTime: newFlashSaleEndTime,
         status: newFlashSaleStatus,
-        products: [],
       };
-      setFlashSales([newFlashSale, ...flashSales]);
+
+      if (editingFlashSale) {
+        await flashSalesService.update(editingFlashSale.id, flashSaleData);
+      } else {
+        await flashSalesService.create(flashSaleData);
+      }
+
+      setIsAddSheetOpen(false);
+      resetForm();
+      await fetchFlashSales();
+    } catch (err: any) {
+      setError(err?.message || 'Không thể lưu flash sale');
+    } finally {
+      setIsSaving(false);
     }
-    setIsAddSheetOpen(false);
-    resetForm();
   };
 
   const handleEditFlashSale = (flashSale: FlashSale) => {
@@ -143,9 +154,14 @@ export function FlashSalesPage() {
     setIsAddSheetOpen(true);
   };
 
-  const handleDeleteFlashSale = (id: string) => {
-    setFlashSales(flashSales.filter(fs => fs.id !== id));
-    setFlashSaleToDelete(null);
+  const handleDeleteFlashSale = async (id: string) => {
+    try {
+      await flashSalesService.delete(id);
+      setFlashSaleToDelete(null);
+      await fetchFlashSales();
+    } catch (err: any) {
+      setError(err?.message || 'Failed to delete flash sale');
+    }
   };
 
   const resetForm = () => {
@@ -182,34 +198,34 @@ export function FlashSalesPage() {
     }
   };
 
-  const handleAddProduct = () => {
-    if (!selectedFlashSale || !selectedProductId) return;
-    
-    const product = products.find(p => p.id === selectedProductId);
-    if (!product) return;
+  const handleAddProduct = async () => {
+    if (!selectedFlashSale || !selectedProductId || !productSalePrice || !productTotal) {
+      setError('Please fill in all required fields');
+      return;
+    }
 
-    const originalPrice = Number(productOriginalPrice) || product.price;
-    const salePrice = Number(productSalePrice);
-    const discount = Math.round(((originalPrice - salePrice) / originalPrice) * 100);
+    try {
+      const product = products.find(p => p.id === selectedProductId);
+      if (!product) return;
 
-    const newProduct: FlashSaleProduct = {
-      productId: selectedProductId,
-      productName: product.name,
-      originalPrice,
-      salePrice,
-      discount,
-      total: Number(productTotal),
-      sold: 0,
-    };
 
-    setFlashSales(flashSales.map(fs =>
-      fs.id === selectedFlashSale.id
-        ? { ...fs, products: [...fs.products, newProduct] }
-        : fs
-    ));
+      const salePrice = Number(productSalePrice);
 
-    setIsAddProductOpen(false);
-    resetProductForm();
+      await flashSalesService.addProduct(selectedFlashSale.id, {
+        productId: selectedProductId,
+        discountPrice: salePrice,
+        stockLimit: Number(productTotal),
+      });
+
+      setIsAddProductOpen(false);
+      resetProductForm();
+      await fetchFlashSales();
+      // Refresh selected flash sale
+      const updated = await flashSalesService.getById(selectedFlashSale.id);
+      setSelectedFlashSale(updated);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to add product to flash sale');
+    }
   };
 
   const handleEditProduct = (product: FlashSaleProduct) => {
@@ -221,44 +237,45 @@ export function FlashSalesPage() {
     setIsAddProductOpen(true);
   };
 
-  const handleUpdateProduct = () => {
-    if (!selectedFlashSale || !editingProduct) return;
+  const handleUpdateProduct = async () => {
+    if (!selectedFlashSale || !editingProduct || !productSalePrice || !productTotal) {
+      setError('Please fill in all required fields');
+      return;
+    }
 
-    const originalPrice = Number(productOriginalPrice);
-    const salePrice = Number(productSalePrice);
-    const discount = Math.round(((originalPrice - salePrice) / originalPrice) * 100);
+    try {
+      // Remove old product and add updated one
+      await flashSalesService.removeProduct(selectedFlashSale.id, editingProduct.productId);
+      const salePrice = Number(productSalePrice);
+      await flashSalesService.addProduct(selectedFlashSale.id, {
+        productId: editingProduct.productId,
+        discountPrice: salePrice,
+        stockLimit: Number(productTotal),
+      });
 
-    setFlashSales(flashSales.map(fs =>
-      fs.id === selectedFlashSale.id
-        ? {
-            ...fs,
-            products: fs.products.map(p =>
-              p.productId === editingProduct.productId
-                ? {
-                    ...p,
-                    originalPrice,
-                    salePrice,
-                    discount,
-                    total: Number(productTotal),
-                  }
-                : p
-            ),
-          }
-        : fs
-    ));
-
-    setIsAddProductOpen(false);
-    resetProductForm();
+      setIsAddProductOpen(false);
+      resetProductForm();
+      await fetchFlashSales();
+      // Refresh selected flash sale
+      const updated = await flashSalesService.getById(selectedFlashSale.id);
+      setSelectedFlashSale(updated);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to update product in flash sale');
+    }
   };
 
-  const handleRemoveProduct = (productId: string) => {
+  const handleRemoveProduct = async (productId: string) => {
     if (!selectedFlashSale) return;
-    setFlashSales(flashSales.map(fs =>
-      fs.id === selectedFlashSale.id
-        ? { ...fs, products: fs.products.filter(p => p.productId !== productId) }
-        : fs
-    ));
-    setProductToRemove(null);
+    try {
+      await flashSalesService.removeProduct(selectedFlashSale.id, productId);
+      setProductToRemove(null);
+      await fetchFlashSales();
+      // Refresh selected flash sale
+      const updated = await flashSalesService.getById(selectedFlashSale.id);
+      setSelectedFlashSale(updated);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to remove product from flash sale');
+    }
   };
 
   const resetProductForm = () => {
@@ -305,7 +322,7 @@ export function FlashSalesPage() {
             </SheetHeader>
             <div className="grid gap-6 py-6">
               <div className="space-y-2">
-                <Label>Tên chương trình</Label>
+                <Label>Tên chương trình <span className="text-destructive">*</span></Label>
                 <Input
                   value={newFlashSaleName}
                   onChange={(e) => setNewFlashSaleName(e.target.value)}
@@ -315,7 +332,7 @@ export function FlashSalesPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Thời gian bắt đầu</Label>
+                  <Label>Thời gian bắt đầu <span className="text-destructive">*</span></Label>
                   <Input
                     type="datetime-local"
                     value={newFlashSaleStartTime}
@@ -324,7 +341,7 @@ export function FlashSalesPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Thời gian kết thúc</Label>
+                  <Label>Thời gian kết thúc <span className="text-destructive">*</span></Label>
                   <Input
                     type="datetime-local"
                     value={newFlashSaleEndTime}
@@ -346,10 +363,17 @@ export function FlashSalesPage() {
                 </select>
               </div>
             </div>
+            {error && (
+              <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
             <SheetFooter>
-              <Button variant="outline" onClick={() => setIsAddSheetOpen(false)}>Hủy</Button>
-              <Button onClick={handleSaveFlashSale}>
-                {editingFlashSale ? 'Cập nhật' : 'Tạo'}
+              <Button variant="outline" onClick={() => setIsAddSheetOpen(false)} disabled={isSaving}>
+                Hủy
+              </Button>
+              <Button onClick={handleSaveFlashSale} disabled={isSaving}>
+                {isSaving ? 'Đang lưu...' : editingFlashSale ? 'Cập nhật' : 'Tạo'}
               </Button>
             </SheetFooter>
           </SheetContent>
@@ -380,7 +404,20 @@ export function FlashSalesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredFlashSales.map((flashSale) => (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  Loading flash sales...
+                </TableCell>
+              </TableRow>
+            ) : filteredFlashSales.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  No flash sales found
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredFlashSales.map((flashSale) => (
               <TableRow key={flashSale.id} className="group">
                 <TableCell className="font-medium">{flashSale.name}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">
@@ -422,7 +459,8 @@ export function FlashSalesPage() {
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
+            ))
+            )}
           </TableBody>
         </Table>
       </div>
@@ -480,12 +518,6 @@ export function FlashSalesPage() {
                     selectedFlashSale?.products.map((product) => (
                       <TableRow key={product.productId} className="group">
                         <TableCell className="font-medium">{product.productName}</TableCell>
-                        <TableCell>
-                          {new Intl.NumberFormat('vi-VN', {
-                            style: 'currency',
-                            currency: 'VND',
-                          }).format(product.originalPrice)}
-                        </TableCell>
                         <TableCell className="font-semibold text-red-600">
                           {new Intl.NumberFormat('vi-VN', {
                             style: 'currency',

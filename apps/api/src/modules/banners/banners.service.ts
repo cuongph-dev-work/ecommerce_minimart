@@ -19,27 +19,30 @@ export class BannersService {
   async findAll(query: QueryBannerDto) {
     const { page = 1, limit = 20, search, status, sortBy = 'sortOrder', sortOrder = 'asc' } = query;
 
-    const qb = this.em.createQueryBuilder(Banner, 'b');
+    const where: any = {};
 
     // Search
     if (search) {
-      qb.andWhere({ title: { $ilike: `%${search}%` } });
+      where.title = { $ilike: `%${search}%` };
     }
 
     // Filter by status
     if (status) {
-      qb.andWhere({ status });
+      where.status = status;
     }
 
     // Sort
     const orderByField = sortBy === 'created_at' ? 'createdAt' : sortBy;
-    qb.orderBy({ [orderByField]: sortOrder === 'asc' ? 'ASC' : 'DESC' });
+    const orderBy: any = { [orderByField]: sortOrder === 'asc' ? 'ASC' : 'DESC' };
 
     // Pagination
     const offset = (page - 1) * limit;
-    qb.limit(limit).offset(offset);
 
-    const [banners, total] = await qb.getResultAndCount();
+    const [banners, total] = await this.em.findAndCount(Banner, where, {
+      orderBy,
+      limit,
+      offset,
+    });
 
     return createPaginatedResponse(banners, page, limit, total);
   }

@@ -42,8 +42,8 @@ export class Product {
   @ManyToOne(() => Category)
   category!: Category;
 
-  @Property({ nullable: true })
-  subcategory?: string;
+  @ManyToOne(() => Category, { nullable: true })
+  subcategory?: Category;
 
   @Property({ nullable: true })
   brand?: string;

@@ -38,7 +38,7 @@ export class CreateProductDto {
 
   @IsString()
   @IsOptional()
-  subcategory?: string;
+  subcategoryId?: string;
 
   @IsString()
   @IsOptional()

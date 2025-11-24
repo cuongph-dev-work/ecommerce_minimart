@@ -61,6 +61,17 @@ class ProductsService {
     );
     return response.data.data;
   }
+
+  async getPopularSearches(limit: number = 5, signal?: AbortSignal): Promise<string[]> {
+    const response = await apiClient.get<{ success: boolean; data: string[] }>(
+      '/products/search/popular',
+      { 
+        params: { limit },
+        signal 
+      }
+    );
+    return response.data.data;
+  }
 }
 
 export const productsService = new ProductsService();

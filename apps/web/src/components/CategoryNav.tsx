@@ -3,6 +3,7 @@ import { Headphones, Watch, Package, Camera, Gamepad2, Home, Monitor, Smartphone
 import { motion } from 'motion/react';
 import { categoriesService } from '../services/categories.service';
 import type { Category } from '../types';
+import { useTranslation } from 'react-i18next';
 
 interface CategoryNavProps {
   onCategoryClick?: (categoryId: string, categoryName: string) => void;
@@ -24,6 +25,11 @@ const iconMap: Record<string, any> = {
 };
 
 export function CategoryNav({ onCategoryClick }: CategoryNavProps) {
+  const { t, i18n } = useTranslation();
+  
+  const formatNumber = (value: number) => {
+    return new Intl.NumberFormat(i18n.language === 'en' ? 'en-US' : 'vi-VN').format(value);
+  };
   const [showAll, setShowAll] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,22 +53,22 @@ export function CategoryNav({ onCategoryClick }: CategoryNavProps) {
   return (
     <div className="bg-white rounded-2xl shadow-md p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3>Danh mục sản phẩm</h3>
+        <h3>{t('home.product_categories')}</h3>
         {!loading && categories.length > 6 && (
           <button
             onClick={() => setShowAll(!showAll)}
             className="text-sm text-[rgb(7,0,11)] hover:underline"
           >
-            {showAll ? 'Thu gọn' : `Xem tất cả (${categories.length})`}
+            {showAll ? t('home.collapse') : t('home.view_all_count').replace('{count}', formatNumber(categories.length))}
           </button>
         )}
       </div>
       
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         {loading ? (
-          <div className="col-span-6 text-center py-8 text-gray-500">Đang tải...</div>
+          <div className="col-span-6 text-center py-8 text-gray-500">{t('home.loading')}</div>
         ) : displayCategories.length === 0 ? (
-          <div className="col-span-6 text-center py-8 text-gray-500">Không có danh mục</div>
+          <div className="col-span-6 text-center py-8 text-gray-500">{t('home.no_categories')}</div>
         ) : (
           displayCategories.map((category, index) => {
             const Icon = category.icon ? iconMap[category.icon] : Package;
@@ -84,7 +90,7 @@ export function CategoryNav({ onCategoryClick }: CategoryNavProps) {
                 <div className="text-sm mb-1">{category.name}</div>
                 {subcategories.length > 0 && (
                   <div className="text-xs text-gray-500">
-                    {subcategories.length} loại
+                    {t('home.types_count').replace('{count}', formatNumber(subcategories.length))}
                   </div>
                 )}
               </motion.button>

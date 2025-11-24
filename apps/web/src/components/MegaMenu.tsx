@@ -4,6 +4,7 @@ import { ChevronDown, Headphones, Watch, Package, Camera, Gamepad2, Home, Monito
 import { motion, AnimatePresence } from 'motion/react';
 import { categoriesService } from '../services/categories.service';
 import type { Category } from '../types';
+import { useTranslation } from 'react-i18next';
 
 const iconMap: Record<string, any> = {
   Headphones,
@@ -21,6 +22,11 @@ const iconMap: Record<string, any> = {
 };
 
 export function MegaMenu() {
+  const { t, i18n } = useTranslation();
+  
+  const formatNumber = (value: number) => {
+    return new Intl.NumberFormat(i18n.language === 'en' ? 'en-US' : 'vi-VN').format(value);
+  };
   const [isOpen, setIsOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +58,7 @@ export function MegaMenu() {
       onMouseLeave={() => setIsOpen(false)}
     >
       <button className="flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
-        <span>Danh mục</span>
+        <span>{t('mega_menu.categories')}</span>
         <ChevronDown
           className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
@@ -70,9 +76,9 @@ export function MegaMenu() {
           >
             <div className="grid grid-cols-3 gap-6 p-6 max-h-[600px] overflow-y-auto">
               {loading ? (
-                <div className="col-span-3 text-center py-8 text-gray-500">Đang tải...</div>
+                <div className="col-span-3 text-center py-8 text-gray-500">{t('home.loading')}</div>
               ) : categories.length === 0 ? (
-                <div className="col-span-3 text-center py-8 text-gray-500">Không có danh mục</div>
+                <div className="col-span-3 text-center py-8 text-gray-500">{t('home.no_categories')}</div>
               ) : (
                 categories.map((category) => {
                   const Icon = category.icon ? iconMap[category.icon] : Package;
@@ -90,7 +96,7 @@ export function MegaMenu() {
                           <div className="font-medium">{category.name}</div>
                           {subcategories.length > 0 && (
                             <div className="text-xs text-gray-500">
-                              {subcategories.length} danh mục
+                              {t('mega_menu.categories_count').replace('{count}', formatNumber(subcategories.length))}
                             </div>
                           )}
                         </div>
@@ -113,7 +119,7 @@ export function MegaMenu() {
                               onClick={() => handleCategoryClick(category.id, category.name)}
                               className="text-xs text-red-600 hover:underline"
                             >
-                              +{subcategories.length - 4} mục khác
+                              {t('mega_menu.more_items', { count: subcategories.length - 4 })}
                             </button>
                           )}
                         </div>
@@ -133,7 +139,7 @@ export function MegaMenu() {
                 }}
                 className="text-sm text-red-600 hover:underline"
               >
-                Xem tất cả sản phẩm →
+                {t('home.view_all_products')} →
               </button>
             </div>
           </motion.div>

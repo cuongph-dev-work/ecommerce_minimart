@@ -120,6 +120,13 @@ export class PublicProductsController {
   }
 
   @Public()
+  @Get('search/popular')
+  async getPopularSearches(@Query('limit') limit?: number) {
+    const data = await this.productsService.getPopularSearches(limit || 5);
+    return { success: true, data };
+  }
+
+  @Public()
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const data = await this.productsService.findOne(id);

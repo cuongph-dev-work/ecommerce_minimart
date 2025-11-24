@@ -1,31 +1,34 @@
 import React from 'react';
 import { Shield, Award, ThumbsUp, Users } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useTranslation } from 'react-i18next';
 
 export function TrustBadges() {
+  const { t } = useTranslation();
+  
   const badges = [
     {
       icon: Shield,
-      title: 'Chính hãng 100%',
-      description: 'Cam kết hàng chính hãng',
+      title: t('home.trust_badges.genuine_title'),
+      description: t('home.trust_badges.genuine_desc'),
       color: 'from-blue-500 to-blue-600',
     },
     {
       icon: Award,
-      title: 'Bảo hành uy tín',
-      description: 'Bảo hành tại nhà',
+      title: t('home.trust_badges.warranty_title'),
+      description: t('home.trust_badges.warranty_desc'),
       color: 'from-green-500 to-green-600',
     },
     {
       icon: ThumbsUp,
-      title: '98% hài lòng',
-      description: 'Khách hàng tin tưởng',
+      title: t('home.trust_badges.satisfaction_title'),
+      description: t('home.trust_badges.satisfaction_desc'),
       color: 'from-purple-500 to-purple-600',
     },
     {
       icon: Users,
-      title: '50.000+ khách hàng',
-      description: 'Phục vụ tận tâm',
+      title: t('home.trust_badges.customers_title'),
+      description: t('home.trust_badges.customers_desc'),
       color: 'from-orange-500 to-orange-600',
     },
   ];

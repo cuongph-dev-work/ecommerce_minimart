@@ -8,6 +8,10 @@ import { Product, Category } from '../types';
 import { useCart } from '../context/CartContext';
 import { toast } from 'sonner';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { HighlightText } from './HighlightText';
+import { SearchSuggestions } from './SearchSuggestions';
+import { useSearchHistory } from '../hooks/useSearchHistory';
+import { useTranslation } from 'react-i18next';
 import {
   Sheet,
   SheetContent,
@@ -43,6 +47,11 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export function ProductsPage() {
+  const { t, i18n } = useTranslation();
+  
+  const formatNumber = (value: number) => {
+    return new Intl.NumberFormat(i18n.language === 'en' ? 'en-US' : 'vi-VN').format(value);
+  };
   const { addToCart } = useCart();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -58,6 +67,11 @@ export function ProductsPage() {
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+
+  // Search history
+  const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
 
   const debouncedSearch = useDebounce(searchQuery, 500);
 
@@ -134,10 +148,10 @@ export function ProductsPage() {
             setTotalPages(result.pagination.totalPages || 1);
           }
         }
-      } catch (error) {
+        } catch (error) {
         if (error instanceof Error && error.name !== 'AbortError') {
           console.error('Failed to load products:', error);
-          toast.error('Không thể tải sản phẩm');
+          toast.error(t('products.load_error'));
         }
       } finally {
         if (!abortController.signal.aborted) {
@@ -162,7 +176,7 @@ export function ProductsPage() {
   const handleAddToCart = (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
     addToCart(product);
-    toast.success(`Đã thêm ${product.name} vào giỏ hàng`);
+    toast.success(t('products.add_to_cart_success', { name: product.name }));
   };
 
   const formatPrice = (price: number) => {
@@ -191,9 +205,9 @@ export function ProductsPage() {
           animate={{ y: 0, opacity: 1 }}
           className="mb-6"
         >
-          <h1 className="mb-4">Sản phẩm</h1>
+          <h1 className="mb-4">{t('products.title')}</h1>
           <p className="text-gray-600 max-w-2xl">
-            Khám phá bộ sưu tập đầy đủ các sản phẩm công nghệ chất lượng cao
+            {t('products.subtitle')}
           </p>
         </motion.div>
 
@@ -208,31 +222,64 @@ export function ProductsPage() {
             <div className="flex flex-col sm:flex-row gap-4 mb-6">
               {/* Search */}
               <div className="flex-1 relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
                 <input
                   type="text"
-                  placeholder="Tìm kiếm sản phẩm..."
+                  placeholder={t('products.search_placeholder')}
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
                     setPage(1);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => {
+                    setSearchFocused(true);
+                    setShowSuggestions(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && searchQuery.trim()) {
+                      addToHistory(searchQuery.trim());
+                      setShowSuggestions(false);
+                    }
                   }}
                   className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-red-500 transition-all"
                 />
                 {searchQuery && (
                   <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setShowSuggestions(false);
+                    }}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 )}
+                
+                {/* Search Suggestions */}
+                <SearchSuggestions
+                  query={searchQuery}
+                  onSelect={(query) => {
+                    setSearchQuery(query);
+                    addToHistory(query);
+                    setShowSuggestions(false);
+                    setPage(1);
+                  }}
+                  searchHistory={history}
+                  onRemoveHistory={removeFromHistory}
+                  onClearHistory={clearHistory}
+                  isOpen={showSuggestions && searchFocused}
+                  onClose={() => {
+                    setShowSuggestions(false);
+                    setSearchFocused(false);
+                  }}
+                />
               </div>
 
               {/* Filter Button (Mobile) */}
               <Button variant="outline" size="lg" className="sm:hidden" onClick={() => setShowFilterSheet(true)}>
                 <SlidersHorizontal className="h-5 w-5 mr-2" />
-                Bộ lọc
+                {t('products.filter')}
               </Button>
             </div>
 
@@ -249,7 +296,7 @@ export function ProductsPage() {
                     : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
                 }`}
               >
-                Tất cả
+                {t('products.all_categories')}
               </button>
               {categories.map((category) => (
                 <button
@@ -277,27 +324,27 @@ export function ProductsPage() {
             {/* Filter & Sort Bar */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-6 border-b">
               <div className="text-sm text-gray-600">
-                {loading ? 'Đang tải...' : `Tìm thấy ${products.length} sản phẩm`}
+                {loading ? t('products.loading') : t('products.found_products').replace('{count}', formatNumber(products.length))}
               </div>
               
               {/* Desktop Filter & Sort */}
               <div className="hidden sm:flex items-center gap-4">
                 {/* Sort Dropdown */}
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">Sắp xếp:</span>
+                  <span className="text-sm text-gray-600">{t('products.sort_by')}</span>
                   <Select value={sortBy} onValueChange={(value) => {
                     setSortBy(value);
                     setPage(1);
                   }}>
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Chọn sắp xếp" />
+                      <SelectValue placeholder={t('products.select_sort')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="default">Mặc định</SelectItem>
-                      <SelectItem value="price-asc">Giá tăng dần</SelectItem>
-                      <SelectItem value="price-desc">Giá giảm dần</SelectItem>
-                      <SelectItem value="name-asc">Tên A-Z</SelectItem>
-                      <SelectItem value="popular">Bán chạy nhất</SelectItem>
+                      <SelectItem value="default">{t('products.default')}</SelectItem>
+                      <SelectItem value="price-asc">{t('products.price_asc')}</SelectItem>
+                      <SelectItem value="price-desc">{t('products.price_desc')}</SelectItem>
+                      <SelectItem value="name-asc">{t('products.name_asc')}</SelectItem>
+                      <SelectItem value="popular">{t('products.popular')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -305,16 +352,16 @@ export function ProductsPage() {
                 {/* Brand Filter */}
                 {brands.length > 0 && (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Thương hiệu:</span>
+                    <span className="text-sm text-gray-600">{t('products.brand_label')}</span>
                     <Select value={selectedBrand} onValueChange={(value) => {
                       setSelectedBrand(value);
                       setPage(1);
                     }}>
                       <SelectTrigger className="w-[140px]">
-                        <SelectValue placeholder="Chọn thương hiệu" />
+                        <SelectValue placeholder={t('products.select_brand')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Tất cả</SelectItem>
+                        <SelectItem value="all">{t('products.all')}</SelectItem>
                         {brands.map((brand) => (
                           <SelectItem key={brand} value={brand!}>{brand}</SelectItem>
                         ))}
@@ -332,7 +379,7 @@ export function ProductsPage() {
                     className="gap-1"
                   >
                     <X className="h-4 w-4" />
-                    Xóa bộ lọc
+                    {t('products.clear_filters')}
                   </Button>
                 )}
               </div>
@@ -343,7 +390,7 @@ export function ProductsPage() {
               <div className="flex flex-wrap gap-2 mb-6">
                 {searchQuery && (
                   <Badge variant="secondary" className="gap-1">
-                    Tìm kiếm: "{searchQuery}"
+                    {t('products.search_badge', { query: searchQuery })}
                     <X 
                       className="h-3 w-3 cursor-pointer" 
                       onClick={() => setSearchQuery('')}
@@ -352,7 +399,7 @@ export function ProductsPage() {
                 )}
                 {selectedCategory !== 'all' && (
                   <Badge variant="secondary" className="gap-1">
-                    Danh mục: {categories.find(c => c.id === selectedCategory)?.name}
+                    {t('products.category_badge', { name: categories.find(c => c.id === selectedCategory)?.name })}
                     <X 
                       className="h-3 w-3 cursor-pointer" 
                       onClick={() => setSelectedCategory('all')}
@@ -361,7 +408,7 @@ export function ProductsPage() {
                 )}
                 {selectedBrand !== 'all' && (
                   <Badge variant="secondary" className="gap-1">
-                    Thương hiệu: {selectedBrand}
+                    {t('products.brand_badge', { brand: selectedBrand })}
                     <X 
                       className="h-3 w-3 cursor-pointer" 
                       onClick={() => setSelectedBrand('all')}
@@ -370,10 +417,10 @@ export function ProductsPage() {
                 )}
                 {sortBy !== 'default' && (
                   <Badge variant="secondary" className="gap-1">
-                    {sortBy === 'price-asc' && 'Giá tăng dần'}
-                    {sortBy === 'price-desc' && 'Giá giảm dần'}
-                    {sortBy === 'name-asc' && 'Tên A-Z'}
-                    {sortBy === 'popular' && 'Bán chạy nhất'}
+                    {sortBy === 'price-asc' && t('products.price_asc')}
+                    {sortBy === 'price-desc' && t('products.price_desc')}
+                    {sortBy === 'name-asc' && t('products.name_asc')}
+                    {sortBy === 'popular' && t('products.popular')}
                     <X 
                       className="h-3 w-3 cursor-pointer" 
                       onClick={() => setSortBy('default')}
@@ -399,9 +446,9 @@ export function ProductsPage() {
                 <div className="text-gray-400 mb-4">
                   <Search className="h-16 w-16 mx-auto" />
                 </div>
-                <h3 className="mb-2">Không tìm thấy sản phẩm</h3>
+                <h3 className="mb-2">{t('products.no_products')}</h3>
                 <p className="text-gray-600">
-                  Thử tìm kiếm với từ khóa khác hoặc chọn danh mục khác
+                  {t('products.no_products_desc')}
                 </p>
               </motion.div>
             ) : (
@@ -425,20 +472,26 @@ export function ProductsPage() {
                         />
                         {product.stock < 10 && product.stock > 0 && (
                           <div className="absolute top-3 right-3 px-3 py-1 bg-red-500 text-white text-xs rounded-full">
-                            Sắp hết
+                            {t('products.almost_out')}
                           </div>
                         )}
                         {product.stock === 0 && (
                           <div className="absolute top-3 right-3 px-3 py-1 bg-gray-500 text-white text-xs rounded-full">
-                            Hết hàng
+                            {t('products.out_of_stock')}
                           </div>
                         )}
                       </div>
                       <div className="p-5">
                         <div className="text-sm text-gray-500 mb-1">
-                          {product.brand || (typeof product.category === 'string' ? product.category : product.category?.name)}
-                        </div>
-                        <h3 className="mb-2 line-clamp-2">{product.name}</h3>
+                        {product.brand || (typeof product.category === 'string' ? product.category : product.category?.name)}
+                      </div>
+                      <h3 className="mb-2 line-clamp-2">
+                        {debouncedSearch ? (
+                          <HighlightText text={product.name} highlight={debouncedSearch} />
+                        ) : (
+                          product.name
+                        )}
+                      </h3>
                         
                         {/* Price with Discount */}
                         <div className="mb-3">
@@ -463,10 +516,10 @@ export function ProductsPage() {
 
                         <div className="flex items-center justify-between mb-4">
                           <div className="text-sm text-gray-500">
-                            {product.soldCount && `Đã bán ${product.soldCount}`}
+                            {product.soldCount && t('products.sold_count').replace('{count}', formatNumber(product.soldCount))}
                           </div>
                           <div className="text-sm text-gray-500">
-                            Còn {product.stock}
+                            {t('products.stock_remaining').replace('{stock}', formatNumber(product.stock))}
                           </div>
                         </div>
                         <Button
@@ -474,7 +527,7 @@ export function ProductsPage() {
                           className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
                           disabled={product.stock === 0}
                         >
-                          {product.stock === 0 ? 'Hết hàng' : 'Thêm vào giỏ'}
+                          {product.stock === 0 ? t('products.out_of_stock') : t('products.add_to_cart')}
                         </Button>
                       </div>
                     </motion.div>
@@ -489,7 +542,7 @@ export function ProductsPage() {
                       onClick={() => setPage(p => Math.max(1, p - 1))}
                       disabled={page === 1}
                     >
-                      Trước
+                      {t('products.previous')}
                     </Button>
                     <div className="flex items-center gap-2">
                       {[...Array(totalPages)].map((_, i) => (
@@ -511,7 +564,7 @@ export function ProductsPage() {
                       onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                       disabled={page === totalPages}
                     >
-                      Sau
+                      {t('products.next')}
                     </Button>
                   </div>
                 )}
@@ -524,16 +577,16 @@ export function ProductsPage() {
         <Sheet open={showFilterSheet} onOpenChange={setShowFilterSheet}>
           <SheetContent className="w-full max-w-2xl">
             <SheetHeader>
-              <SheetTitle>Bộ lọc sản phẩm</SheetTitle>
+              <SheetTitle>{t('products.filter_title')}</SheetTitle>
               <SheetDescription>
-                Áp dụng các bộ lọc để tìm kiếm sản phẩm phù hợp với bạn.
+                {t('products.filter_description')}
               </SheetDescription>
             </SheetHeader>
             <div className="space-y-6 mt-6">
               {/* Brand */}
               {brands.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Thương hiệu</h3>
+                  <h3 className="text-sm font-medium">{t('products.brand')}</h3>
                   <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => setSelectedBrand('all')}
@@ -543,7 +596,7 @@ export function ProductsPage() {
                           : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
                       }`}
                     >
-                      Tất cả
+                      {t('products.all')}
                     </button>
                     {brands.map((brand) => (
                       <button
@@ -564,14 +617,14 @@ export function ProductsPage() {
 
               {/* Sort By */}
               <div className="space-y-2">
-                <h3 className="text-sm font-medium">Sắp xếp theo</h3>
+                <h3 className="text-sm font-medium">{t('products.sort_by_title')}</h3>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    { value: 'default', label: 'Mặc định' },
-                    { value: 'price-asc', label: 'Giá tăng dần' },
-                    { value: 'price-desc', label: 'Giá giảm dần' },
-                    { value: 'name-asc', label: 'Tên A-Z' },
-                    { value: 'popular', label: 'Bán chạy nhất' },
+                    { value: 'default', label: t('products.default') },
+                    { value: 'price-asc', label: t('products.price_asc') },
+                    { value: 'price-desc', label: t('products.price_desc') },
+                    { value: 'name-asc', label: t('products.name_asc') },
+                    { value: 'popular', label: t('products.popular') },
                   ].map((option) => (
                     <button
                       key={option.value}
@@ -594,13 +647,13 @@ export function ProductsPage() {
                 variant="outline"
                 className="flex-1"
               >
-                Xóa bộ lọc
+                {t('products.clear_filters')}
               </Button>
               <Button
                 onClick={() => setShowFilterSheet(false)}
                 className="flex-1 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
               >
-                Áp dụng
+                {t('products.apply')}
               </Button>
             </div>
           </SheetContent>

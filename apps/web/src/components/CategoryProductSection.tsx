@@ -7,6 +7,7 @@ import { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { toast } from 'sonner';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { useTranslation } from 'react-i18next';
 
 interface CategoryProductSectionProps {
   categoryName: string;
@@ -15,13 +16,18 @@ interface CategoryProductSectionProps {
 }
 
 export function CategoryProductSection({ categoryName, products, icon }: CategoryProductSectionProps) {
+  const { t, i18n } = useTranslation();
   const { addToCart } = useCart();
   const navigate = useNavigate();
+  
+  const formatNumber = (value: number) => {
+    return new Intl.NumberFormat(i18n.language === 'en' ? 'en-US' : 'vi-VN').format(value);
+  };
 
   const handleAddToCart = (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
     addToCart(product);
-    toast.success(`Đã thêm ${product.name} vào giỏ hàng`);
+    toast.success(t('home.add_to_cart_success', { name: product.name }));
   };
 
   const formatPrice = (price: number) => {
@@ -48,7 +54,7 @@ export function CategoryProductSection({ categoryName, products, icon }: Categor
             <div>
               <h2 className="mb-1">{categoryName}</h2>
               <p className="text-sm text-gray-600">
-                {products.length} sản phẩm
+                {t('home.products_count').replace('{count}', formatNumber(products.length))}
               </p>
             </div>
           </div>
@@ -57,7 +63,7 @@ export function CategoryProductSection({ categoryName, products, icon }: Categor
             variant="outline"
             className="hidden sm:flex"
           >
-            Xem tất cả
+            {t('home.view_all')}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
@@ -138,7 +144,7 @@ export function CategoryProductSection({ categoryName, products, icon }: Categor
                 {/* Sold Count */}
                 {product.soldCount && (
                   <div className="text-xs text-gray-500 mb-2">
-                    Đã bán {product.soldCount}
+                    {t('home.sold_count').replace('{count}', formatNumber(product.soldCount))}
                   </div>
                 )}
 
@@ -148,7 +154,7 @@ export function CategoryProductSection({ categoryName, products, icon }: Categor
                   size="sm"
                   className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
                 >
-                  Thêm vào giỏ
+                  {t('products.add_to_cart')}
                 </Button>
               </div>
             </motion.div>
@@ -162,7 +168,7 @@ export function CategoryProductSection({ categoryName, products, icon }: Categor
             variant="outline"
             className="w-full"
           >
-            Xem tất cả {categoryName}
+            {t('home.view_all_category', { category: categoryName })}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>

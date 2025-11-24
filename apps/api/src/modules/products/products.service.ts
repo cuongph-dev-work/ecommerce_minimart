@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
-import { Product } from '../../entities/product.entity';
+import { Product, ProductStatus } from '../../entities/product.entity';
 import { Category } from '../../entities/category.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -221,6 +221,45 @@ export class ProductsService {
   async import(file: any): Promise<any> {
     // TODO: Implement import from Excel/CSV
     throw new BadRequestException('Import not implemented yet');
+  }
+
+  async getPopularSearches(limit: number = 5): Promise<string[]> {
+    // Get most popular products by sold count and extract unique search terms
+    const products = await this.em.find(
+      Product,
+      { status: ProductStatus.ACTIVE },
+      {
+        populate: ['category'],
+        orderBy: { soldCount: 'DESC' },
+        limit: limit * 3, // Get more to extract unique terms
+      },
+    );
+
+    // Extract unique search terms from product names and brands
+    const searchTerms = new Set<string>();
+    
+    products.forEach((product) => {
+      // Add brand if exists
+      if (product.brand) {
+        searchTerms.add(product.brand);
+      }
+      
+      // Add category name
+      if (product.category?.name) {
+        searchTerms.add(product.category.name);
+      }
+      
+      // Add first 2 words from product name as potential search terms
+      const words = product.name.split(' ').slice(0, 2);
+      words.forEach(word => {
+        if (word.length > 2) { // Only add meaningful words
+          searchTerms.add(word);
+        }
+      });
+    });
+
+    // Convert to array and return top N
+    return Array.from(searchTerms).slice(0, limit);
   }
 }
 

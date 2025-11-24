@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Facebook, Instagram, Send } from 'lucide-react';
 import { settingsService } from '../services/settings.service';
+import { useTranslation } from 'react-i18next';
 
 export function Footer() {
+  const { t } = useTranslation();
   const [settings, setSettings] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -77,13 +79,13 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="mb-4">Liên kết nhanh</h3>
+            <h3 className="mb-4">{t('footer.quick_links')}</h3>
             <ul className="space-y-2">
               {[
-                { label: 'Trang chủ', path: '/' },
-                { label: 'Sản phẩm', path: '/products' },
-                { label: 'Cửa hàng', path: '/stores' },
-                { label: 'Liên hệ', path: '/contact' },
+                { label: t('common.home'), path: '/' },
+                { label: t('common.products'), path: '/products' },
+                { label: t('common.stores'), path: '/stores' },
+                { label: t('common.contact'), path: '/contact' },
               ].map((link) => (
                 <li key={link.path}>
                   <Link
@@ -99,7 +101,7 @@ export function Footer() {
 
           {/* Contact */}
           <div>
-            <h3 className="mb-4">Liên hệ</h3>
+            <h3 className="mb-4">{t('footer.contact')}</h3>
             <ul className="space-y-3">
               {settings.store_phone && (
                 <li className="flex items-start gap-3 text-gray-600">
@@ -129,26 +131,26 @@ export function Footer() {
 
           {/* Support */}
           <div>
-            <h3 className="mb-4">Hỗ trợ</h3>
+            <h3 className="mb-4">{t('footer.support')}</h3>
             <ul className="space-y-2 text-gray-600">
               <li>
                 <a href="#" className="hover:text-blue-600 transition-colors">
-                  Chính sách bảo hành
+                  {t('footer.warranty_policy')}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-blue-600 transition-colors">
-                  Chính sách đổi trả
+                  {t('footer.return_policy')}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-blue-600 transition-colors">
-                  Hướng dẫn mua hàng
+                  {t('footer.shopping_guide')}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-blue-600 transition-colors">
-                  Câu hỏi thường gặp
+                  {t('footer.faq')}
                 </a>
               </li>
             </ul>
@@ -156,7 +158,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t text-center text-gray-600">
-          <p>&copy; 2025 {settings.store_name}. Tất cả quyền được bảo lưu.</p>
+          <p>&copy; 2025 {settings.store_name}. {t('footer.all_rights_reserved')}</p>
         </div>
       </div>
     </footer>

@@ -16,10 +16,17 @@ import { TrustBadges } from './TrustBadges';
 import { CategoryProductSection } from './CategoryProductSection';
 import { productsService } from '../services/products.service';
 import { categoriesService, CategoryWithSales } from '../services/categories.service';
+import { useTranslation } from 'react-i18next';
 
 export function HomePage() {
+  const { t, i18n } = useTranslation();
   const { addToCart } = useCart();
   const navigate = useNavigate();
+  
+  const formatNumber = (value: number) => {
+    return new Intl.NumberFormat(i18n.language === 'en' ? 'en-US' : 'vi-VN').format(value);
+  };
+  
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [topCategories, setTopCategories] = useState<CategoryWithSales[]>([]);
   const [categoryProducts, setCategoryProducts] = useState<Record<string, Product[]>>({});
@@ -72,7 +79,7 @@ export function HomePage() {
   const handleAddToCart = (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
     addToCart(product);
-    toast.success(`Đã thêm ${product.name} vào giỏ hàng`);
+    toast.success(t('home.add_to_cart_success', { name: product.name }));
   };
 
   const formatPrice = (price: number) => {
@@ -135,9 +142,9 @@ export function HomePage() {
           <div className="bg-white rounded-2xl shadow-md p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="mb-2">Sản phẩm nổi bật</h2>
+                <h2 className="mb-2">{t('home.featured_products')}</h2>
                 <p className="text-gray-600">
-                  Khám phá những sản phẩm được yêu thích nhất
+                  {t('home.featured_products_subtitle')}
                 </p>
               </div>
               <Button
@@ -145,7 +152,7 @@ export function HomePage() {
                 variant="outline"
                 className="hidden sm:flex"
               >
-                Xem tất cả
+                {t('home.view_all')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
@@ -232,7 +239,7 @@ export function HomePage() {
                   {/* Sold Count */}
                   {product.soldCount && (
                     <div className="text-xs text-gray-500 mb-2">
-                      Đã bán {product.soldCount}
+                      {t('home.sold_count').replace('{count}', formatNumber(product.soldCount))}
                     </div>
                   )}
 
@@ -242,7 +249,7 @@ export function HomePage() {
                     size="sm"
                     className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
                   >
-                    Thêm vào giỏ
+                    {t('products.add_to_cart')}
                   </Button>
                 </div>
               </motion.div>
@@ -256,7 +263,7 @@ export function HomePage() {
                 variant="outline"
                 className="w-full"
               >
-                Xem tất cả sản phẩm
+                {t('home.view_all_products')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>

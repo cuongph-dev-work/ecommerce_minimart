@@ -19,6 +19,17 @@ i18n
     fallbackLng: 'vi',
     interpolation: {
       escapeValue: false,
+      formatSeparator: ',',
+      format: (value, format, lng) => {
+        if (format === 'number') {
+          const num = typeof value === 'number' ? value : parseFloat(value);
+          if (!isNaN(num)) {
+            const locale = lng === 'en' ? 'en-US' : 'vi-VN';
+            return new Intl.NumberFormat(locale).format(num);
+          }
+        }
+        return value;
+      },
     },
   });
 

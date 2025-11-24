@@ -3,9 +3,13 @@ export interface Product {
   name: string;
   price: number;
   description: string;
-  image: string;
-  category: string;
+  image?: string; // For backward compatibility with mock data
+  images?: string[]; // Array of images from API
+  thumbnailUrls?: string[]; // Thumbnail URLs from API
+  category: string | Category | any; // Can be string (mock data) or Category object (API)
+  subcategory?: string | Category | any;
   stock: number;
+  sku?: string;
   featured?: boolean;
   discount?: number; // Phần trăm giảm giá
   rating?: number; // Điểm đánh giá trung bình
@@ -14,6 +18,11 @@ export interface Product {
   isFlashSale?: boolean; // Có phải sản phẩm flash sale không
   flashSaleEnd?: Date; // Thời gian kết thúc flash sale
   brand?: string; // Thương hiệu
+  isOfficial?: boolean;
+  warrantyPeriod?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CartItem extends Product {
@@ -25,10 +34,23 @@ export interface StoreLocation {
   name: string;
   address: string;
   phone: string;
-  email: string;
-  lat: number;
-  lng: number;
+  email?: string;
+  lat?: number;
+  lng?: number;
+  workingHours?: {
+    weekdays: { start: string; end: string };
+    weekends: { start: string; end: string };
+  };
+  services?: string[];
+  allowPickup?: boolean;
+  preparationTime?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
+
+// Alias for Store (matches backend entity)
+export type Store = StoreLocation;
 
 export interface ContactForm {
   name: string;
@@ -73,15 +95,26 @@ export interface Voucher {
 export interface Category {
   id: string;
   name: string;
-  icon: string;
-  subcategories?: string[];
+  icon?: string; // Icon name for frontend mapping
+  slug?: string;
+  description?: string;
+  image?: string;
+  parentId?: string | null;
+  children?: Category[]; // Subcategories
+  subcategories?: string[]; // Legacy support
+  sortOrder?: number;
+  status?: string;
+  productCount?: number;
 }
 
 export interface Banner {
   id: string;
-  image: string;
   title: string;
-  description: string;
-  link: string;
-  color: string;
+  description?: string;
+  image: string;
+  link?: string;
+  status?: string;
+  sortOrder?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }

@@ -8,6 +8,7 @@ import {
   Delete,
   Put,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -17,6 +18,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { UserRole } from '../../entities/user.entity';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('admin/categories')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -58,6 +60,32 @@ export class CategoriesController {
   async reorder(@Body() reorderDto: ReorderCategoriesDto) {
     await this.categoriesService.reorder(reorderDto.categories);
     return { success: true, message: 'Categories reordered successfully' };
+  }
+}
+
+@Controller('categories')
+export class PublicCategoriesController {
+  constructor(private readonly categoriesService: CategoriesService) {}
+
+  @Public()
+  @Get()
+  async findAll() {
+    const data = await this.categoriesService.findAll();
+    return { success: true, data };
+  }
+
+  @Public()
+  @Get('top-by-sales')
+  async findTopBySales(@Query('limit') limit?: number) {
+    const data = await this.categoriesService.findTopBySales(limit || 3);
+    return { success: true, data };
+  }
+
+  @Public()
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    const data = await this.categoriesService.findOne(id);
+    return { success: true, data };
   }
 }
 

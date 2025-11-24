@@ -18,6 +18,8 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { UserRole } from '../../entities/user.entity';
 import { OrderStatus } from '../../entities/order.entity';
+import { Public } from '../auth/decorators/public.decorator';
+import { StoreStatus } from '../../entities/store.entity';
 
 @Controller('admin/stores')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -67,6 +69,34 @@ export class StoresController {
     @Query('status') status?: OrderStatus,
   ) {
     const data = await this.storesService.getStoreOrders(id, status);
+    return { success: true, data };
+  }
+}
+
+@Controller('stores')
+export class PublicStoresController {
+  constructor(private readonly storesService: StoresService) {}
+
+  @Public()
+  @Get()
+  async findAll() {
+    // Only return active stores that allow pickup
+    const result = await this.storesService.findAll({
+      status: StoreStatus.ACTIVE,
+      allowPickup: true,
+      page: 1,
+      limit: 100,
+    });
+    return {
+      success: true,
+      data: result.data,
+    };
+  }
+
+  @Public()
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    const data = await this.storesService.findOne(id);
     return { success: true, data };
   }
 }

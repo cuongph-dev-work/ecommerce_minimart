@@ -11,6 +11,10 @@ export interface UpdateSettingData {
   value: string;
 }
 
+export interface BatchUpdateSettingsData {
+  settings: Record<string, string>;
+}
+
 class SettingsService {
   async getAll(signal?: AbortSignal): Promise<Setting[] | Record<string, any>> {
     const response = await apiClient.get<{ success: boolean; data: Setting[] | Record<string, any> }>(
@@ -31,6 +35,14 @@ class SettingsService {
   async update(key: string, data: UpdateSettingData): Promise<Setting> {
     const response = await apiClient.patch<{ success: boolean; data: Setting }>(
       `/admin/settings/${key}`,
+      data
+    );
+    return response.data.data;
+  }
+
+  async batchUpdate(data: BatchUpdateSettingsData): Promise<Setting[]> {
+    const response = await apiClient.post<{ success: boolean; data: Setting[] }>(
+      '/admin/settings/batch',
       data
     );
     return response.data.data;

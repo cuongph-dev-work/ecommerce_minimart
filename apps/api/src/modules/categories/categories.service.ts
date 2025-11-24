@@ -167,5 +167,68 @@ export class CategoriesService {
 
     await this.em.flush();
   }
+
+  /**
+   * Get all subcategory IDs for a given parent category (recursive)
+   */
+  private async getAllSubcategoryIds(categoryId: string): Promise<string[]> {
+    const category = await this.em.findOne(
+      Category,
+      { id: categoryId },
+      { populate: ['children'] }
+    );
+    
+    if (!category) {
+      return [];
+    }
+
+    const subcategoryIds: string[] = [categoryId];
+    
+    for (const child of category.children) {
+      const childSubcategories = await this.getAllSubcategoryIds(child.id);
+      subcategoryIds.push(...childSubcategories);
+    }
+
+    return subcategoryIds;
+  }
+
+  /**
+   * Find top parent categories by total sales (including subcategories)
+   */
+  async findTopBySales(limit: number = 3): Promise<Array<Category & { totalSold: number }>> {
+    // Get all parent categories (no parent)
+    const parentCategories = await this.em.find(
+      Category,
+      { parent: null },
+      { populate: ['children', 'products'] }
+    );
+
+    // Calculate total soldCount for each parent category
+    const categoriesWithSales = await Promise.all(
+      parentCategories.map(async (category) => {
+        // Get all subcategory IDs including the parent
+        const allCategoryIds = await this.getAllSubcategoryIds(category.id);
+
+        // Get all products in these categories and sum soldCount
+        const products = await this.em.find('Product', {
+          category: { $in: allCategoryIds },
+        });
+
+        const totalSold = products.reduce((sum, product: any) => {
+          return sum + (product.soldCount || 0);
+        }, 0);
+
+        return {
+          ...category,
+          totalSold,
+        };
+      })
+    );
+
+    // Sort by totalSold descending and return top N
+    categoriesWithSales.sort((a, b) => b.totalSold - a.totalSold);
+    
+    return categoriesWithSales.slice(0, limit);
+  }
 }
 

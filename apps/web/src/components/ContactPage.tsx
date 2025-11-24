@@ -1,55 +1,146 @@
-import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Send, MessageCircle, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Mail, Phone, MapPin, MessageCircle, ArrowRight } from 'lucide-react';
 import { Button } from './ui/button';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
+import { settingsService } from '../services/settings.service';
+import * as v from 'valibot';
 
 export function ContactPage() {
+  const { t } = useTranslation();
+  const [settings, setSettings] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
     phone: '',
     message: '',
   });
+  const [validationErrors, setValidationErrors] = useState<{ field: string; message: string }[]>([]);
+
+  const getFieldError = (field: string) => {
+    return validationErrors.find(err => err.field === field)?.message;
+  };
+
+  // Create dynamic schema with i18n messages
+  const getContactSchema = () => {
+    return v.object({
+      name: v.pipe(
+        v.string(t('contact.validation.name_required')),
+        v.minLength(1, t('contact.validation.name_empty')),
+        v.maxLength(100, t('contact.validation.name_max_length'))
+      ),
+      phone: v.optional(
+        v.pipe(
+          v.string(),
+          v.regex(/^[0-9\s\-()]+$/, t('contact.validation.phone_invalid')),
+          v.maxLength(20, t('contact.validation.phone_max_length'))
+        )
+      ),
+      message: v.pipe(
+        v.string(t('contact.validation.message_required')),
+        v.minLength(1, t('contact.validation.message_empty')),
+        v.maxLength(2000, t('contact.validation.message_max_length'))
+      ),
+    });
+  };
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const data = await settingsService.getAll();
+        setSettings(data);
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+      }
+    };
+    loadSettings();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Contact form submitted:', formData);
-    toast.success('Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất.');
-    setFormData({ name: '', email: '', phone: '', message: '' });
+    
+    // Clear previous errors
+    setValidationErrors([]);
+    
+    // Validate using Valibot with i18n messages
+    const schema = getContactSchema();
+    const result = v.safeParse(schema, formData);
+    
+    if (!result.success) {
+      // Convert Valibot errors to our format
+      const errors: { field: string; message: string }[] = [];
+      
+      for (const issue of result.issues) {
+        const field = issue.path?.[0]?.key as string;
+        if (field) {
+          errors.push({
+            field,
+            message: issue.message,
+          });
+        }
+      }
+      
+      setValidationErrors(errors);
+      toast.error(t('contact.errors.check_info'));
+      return;
+    }
+    
+    // Check email setting
+    if (!settings.store_email) {
+      toast.error(t('contact.errors.no_email_config'));
+      return;
+    }
+    
+    // Create mailto URL with i18n labels
+    const subject = encodeURIComponent(`${t('contact.title')} - ${formData.name}`);
+    const nameLabel = t('contact.name');
+    const phoneLabel = t('contact.phone');
+    const messageLabel = t('contact.message');
+    const body = encodeURIComponent(
+      `${nameLabel}: ${formData.name}\n` +
+      (formData.phone ? `${phoneLabel}: ${formData.phone}\n\n` : '\n') +
+      `${messageLabel}:\n${formData.message}`
+    );
+    
+    const mailtoUrl = `mailto:${settings.store_email}?subject=${subject}&body=${body}`;
+    window.location.href = mailtoUrl;
+    
+    toast.success(t('contact.success.opening_email'));
+    setFormData({ name: '', phone: '', message: '' });
+    setValidationErrors([]);
   };
 
   const contactMethods = [
     {
       icon: Phone,
-      title: 'Điện thoại',
-      content: '1900 xxxx',
-      action: 'tel:1900xxxx',
-      actionText: 'Gọi ngay',
+      title: t('contact_methods.phone'),
+      content: settings.store_phone || '',
+      action: settings.store_phone ? `tel:${settings.store_phone.replace(/\s/g, '')}` : '#',
+      actionText: t('contact_methods.phone_call_now'),
       color: 'from-blue-500 to-blue-600',
     },
     {
       icon: Mail,
-      title: 'Email',
-      content: 'support@store.vn',
-      action: 'mailto:support@store.vn',
-      actionText: 'Gửi email',
+      title: t('contact_methods.email'),
+      content: settings.store_email || '',
+      action: settings.store_email ? `mailto:${settings.store_email}` : '#',
+      actionText: t('contact_methods.email_send'),
       color: 'from-purple-500 to-purple-600',
     },
     {
       icon: MessageCircle,
-      title: 'Zalo',
-      content: '0912 345 678',
-      action: 'https://zalo.me',
-      actionText: 'Chat Zalo',
+      title: t('contact_methods.zalo'),
+      content: settings.telegram_link ? t('contact_methods.zalo_content') : '',
+      action: settings.telegram_link || '#',
+      actionText: t('contact_methods.zalo_chat'),
       color: 'from-blue-400 to-blue-500',
     },
     {
       icon: MapPin,
-      title: 'Địa chỉ',
-      content: '3 chi nhánh HCM, HN, ĐN',
-      action: '#stores',
-      actionText: 'Xem bản đồ',
+      title: t('contact_methods.address'),
+      content: settings.store_address || '',
+      action: '/stores',
+      actionText: t('contact_methods.address_view_map'),
       color: 'from-green-500 to-green-600',
     },
   ];
@@ -63,9 +154,9 @@ export function ContactPage() {
           animate={{ y: 0, opacity: 1 }}
           className="text-center mb-6"
         >
-          <h1 className="mb-4">Liên hệ với chúng tôi</h1>
+          <h1 className="mb-4">{t('contact.title')}</h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Chúng tôi luôn sẵn sàng hỗ trợ bạn. Hãy liên hệ với chúng tôi qua các kênh bên dưới
+            {t('contact.subtitle')}
           </p>
         </motion.div>
 
@@ -110,59 +201,76 @@ export function ContactPage() {
             transition={{ delay: 0.3 }}
           >
             <div className="bg-white rounded-3xl p-8 shadow-lg">
-              <h2 className="mb-6">Gửi tin nhắn cho chúng tôi</h2>
+              <h2 className="mb-6">{t('contact.send_message')}</h2>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label className="block mb-2">
-                    Họ và tên <span className="text-red-500">*</span>
+                    {t('contact.name')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    required
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-red-500 transition-all"
-                    placeholder="Nhập họ và tên"
+                    onChange={(e) => {
+                      setFormData({ ...formData, name: e.target.value });
+                      // Clear error when user starts typing
+                      if (getFieldError('name')) {
+                        setValidationErrors(validationErrors.filter(err => err.field !== 'name'));
+                      }
+                    }}
+                    className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none focus:ring-2 focus:ring-red-500 transition-all ${
+                      getFieldError('name') ? 'border-red-500' : 'border-gray-200'
+                    }`}
+                    placeholder={t('contact.name_placeholder')}
                   />
+                  {getFieldError('name') && (
+                    <p className="text-sm text-red-500 mt-1">{getFieldError('name')}</p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="block mb-2">
-                    Email <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-red-500 transition-all"
-                    placeholder="email@example.com"
-                  />
-                </div>
-
-                <div>
-                  <label className="block mb-2">Số điện thoại</label>
+                  <label className="block mb-2">{t('contact.phone')}</label>
                   <input
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-red-500 transition-all"
-                    placeholder="0912345678"
+                    onChange={(e) => {
+                      setFormData({ ...formData, phone: e.target.value });
+                      // Clear error when user starts typing
+                      if (getFieldError('phone')) {
+                        setValidationErrors(validationErrors.filter(err => err.field !== 'phone'));
+                      }
+                    }}
+                    className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none focus:ring-2 focus:ring-red-500 transition-all ${
+                      getFieldError('phone') ? 'border-red-500' : 'border-gray-200'
+                    }`}
+                    placeholder={t('contact.phone_placeholder')}
                   />
+                  {getFieldError('phone') && (
+                    <p className="text-sm text-red-500 mt-1">{getFieldError('phone')}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block mb-2">
-                    Nội dung <span className="text-red-500">*</span>
+                    {t('contact.message')} <span className="text-red-500">*</span>
                   </label>
                   <textarea
-                    required
                     value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, message: e.target.value });
+                      // Clear error when user starts typing
+                      if (getFieldError('message')) {
+                        setValidationErrors(validationErrors.filter(err => err.field !== 'message'));
+                      }
+                    }}
                     rows={5}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-red-500 transition-all resize-none"
-                    placeholder="Nhập nội dung cần hỗ trợ..."
+                    className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none focus:ring-2 focus:ring-red-500 transition-all resize-none ${
+                      getFieldError('message') ? 'border-red-500' : 'border-gray-200'
+                    }`}
+                    placeholder={t('contact.message_placeholder')}
                   />
+                  {getFieldError('message') && (
+                    <p className="text-sm text-red-500 mt-1">{getFieldError('message')}</p>
+                  )}
                 </div>
 
                 <Button
@@ -170,7 +278,7 @@ export function ContactPage() {
                   size="lg"
                   className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 group"
                 >
-                  Gửi tin nhắn
+                  {t('contact.send_button')}
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </form>
@@ -185,16 +293,22 @@ export function ContactPage() {
             className="space-y-8"
           >
             <div>
-              <h2 className="mb-6">Thông tin liên hệ</h2>
+              <h2 className="mb-6">{t('contact.info.title')}</h2>
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Phone className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="mb-1">Hotline</h3>
-                    <p className="text-gray-600">1900 xxxx (8:00 - 21:00)</p>
-                    <p className="text-gray-600">Hỗ trợ khách hàng 24/7</p>
+                    <h3 className="mb-1">{t('contact.info.hotline')}</h3>
+                    {settings.store_phone ? (
+                      <>
+                        <p className="text-gray-600">{settings.store_phone} ({t('contact.info.hotline_hours')})</p>
+                        <p className="text-gray-600">{t('contact.info.hotline_support')}</p>
+                      </>
+                    ) : (
+                      <p className="text-gray-400">{t('contact.info.not_updated')}</p>
+                    )}
                   </div>
                 </div>
 
@@ -203,9 +317,15 @@ export function ContactPage() {
                     <Mail className="h-6 w-6 text-purple-600" />
                   </div>
                   <div>
-                    <h3 className="mb-1">Email</h3>
-                    <p className="text-gray-600">support@store.vn</p>
-                    <p className="text-gray-600">Phản hồi trong 24h</p>
+                    <h3 className="mb-1">{t('contact.info.email')}</h3>
+                    {settings.store_email ? (
+                      <>
+                        <p className="text-gray-600">{settings.store_email}</p>
+                        <p className="text-gray-600">{t('contact.info.email_response')}</p>
+                      </>
+                    ) : (
+                      <p className="text-gray-400">{t('contact.info.not_updated')}</p>
+                    )}
                   </div>
                 </div>
 
@@ -214,12 +334,12 @@ export function ContactPage() {
                     <MapPin className="h-6 w-6 text-green-600" />
                   </div>
                   <div>
-                    <h3 className="mb-1">Địa chỉ cửa hàng</h3>
-                    <ul className="text-gray-600 space-y-1">
-                      <li>• Chi nhánh Quận 1, TP.HCM</li>
-                      <li>• Chi nhánh Hà Nội</li>
-                      <li>• Chi nhánh Đà Nẵng</li>
-                    </ul>
+                    <h3 className="mb-1">{t('contact.info.address')}</h3>
+                    {settings.store_address ? (
+                      <p className="text-gray-600">{settings.store_address}</p>
+                    ) : (
+                      <p className="text-gray-400">{t('contact.info.not_updated')}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -227,20 +347,20 @@ export function ContactPage() {
 
             {/* FAQ */}
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8">
-              <h3 className="mb-4">Câu hỏi thường gặp</h3>
+              <h3 className="mb-4">{t('contact.faq.title')}</h3>
               <div className="space-y-4">
                 {[
                   {
-                    q: 'Thời gian giao hàng bao lâu?',
-                    a: '1-3 ngày nội thành, 3-7 ngày ngoại thành',
+                    q: t('contact.faq.delivery_time_q'),
+                    a: t('contact.faq.delivery_time_a'),
                   },
                   {
-                    q: 'Chính sách đổi trả như thế nào?',
-                    a: 'Đổi trả trong 7 ngày với sản phẩm còn nguyên tem',
+                    q: t('contact.faq.return_policy_q'),
+                    a: t('contact.faq.return_policy_a'),
                   },
                   {
-                    q: 'Có hỗ trợ trả góp không?',
-                    a: 'Hỗ trợ trả góp 0% qua thẻ tín dụng',
+                    q: t('contact.faq.installment_q'),
+                    a: t('contact.faq.installment_a'),
                   },
                 ].map((faq, index) => (
                   <div key={index}>

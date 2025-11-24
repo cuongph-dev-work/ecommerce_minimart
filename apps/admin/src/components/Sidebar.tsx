@@ -4,7 +4,6 @@ import {
   Package,
   Tags,
   ShoppingCart,
-  Users,
   ChevronRight,
   Image,
   // Zap, // Tạm thời comment do chưa implement Flash Sale
@@ -52,7 +51,7 @@ export function Sidebar() {
     // },
     {
       icon: MapPin,
-      label: 'Cửa hàng',
+      label: 'Địa Điểm Nhận Hàng',
       path: '/stores',
     },
     {

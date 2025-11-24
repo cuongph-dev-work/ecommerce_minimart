@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, Headphones, Watch, Package, Camera, Gamepad2, Home, Monitor, Smartphone, Tablet, Tv, Refrigerator, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { categories } from '../data/categories';
+import { categoriesService } from '../services/categories.service';
+import type { Category } from '../types';
 
 const iconMap: Record<string, any> = {
   Headphones,
@@ -21,10 +22,26 @@ const iconMap: Record<string, any> = {
 
 export function MegaMenu() {
   const [isOpen, setIsOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const handleCategoryClick = (category: string) => {
-    navigate(`/products?category=${encodeURIComponent(category)}`);
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await categoriesService.getAll();
+        setCategories(data);
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadCategories();
+  }, []);
+
+  const handleCategoryClick = (categoryId: string, categoryName: string) => {
+    navigate(`/products?category=${encodeURIComponent(categoryId)}`);
     setIsOpen(false);
   };
 
@@ -52,52 +69,59 @@ export function MegaMenu() {
             style={{ width: '800px', maxWidth: '90vw' }}
           >
             <div className="grid grid-cols-3 gap-6 p-6 max-h-[600px] overflow-y-auto">
-              {categories.map((category) => {
-                const Icon = iconMap[category.icon];
-                return (
-                  <div key={category.id} className="group">
-                    <button
-                      onClick={() => handleCategoryClick(category.name)}
-                      className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-orange-50 transition-all mb-2"
-                    >
-                      <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                        {Icon && <Icon className="h-5 w-5 text-white" />}
-                      </div>
-                      <div className="text-left">
-                        <div className="font-medium">{category.name}</div>
-                        {category.subcategories && (
-                          <div className="text-xs text-gray-500">
-                            {category.subcategories.length} danh mục
-                          </div>
-                        )}
-                      </div>
-                    </button>
+              {loading ? (
+                <div className="col-span-3 text-center py-8 text-gray-500">Đang tải...</div>
+              ) : categories.length === 0 ? (
+                <div className="col-span-3 text-center py-8 text-gray-500">Không có danh mục</div>
+              ) : (
+                categories.map((category) => {
+                  const Icon = category.icon ? iconMap[category.icon] : Package;
+                  const subcategories = category.children || [];
+                  return (
+                    <div key={category.id} className="group">
+                      <button
+                        onClick={() => handleCategoryClick(category.id, category.name)}
+                        className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-orange-50 transition-all mb-2"
+                      >
+                        <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                          {Icon && <Icon className="h-5 w-5 text-white" />}
+                        </div>
+                        <div className="text-left">
+                          <div className="font-medium">{category.name}</div>
+                          {subcategories.length > 0 && (
+                            <div className="text-xs text-gray-500">
+                              {subcategories.length} danh mục
+                            </div>
+                          )}
+                        </div>
+                      </button>
 
-                    {/* Subcategories */}
-                    {category.subcategories && category.subcategories.length > 0 && (
-                      <div className="ml-13 space-y-1">
-                        {category.subcategories.slice(0, 4).map((sub, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleCategoryClick(category.name)}
-                            className="block text-sm text-gray-600 hover:text-red-600 hover:translate-x-1 transition-all py-1"
-                          >
-                            {sub}
-                          </button>
-                        ))}
-                        {category.subcategories.length > 4 && (
-                          <button
-                            onClick={() => handleCategoryClick(category.name)}
-                            className="text-xs text-red-600 hover:underline"
-                          >
-                            +{category.subcategories.length - 4} mục khác
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                      {/* Subcategories */}
+                      {subcategories.length > 0 && (
+                        <div className="ml-13 space-y-1">
+                          {subcategories.slice(0, 4).map((sub) => (
+                            <button
+                              key={sub.id}
+                              onClick={() => handleCategoryClick(sub.id, sub.name)}
+                              className="block text-sm text-gray-600 hover:text-red-600 hover:translate-x-1 transition-all py-1"
+                            >
+                              {sub.name}
+                            </button>
+                          ))}
+                          {subcategories.length > 4 && (
+                            <button
+                              onClick={() => handleCategoryClick(category.id, category.name)}
+                              className="text-xs text-red-600 hover:underline"
+                            >
+                              +{subcategories.length - 4} mục khác
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
             </div>
 
             {/* Footer */}

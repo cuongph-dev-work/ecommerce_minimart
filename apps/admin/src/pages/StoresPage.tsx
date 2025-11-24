@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { storesService, type Store as StoreServiceType } from '@/services/stores.service';
 import axios from 'axios';
 import {
@@ -45,15 +45,6 @@ import { safeParse } from 'valibot';
 
 type Store = StoreServiceType;
 
-const availableServices = [
-  'Trải nghiệm sản phẩm trực tiếp',
-  'Tư vấn chuyên sâu từ chuyên gia',
-  'Hỗ trợ cài đặt và kích hoạt',
-  'Bảo hành và sửa chữa nhanh',
-  'Đổi trả trong 7 ngày',
-  'Miễn phí gửi xe ô tô, xe máy',
-];
-
 export function StoresPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [stores, setStores] = useState<Store[]>([]);
@@ -65,13 +56,7 @@ export function StoresPage() {
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [statusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchStores(controller.signal);
-    return () => controller.abort();
-  }, [statusFilter]);
-
-  const fetchStores = async (signal?: AbortSignal) => {
+  const fetchStores = useCallback(async (signal?: AbortSignal) => {
     try {
       setIsLoading(true);
       const response = await storesService.getAll(undefined, signal);
@@ -88,7 +73,13 @@ export function StoresPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [statusFilter]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchStores(controller.signal);
+    return () => controller.abort();
+  }, [fetchStores]);
 
   // Form state
   const [newStoreName, setNewStoreName] = useState('');
@@ -105,18 +96,52 @@ export function StoresPage() {
   const [newStoreAllowPickup, setNewStoreAllowPickup] = useState(true);
   const [newStorePreparationTime, setNewStorePreparationTime] = useState('1-2 ngày');
   const [newStoreStatus, setNewStoreStatus] = useState<'active' | 'inactive'>('active');
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [geocodeError, setGeocodeError] = useState<string | null>(null);
+
+  const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   const filteredStores = stores.filter((store) =>
     store.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     store.address.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleToggleService = (service: string) => {
-    setNewStoreServices(prev =>
-      prev.includes(service)
-        ? prev.filter(s => s !== service)
-        : [...prev, service]
-    );
+  const geocodeAddress = async (address: string) => {
+    if (!address.trim()) return;
+    if (!googleMapsApiKey) {
+      setGeocodeError('Thiếu Google Maps API key. Vui lòng cấu hình biến VITE_GOOGLE_MAPS_API_KEY.');
+      return;
+    }
+    
+    try {
+      setIsGeocoding(true);
+      setGeocodeError(null);
+
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${googleMapsApiKey}`
+      );
+      const data = await response.json();
+
+      if (data?.status === 'OK' && data.results.length > 0) {
+        const { lat, lng } = data.results[0].geometry.location;
+        setNewStoreLat(Number(lat).toFixed(7));
+        setNewStoreLng(Number(lng).toFixed(7));
+        setGeocodeError(null);
+      } else {
+        const message =
+          data?.error_message ||
+          (data?.status === 'ZERO_RESULTS'
+            ? 'Không tìm thấy tọa độ cho địa chỉ này'
+            : 'Không thể lấy tọa độ từ Google Maps');
+        setGeocodeError(message);
+        console.warn('Geocoding error:', data);
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy tọa độ:', error);
+      setGeocodeError('Không thể kết nối tới Google Maps Geocoding API');
+    } finally {
+      setIsGeocoding(false);
+    }
   };
 
   const handleSaveStore = async () => {
@@ -132,7 +157,7 @@ export function StoresPage() {
         weekdays: { start: newStoreWeekdaysStart, end: newStoreWeekdaysEnd },
         weekends: { start: newStoreWeekendsStart, end: newStoreWeekendsEnd },
       },
-      services: newStoreServices,
+      services: newStoreServices.filter(s => s.trim().length > 0),
       allowPickup: newStoreAllowPickup,
       preparationTime: newStorePreparationTime,
       status: newStoreStatus,
@@ -168,7 +193,7 @@ export function StoresPage() {
           weekdays: { start: newStoreWeekdaysStart, end: newStoreWeekdaysEnd },
           weekends: { start: newStoreWeekendsStart, end: newStoreWeekendsEnd },
         },
-        services: newStoreServices,
+        services: newStoreServices.filter(s => s.trim().length > 0),
         allowPickup: newStoreAllowPickup,
         preparationTime: newStorePreparationTime,
         status: newStoreStatus,
@@ -252,7 +277,7 @@ export function StoresPage() {
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Cửa hàng / Địa điểm nhận hàng</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Địa điểm nhận hàng</h2>
           <p className="text-muted-foreground mt-1">
             Quản lý các chi nhánh cửa hàng và địa điểm nhận hàng
           </p>
@@ -295,13 +320,33 @@ export function StoresPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Địa chỉ *</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Địa chỉ *</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => geocodeAddress(newStoreAddress)}
+                    disabled={!newStoreAddress.trim() || isGeocoding || !googleMapsApiKey}
+                  >
+                    {isGeocoding ? 'Đang lấy...' : googleMapsApiKey ? 'Lấy tọa độ' : 'Thiếu API key'}
+                  </Button>
+                </div>
                 <Textarea
                   value={newStoreAddress}
                   onChange={(e) => {
                     setNewStoreAddress(e.target.value);
+                    if (geocodeError) {
+                      setGeocodeError(null);
+                    }
                     if (getFieldError(validationErrors, 'address')) {
                       setValidationErrors(validationErrors.filter(err => err.field !== 'address'));
+                    }
+                  }}
+                  onBlur={() => {
+                    // Tự động lấy tọa độ khi blur nếu địa chỉ đã có và chưa có tọa độ
+                    if (newStoreAddress.trim() && (!newStoreLat || !newStoreLng) && googleMapsApiKey) {
+                      geocodeAddress(newStoreAddress);
                     }
                   }}
                   placeholder="123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
@@ -310,6 +355,16 @@ export function StoresPage() {
                 {getFieldError(validationErrors, 'address') && (
                   <p className="text-sm text-destructive mt-1">
                     {getFieldError(validationErrors, 'address')}
+                  </p>
+                )}
+                {geocodeError && (
+                  <p className="text-sm text-destructive mt-1">
+                    {geocodeError}
+                  </p>
+                )}
+                {!googleMapsApiKey && (
+                  <p className="text-xs text-muted-foreground">
+                    Cần cấu hình biến môi trường <code>VITE_GOOGLE_MAPS_API_KEY</code> để tự động lấy tọa độ.
                   </p>
                 )}
               </div>
@@ -359,24 +414,26 @@ export function StoresPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Latitude</Label>
+                  <Label>Latitude {isGeocoding && <span className="text-xs text-muted-foreground">(Đang lấy...)</span>}</Label>
                   <Input
                     type="number"
                     step="any"
                     value={newStoreLat}
                     onChange={(e) => setNewStoreLat(e.target.value)}
                     placeholder="10.7769"
+                    readOnly={isGeocoding}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Longitude</Label>
+                  <Label>Longitude {isGeocoding && <span className="text-xs text-muted-foreground">(Đang lấy...)</span>}</Label>
                   <Input
                     type="number"
                     step="any"
                     value={newStoreLng}
                     onChange={(e) => setNewStoreLng(e.target.value)}
                     placeholder="106.7009"
+                    readOnly={isGeocoding}
                   />
                 </div>
               </div>
@@ -421,19 +478,40 @@ export function StoresPage() {
 
               <div className="space-y-4 border-t pt-4">
                 <Label>Dịch vụ tại cửa hàng</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  {availableServices.map((service) => (
-                    <div key={service} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={service}
-                        checked={newStoreServices.includes(service)}
-                        onCheckedChange={() => handleToggleService(service)}
+                <div className="space-y-2">
+                  {newStoreServices.map((service, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        value={service}
+                        onChange={(e) => {
+                          const newServices = [...newStoreServices];
+                          newServices[index] = e.target.value;
+                          setNewStoreServices(newServices);
+                        }}
+                        placeholder="Nhập tên dịch vụ..."
+                        className="flex-1"
                       />
-                      <Label htmlFor={service} className="text-sm font-normal cursor-pointer">
-                        {service}
-                      </Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          setNewStoreServices(newStoreServices.filter((_, i) => i !== index));
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
                   ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setNewStoreServices([...newStoreServices, ''])}
+                    className="w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Thêm dịch vụ
+                  </Button>
                 </div>
               </div>
 

@@ -14,6 +14,7 @@
         "hero_title": "Technology for Life",
         "hero_subtitle": "Discover premium technology products at Minimart",
         "shop_now": "Shop Now",
+        "view_more": "View More",
         "featured_products": "Featured Products",
         "flash_sale": "Flash Sale",
         "categories": "Categories"
@@ -33,5 +34,85 @@
         "users": "Users",
         "settings": "Settings",
         "logout": "Logout"
+    },
+    "contact": {
+        "title": "Contact Us",
+        "subtitle": "We are always ready to help you. Please contact us through the channels below",
+        "send_message": "Send us a message",
+        "name": "Full Name",
+        "phone": "Phone Number",
+        "message": "Message",
+        "name_placeholder": "Enter your name",
+        "phone_placeholder": "0912345678",
+        "message_placeholder": "Enter your message...",
+        "send_button": "Send Message",
+        "validation": {
+            "name_required": "Full name is required",
+            "name_empty": "Full name cannot be empty",
+            "name_max_length": "Full name cannot exceed 100 characters",
+            "phone_invalid": "Invalid phone number",
+            "phone_max_length": "Phone number cannot exceed 20 characters",
+            "message_required": "Message is required",
+            "message_empty": "Message cannot be empty",
+            "message_max_length": "Message cannot exceed 2000 characters"
+        },
+        "errors": {
+            "check_info": "Please check the information you entered",
+            "no_email_config": "Email contact is not configured. Please contact via phone number."
+        },
+        "success": {
+            "opening_email": "Opening email application..."
+        },
+        "info": {
+            "title": "Contact Information",
+            "hotline": "Hotline",
+            "hotline_hours": "8:00 - 21:00",
+            "hotline_support": "24/7 Customer Support",
+            "email": "Email",
+            "email_response": "Response within 24 hours",
+            "address": "Store Address",
+            "not_updated": "Not updated"
+        },
+        "faq": {
+            "title": "Frequently Asked Questions",
+            "delivery_time_q": "How long is the delivery time?",
+            "delivery_time_a": "1-3 days in city, 3-7 days outside city",
+            "return_policy_q": "What is the return policy?",
+            "return_policy_a": "Return within 7 days with original tags",
+            "installment_q": "Do you support installment payments?",
+            "installment_a": "0% installment support via credit card"
+        }
+    },
+    "stores": {
+        "title": "Store Locations",
+        "subtitle": "Find the nearest store to experience products in person",
+        "loading": "Loading stores...",
+        "no_stores": "No stores available",
+        "get_directions": "Get Directions",
+        "call": "Call",
+        "call_phone": "Call",
+        "open_in_maps": "Open in Google Maps",
+        "map_title": "Map",
+        "contact_info": "Contact Information",
+        "address": "Address",
+        "phone": "Phone",
+        "email": "Email",
+        "working_hours": "Working Hours",
+        "services": "Store Services",
+        "weekdays": "Mon-Fri",
+        "weekends": "Sat-Sun",
+        "default_weekdays": "8:00 - 21:00",
+            "default_weekends": "9:00 - 20:00"
+    },
+    "contact_methods": {
+        "phone": "Phone",
+        "phone_call_now": "Call Now",
+        "email": "Email",
+        "email_send": "Send Email",
+        "zalo": "Zalo",
+        "zalo_chat": "Chat Zalo",
+        "zalo_content": "Chat with us",
+        "address": "Address",
+        "address_view_map": "View Map"
     }
 }

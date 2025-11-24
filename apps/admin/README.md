@@ -24,13 +24,24 @@ Cập nhật các biến môi trường trong file `.env`:
 # API Configuration
 VITE_API_URL=http://localhost:3001/api
 
+# Google Maps API (cho tính năng lấy tọa độ từ địa chỉ)
+VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+
 # Environment
 VITE_NODE_ENV=development
 ```
 
 **Lưu ý:** 
 - `VITE_API_URL`: URL của API backend (mặc định: `http://localhost:3001/api`)
+- `VITE_GOOGLE_MAPS_API_KEY`: API key từ Google Cloud Console (bật Geocoding API)
 - Đảm bảo backend API đang chạy trước khi start admin dashboard
+
+**Cách lấy Google Maps API Key:**
+1. Truy cập [Google Cloud Console](https://console.cloud.google.com/)
+2. Tạo dự án mới hoặc chọn dự án hiện có
+3. Bật "Geocoding API" trong "APIs & Services" > "Library"
+4. Tạo API Key trong "APIs & Services" > "Credentials"
+5. (Khuyến nghị) Giới hạn API key chỉ cho Geocoding API và domain của bạn
 
 ### 3. Chạy development server
 

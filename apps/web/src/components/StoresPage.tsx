@@ -1,23 +1,100 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapPin, Phone, Mail, Clock, Navigation } from 'lucide-react';
 import { Button } from './ui/button';
 import { motion } from 'motion/react';
-import { storeLocations } from '../data/stores';
+import { useTranslation } from 'react-i18next';
+import { storesService } from '../services/stores.service';
 import { StoreLocation } from '../types';
 
 export function StoresPage() {
-  const [selectedStore, setSelectedStore] = useState<StoreLocation>(storeLocations[0]);
+  const { t } = useTranslation();
+  const [stores, setStores] = useState<StoreLocation[]>([]);
+  const [selectedStore, setSelectedStore] = useState<StoreLocation | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const getMapUrl = (store: StoreLocation) => {
-    return `https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY_HERE&q=${store.lat},${store.lng}&zoom=15`;
+  useEffect(() => {
+    const loadStores = async () => {
+      try {
+        const data = await storesService.getAll();
+        setStores(data);
+        if (data.length > 0) {
+          setSelectedStore(data[0]);
+        }
+      } catch (error) {
+        console.error('Failed to load stores:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadStores();
+  }, []);
+
+  const getMapEmbedUrl = (store: StoreLocation) => {
+    if (store.lat && store.lng) {
+      // Use Google Maps Embed with coordinates (no API key needed)
+      return `https://www.google.com/maps?q=${store.lat},${store.lng}&z=15&output=embed`;
+    } else if (store.address) {
+      // Use address-based embed (no API key needed)
+      return `https://www.google.com/maps?q=${encodeURIComponent(store.address)}&output=embed`;
+    }
+    return '';
   };
 
   const openInGoogleMaps = (store: StoreLocation) => {
-    window.open(
-      `https://www.google.com/maps/search/?api=1&query=${store.lat},${store.lng}`,
-      '_blank'
+    if (store.lat && store.lng) {
+      window.open(
+        `https://www.google.com/maps/search/?api=1&query=${store.lat},${store.lng}`,
+        '_blank'
+      );
+    } else if (store.address) {
+      window.open(
+        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address)}`,
+        '_blank'
+      );
+    }
+  };
+
+  const formatWorkingHours = (store: StoreLocation) => {
+    if (store.workingHours) {
+      const { weekdays, weekends } = store.workingHours;
+      return (
+        <>
+          <div>{t('stores.weekdays')}: {weekdays.start} - {weekdays.end}</div>
+          <div>{t('stores.weekends')}: {weekends.start} - {weekends.end}</div>
+        </>
+      );
+    }
+    return (
+      <>
+        <div>{t('stores.weekdays')}: {t('stores.default_weekdays')}</div>
+        <div>{t('stores.weekends')}: {t('stores.default_weekends')}</div>
+      </>
     );
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-24 pb-12 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-gray-500">{t('stores.loading')}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (stores.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-24 pb-12 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-gray-500">{t('stores.no_stores')}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!selectedStore) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">
@@ -28,9 +105,9 @@ export function StoresPage() {
           animate={{ y: 0, opacity: 1 }}
           className="text-center mb-6"
         >
-          <h1 className="mb-4">Hệ thống cửa hàng</h1>
+          <h1 className="mb-4">{t('stores.title')}</h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Tìm cửa hàng gần bạn nhất để trải nghiệm sản phẩm trực tiếp
+            {t('stores.subtitle')}
           </p>
         </motion.div>
 
@@ -41,7 +118,7 @@ export function StoresPage() {
           transition={{ delay: 0.1 }}
           className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"
         >
-          {storeLocations.map((store, index) => (
+          {stores.map((store, index) => (
             <motion.div
               key={store.id}
               initial={{ y: 20, opacity: 0 }}
@@ -98,16 +175,18 @@ export function StoresPage() {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Mail className={`h-4 w-4 flex-shrink-0 ${
-                    selectedStore.id === store.id ? 'text-white/80' : 'text-gray-500'
-                  }`} />
-                  <span className={`text-sm ${
-                    selectedStore.id === store.id ? 'text-white/90' : 'text-gray-600'
-                  }`}>
-                    {store.email}
-                  </span>
-                </div>
+                {store.email && (
+                  <div className="flex items-center gap-2">
+                    <Mail className={`h-4 w-4 flex-shrink-0 ${
+                      selectedStore.id === store.id ? 'text-white/80' : 'text-gray-500'
+                    }`} />
+                    <span className={`text-sm ${
+                      selectedStore.id === store.id ? 'text-white/90' : 'text-gray-600'
+                    }`}>
+                      {store.email}
+                    </span>
+                  </div>
+                )}
 
                 <div className="flex items-start gap-2">
                   <Clock className={`h-4 w-4 mt-0.5 flex-shrink-0 ${
@@ -116,8 +195,7 @@ export function StoresPage() {
                   <div className={`text-sm ${
                     selectedStore.id === store.id ? 'text-white/90' : 'text-gray-600'
                   }`}>
-                    <div>T2-T6: 8:00 - 21:00</div>
-                    <div>T7-CN: 9:00 - 20:00</div>
+                    {formatWorkingHours(store)}
                   </div>
                 </div>
               </div>
@@ -134,7 +212,7 @@ export function StoresPage() {
                     className="flex-1 bg-white text-red-600 hover:bg-gray-100"
                   >
                     <Navigation className="h-4 w-4 mr-1" />
-                    Chỉ đường
+                    {t('stores.get_directions')}
                   </Button>
                   <Button
                     onClick={(e) => {
@@ -142,11 +220,10 @@ export function StoresPage() {
                       window.open(`tel:${store.phone}`, '_blank');
                     }}
                     size="sm"
-                    variant="outline"
-                    className="flex-1 border-white/40 text-white hover:bg-white/20"
+                    className="flex-1 bg-white text-red-600 hover:bg-gray-100 border-0"
                   >
                     <Phone className="h-4 w-4 mr-1" />
-                    Gọi
+                    {t('stores.call')}
                   </Button>
                 </div>
               )}
@@ -164,33 +241,33 @@ export function StoresPage() {
             className="lg:col-span-2"
           >
             <div className="bg-white rounded-3xl overflow-hidden shadow-lg">
-              {/* Interactive Map Placeholder */}
+              {/* Interactive Map */}
               <div className="aspect-video bg-gray-100 relative">
-                {/* Since we don't have a real API key, we'll show a static map placeholder */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center p-8">
-                    <MapPin className="h-16 w-16 mx-auto mb-4 text-red-600" />
-                    <h3 className="mb-2">{selectedStore.name}</h3>
-                    <p className="text-gray-600 mb-4">{selectedStore.address}</p>
-                    <Button
-                      onClick={() => openInGoogleMaps(selectedStore)}
-                      className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white"
-                    >
-                      <Navigation className="mr-2 h-4 w-4" />
-                      Mở trong Google Maps
-                    </Button>
+                {getMapEmbedUrl(selectedStore) ? (
+                  <iframe
+                    src={getMapEmbedUrl(selectedStore)}
+                    className="w-full h-full border-0"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title={`${t('stores.map_title')} ${selectedStore.name}`}
+                    allowFullScreen
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center p-8">
+                      <MapPin className="h-16 w-16 mx-auto mb-4 text-red-600" />
+                      <h3 className="mb-2">{selectedStore.name}</h3>
+                      <p className="text-gray-600 mb-4">{selectedStore.address}</p>
+                      <Button
+                        onClick={() => openInGoogleMaps(selectedStore)}
+                        className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white"
+                      >
+                        <Navigation className="mr-2 h-4 w-4" />
+                        {t('stores.open_in_maps')}
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                
-                {/* In a real implementation, you would use an iframe with Google Maps Embed API:
-                <iframe
-                  src={getMapUrl(selectedStore)}
-                  className="w-full h-full"
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title={selectedStore.name}
-                />
-                */}
+                )}
               </div>
 
               <div className="p-6 border-t">
@@ -200,7 +277,7 @@ export function StoresPage() {
                     className="flex-1 min-w-[200px] bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white"
                   >
                     <Navigation className="mr-2 h-4 w-4" />
-                    Chỉ đường
+                    {t('stores.get_directions')}
                   </Button>
                   <Button
                     onClick={() => window.open(`tel:${selectedStore.phone}`, '_blank')}
@@ -208,7 +285,7 @@ export function StoresPage() {
                     className="flex-1 min-w-[200px]"
                   >
                     <Phone className="mr-2 h-4 w-4" />
-                    Gọi điện
+                    {t('stores.call_phone')}
                   </Button>
                 </div>
               </div>
@@ -224,14 +301,14 @@ export function StoresPage() {
           >
             {/* Contact Info */}
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="mb-6">Thông tin liên hệ</h3>
+              <h3 className="mb-6">{t('stores.contact_info')}</h3>
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <MapPin className="h-5 w-5 text-blue-600" />
                   </div>
                   <div className="flex-1">
-                    <div className="mb-1">Địa chỉ</div>
+                    <div className="mb-1">{t('stores.address')}</div>
                     <p className="text-gray-600">{selectedStore.address}</p>
                   </div>
                 </div>
@@ -241,7 +318,7 @@ export function StoresPage() {
                     <Phone className="h-5 w-5 text-green-600" />
                   </div>
                   <div className="flex-1">
-                    <div className="mb-1">Điện thoại</div>
+                    <div className="mb-1">{t('stores.phone')}</div>
                     <a
                       href={`tel:${selectedStore.phone}`}
                       className="text-gray-600 hover:text-blue-600 transition-colors"
@@ -251,30 +328,31 @@ export function StoresPage() {
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Mail className="h-5 w-5 text-purple-600" />
+                {selectedStore.email && (
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Mail className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="mb-1">{t('stores.email')}</div>
+                      <a
+                        href={`mailto:${selectedStore.email}`}
+                        className="text-gray-600 hover:text-blue-600 transition-colors"
+                      >
+                        {selectedStore.email}
+                      </a>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <div className="mb-1">Email</div>
-                    <a
-                      href={`mailto:${selectedStore.email}`}
-                      className="text-gray-600 hover:text-blue-600 transition-colors"
-                    >
-                      {selectedStore.email}
-                    </a>
-                  </div>
-                </div>
+                )}
 
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Clock className="h-5 w-5 text-orange-600" />
                   </div>
                   <div className="flex-1">
-                    <div className="mb-1">Giờ làm việc</div>
+                    <div className="mb-1">{t('stores.working_hours')}</div>
                     <div className="text-gray-600 space-y-1">
-                      <div>Thứ 2 - Thứ 6: 8:00 - 21:00</div>
-                      <div>Thứ 7 - CN: 9:00 - 20:00</div>
+                      {formatWorkingHours(selectedStore)}
                     </div>
                   </div>
                 </div>
@@ -282,39 +360,19 @@ export function StoresPage() {
             </div>
 
             {/* Services */}
-            <div className="bg-red-50 rounded-2xl p-6">
-              <h3 className="mb-4">Dịch vụ tại cửa hàng</h3>
-              <ul className="space-y-3">
-                {[
-                  'Trải nghiệm sản phẩm trực tiếp',
-                  'Tư vấn chuyên sâu từ chuyên gia',
-                  'Hỗ trợ cài đặt và kích hoạt',
-                  'Bảo hành và sửa chữa nhanh',
-                  'Đổi trả trong 7 ngày',
-                  'Miễn phí gửi xe ô tô, xe máy',
-                ].map((service, index) => (
-                  <li key={index} className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-red-600 rounded-full flex-shrink-0" />
-                    <span className="text-gray-700">{service}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* CTA */}
-            <div className="bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl p-6 text-white">
-              <h3 className="mb-2 text-white">Cần hỗ trợ?</h3>
-              <p className="mb-4 text-white/90">
-                Đội ngũ chuyên gia của chúng tôi luôn sẵn sàng hỗ trợ bạn
-              </p>
-              <Button
-                onClick={() => window.open(`tel:${selectedStore.phone}`, '_blank')}
-                className="w-full bg-white text-red-600 hover:bg-gray-100"
-              >
-                <Phone className="mr-2 h-4 w-4" />
-                Gọi ngay
-              </Button>
-            </div>
+            {selectedStore.services && selectedStore.services.length > 0 && (
+              <div className="bg-red-50 rounded-2xl p-6">
+                <h3 className="mb-4">{t('stores.services')}</h3>
+                <ul className="space-y-3">
+                  {selectedStore.services.map((service, index) => (
+                    <li key={index} className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-red-600 rounded-full flex-shrink-0" />
+                      <span className="text-gray-700">{service}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </motion.div>
         </div>
       </div>

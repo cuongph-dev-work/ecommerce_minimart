@@ -7,12 +7,14 @@ import { motion, AnimatePresence } from 'motion/react';
 import { MegaMenu } from './MegaMenu';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { settingsService } from '../services/settings.service';
 
 export function Header() {
   const { t } = useTranslation();
   const { getTotalItems } = useCart();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [settings, setSettings] = useState<Record<string, string>>({});
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -22,6 +24,18 @@ export function Header() {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const data = await settingsService.getAll();
+        setSettings(data);
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+      }
+    };
+    loadSettings();
   }, []);
 
   const navItems = [
@@ -50,15 +64,25 @@ export function Header() {
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center"
-            >
-              <span className="text-white">M</span>
-            </motion.div>
+            {settings.store_logo ? (
+              <motion.img
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                src={settings.store_logo}
+                alt={settings.store_name || 'Logo'}
+                className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded-lg"
+              />
+            ) : (
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center"
+              >
+                <span className="text-white">{settings.store_name?.charAt(0) || 'M'}</span>
+              </motion.div>
+            )}
             <span className="hidden sm:block transition-colors">
-              Mini Mart
+              {settings.store_name || 'Mini Mart'}
             </span>
           </Link>
 

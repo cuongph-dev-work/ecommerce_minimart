@@ -5,14 +5,25 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'motion/react';
-import { Save, Store, CreditCard, FileText } from 'lucide-react';
+import { Save, Store, CreditCard, FileText, Upload, X } from 'lucide-react';
 import { settingsService } from '@/services/settings.service';
+import { extractApiError, getFieldError, type ValidationError } from '@/lib/error-handler';
+import { storeSettingsSchema, paymentSettingsSchema, policySettingsSchema } from '@/schemas/settings.schema';
+import { safeParse } from 'valibot';
+import { UploadHelper, type PendingFile } from '@/lib/upload-helper';
 
 export function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  
+  // Logo upload state
+  const [pendingLogoFile, setPendingLogoFile] = useState<PendingFile | null>(null);
+  const [uploadedLogoUrl, setUploadedLogoUrl] = useState<string>('');
+  const [currentLogoUrl, setCurrentLogoUrl] = useState('');
+  const [uploadingLogo, setUploadingLogo] = useState<number | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -34,6 +45,8 @@ export function SettingsPage() {
       setSettings(settingsMap);
       // Initialize form state from settings
       setStoreName(settingsMap.store_name || '');
+      setStoreLogo(settingsMap.store_logo || '');
+      setUploadedLogoUrl(settingsMap.store_logo || '');
       setStorePhone(settingsMap.store_phone || '');
       setStoreEmail(settingsMap.store_email || '');
       setStoreAddress(settingsMap.store_address || '');
@@ -42,6 +55,7 @@ export function SettingsPage() {
       setInstagramLink(settingsMap.instagram_link || '');
       setTelegramLink(settingsMap.telegram_link || '');
       setYoutubeLink(settingsMap.youtube_link || '');
+      setWorkingHours(settingsMap.working_hours || '');
       setBankAccount(settingsMap.bank_account || '');
       setAccountName(settingsMap.account_name || '');
       setBankName(settingsMap.bank_name || '');
@@ -58,16 +72,17 @@ export function SettingsPage() {
     }
   };
   // Store Info
-  const [storeName, setStoreName] = useState('M Tech Store');
+  const [storeName, setStoreName] = useState(settings.store_name || '');
   const [storeLogo, setStoreLogo] = useState('');
-  const [storePhone, setStorePhone] = useState('1900 xxxx');
-  const [storeEmail, setStoreEmail] = useState('support@store.vn');
-  const [storeAddress, setStoreAddress] = useState('123 Nguyễn Huệ, Quận 1, TP.HCM');
-  const [storeDescription, setStoreDescription] = useState('Cửa hàng công nghệ uy tín, cam kết hàng chính hãng và bảo hành tốt nhất.');
+  const [storePhone, setStorePhone] = useState(settings.store_phone || '');
+  const [storeEmail, setStoreEmail] = useState(settings.store_email || '');
+  const [storeAddress, setStoreAddress] = useState(settings.store_address || '');
+  const [storeDescription, setStoreDescription] = useState(settings.store_description || '');
   const [facebookLink, setFacebookLink] = useState('');
   const [instagramLink, setInstagramLink] = useState('');
   const [telegramLink, setTelegramLink] = useState('');
   const [youtubeLink, setYoutubeLink] = useState('');
+  const [workingHours, setWorkingHours] = useState('');
 
 
   // Payment
@@ -83,44 +98,214 @@ export function SettingsPage() {
   const [shoppingGuide, setShoppingGuide] = useState('');
   const [faq, setFaq] = useState('');
 
-  const handleSave = async () => {
+  const handleAddLogoUrl = () => {
+    if (currentLogoUrl) {
+      if (pendingLogoFile) {
+        UploadHelper.revokePreview(pendingLogoFile.preview);
+        setPendingLogoFile(null);
+      }
+      setUploadedLogoUrl(currentLogoUrl);
+      setStoreLogo(currentLogoUrl);
+      setCurrentLogoUrl('');
+      setValidationErrors(validationErrors.filter(err => err.field !== 'store_logo'));
+    }
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validation = UploadHelper.validateFile(file, {
+      maxSize: 5 * 1024 * 1024, // 5MB
+    });
+
+    if (!validation.valid) {
+      setValidationErrors([{ field: 'store_logo', message: validation.error || 'File không hợp lệ' }]);
+      if (e.target) {
+        e.target.value = '';
+      }
+      return;
+    }
+
+    const preview = UploadHelper.createPreview(file);
+    const pending: PendingFile = {
+      file,
+      preview,
+      id: `${Date.now()}-${Math.random()}`,
+    };
+
+    setUploadedLogoUrl('');
+    setStoreLogo('');
+    setPendingLogoFile(pending);
+    setValidationErrors(validationErrors.filter(err => err.field !== 'store_logo'));
+
+    if (e.target) {
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    if (pendingLogoFile) {
+      UploadHelper.revokePreview(pendingLogoFile.preview);
+      setPendingLogoFile(null);
+    }
+    setUploadedLogoUrl('');
+    setStoreLogo('');
+    setCurrentLogoUrl('');
+    setValidationErrors(validationErrors.filter(err => err.field !== 'store_logo'));
+  };
+
+  const handleSave = async (tab: 'store' | 'payment' | 'policies' = 'store') => {
     try {
       setIsSaving(true);
       setError(null);
+      setValidationErrors([]);
 
-      const settingsToUpdate = [
-        { key: 'store_name', value: storeName },
-        { key: 'store_phone', value: storePhone },
-        { key: 'store_email', value: storeEmail },
-        { key: 'store_address', value: storeAddress },
-        { key: 'store_description', value: storeDescription },
-        { key: 'facebook_link', value: facebookLink },
-        { key: 'instagram_link', value: instagramLink },
-        { key: 'telegram_link', value: telegramLink },
-        { key: 'youtube_link', value: youtubeLink },
-        { key: 'bank_account', value: bankAccount },
-        { key: 'account_name', value: accountName },
-        { key: 'bank_name', value: bankName },
-        { key: 'bank_branch', value: bankBranch },
-        { key: 'transfer_note', value: transferNote },
-        { key: 'warranty_policy', value: warrantyPolicy },
-        { key: 'return_policy', value: returnPolicy },
-        { key: 'shopping_guide', value: shoppingGuide },
-        { key: 'faq', value: faq },
-      ];
+      let settingsToUpdate: Array<{ key: string; value: string }> = [];
+      let formData: Record<string, unknown> = {};
 
-      // Update all settings
-      await Promise.all(
-        settingsToUpdate.map(({ key, value }) =>
-          settingsService.update(key, { value })
-        )
-      );
+      if (tab === 'store') {
+        // Upload logo if there's a pending file
+        let logoUrl = uploadedLogoUrl || storeLogo;
+        
+        if (pendingLogoFile) {
+          setUploadingLogo(0);
+          try {
+            const uploadResult = await UploadHelper.uploadBatch(
+              [pendingLogoFile.file],
+              'store',
+              {
+                onProgress: (progress) => {
+                  setUploadingLogo(progress);
+                },
+              }
+            );
+
+            logoUrl = uploadResult.uploaded[0]?.url || '';
+            if (!logoUrl) {
+              setValidationErrors([{ field: 'store_logo', message: 'Lỗi khi upload logo' }]);
+              return;
+            }
+
+            UploadHelper.revokePreview(pendingLogoFile.preview);
+            setPendingLogoFile(null);
+          } catch (uploadError: unknown) {
+            const apiError = extractApiError(uploadError);
+            setValidationErrors([{ field: 'store_logo', message: apiError.message || 'Lỗi khi upload logo' }]);
+            return;
+          } finally {
+            setUploadingLogo(null);
+          }
+        }
+
+        formData = {
+          store_name: storeName.trim(),
+          store_logo: logoUrl || undefined,
+          store_phone: storePhone.trim(),
+          store_email: storeEmail.trim(),
+          store_address: storeAddress.trim(),
+          store_description: storeDescription?.trim() || undefined,
+          facebook_link: facebookLink?.trim() || undefined,
+          instagram_link: instagramLink?.trim() || undefined,
+          telegram_link: telegramLink?.trim() || undefined,
+          youtube_link: youtubeLink?.trim() || undefined,
+          working_hours: workingHours?.trim() || undefined,
+        };
+
+        const result = safeParse(storeSettingsSchema, formData);
+        if (!result.success) {
+          const errors: ValidationError[] = result.issues.map((issue) => {
+            const field = issue.path?.[0]?.key as string || 'store_name';
+            return { field, message: issue.message };
+          });
+          setValidationErrors(errors);
+          return;
+        }
+
+        settingsToUpdate = [
+          { key: 'store_name', value: storeName.trim() },
+          { key: 'store_logo', value: logoUrl || '' },
+          { key: 'store_phone', value: storePhone.trim() },
+          { key: 'store_email', value: storeEmail.trim() },
+          { key: 'store_address', value: storeAddress.trim() },
+          { key: 'store_description', value: storeDescription?.trim() || '' },
+          { key: 'facebook_link', value: facebookLink?.trim() || '' },
+          { key: 'instagram_link', value: instagramLink?.trim() || '' },
+          { key: 'telegram_link', value: telegramLink?.trim() || '' },
+          { key: 'youtube_link', value: youtubeLink?.trim() || '' },
+          { key: 'working_hours', value: workingHours?.trim() || '' },
+        ];
+      } else if (tab === 'payment') {
+        formData = {
+          bank_account: bankAccount?.trim() || undefined,
+          account_name: accountName?.trim() || undefined,
+          bank_name: bankName?.trim() || undefined,
+          bank_branch: bankBranch?.trim() || undefined,
+          transfer_note: transferNote?.trim() || undefined,
+        };
+
+        const result = safeParse(paymentSettingsSchema, formData);
+        if (!result.success) {
+          const errors: ValidationError[] = result.issues.map((issue) => {
+            const field = issue.path?.[0]?.key as string || 'bank_account';
+            return { field, message: issue.message };
+          });
+          setValidationErrors(errors);
+          return;
+        }
+
+        settingsToUpdate = [
+          { key: 'bank_account', value: bankAccount?.trim() || '' },
+          { key: 'account_name', value: accountName?.trim() || '' },
+          { key: 'bank_name', value: bankName?.trim() || '' },
+          { key: 'bank_branch', value: bankBranch?.trim() || '' },
+          { key: 'transfer_note', value: transferNote?.trim() || '' },
+        ];
+      } else if (tab === 'policies') {
+        formData = {
+          warranty_policy: warrantyPolicy?.trim() || undefined,
+          return_policy: returnPolicy?.trim() || undefined,
+          shopping_guide: shoppingGuide?.trim() || undefined,
+          faq: faq?.trim() || undefined,
+        };
+
+        const result = safeParse(policySettingsSchema, formData);
+        if (!result.success) {
+          const errors: ValidationError[] = result.issues.map((issue) => {
+            const field = issue.path?.[0]?.key as string || 'warranty_policy';
+            return { field, message: issue.message };
+          });
+          setValidationErrors(errors);
+          return;
+        }
+
+        settingsToUpdate = [
+          { key: 'warranty_policy', value: warrantyPolicy?.trim() || '' },
+          { key: 'return_policy', value: returnPolicy?.trim() || '' },
+          { key: 'shopping_guide', value: shoppingGuide?.trim() || '' },
+          { key: 'faq', value: faq?.trim() || '' },
+        ];
+      }
+
+      // Batch update all settings in one API call
+      const settingsMap: Record<string, string> = {};
+      settingsToUpdate.forEach(({ key, value }) => {
+        settingsMap[key] = value;
+      });
+
+      await settingsService.batchUpdate({ settings: settingsMap });
 
       await fetchSettings();
-    } catch (err: any) {
-      setError(err?.message || 'Failed to save settings');
+    } catch (err: unknown) {
+      const apiError = extractApiError(err);
+      if (apiError.errors) {
+        setValidationErrors(apiError.errors);
+      } else {
+        setError(apiError.message || 'Failed to save settings');
+      }
     } finally {
       setIsSaving(false);
+      setUploadingLogo(null);
     }
   };
 
@@ -170,56 +355,222 @@ export function SettingsPage() {
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Tên cửa hàng</Label>
+                <Label>Tên cửa hàng <span className="text-destructive">*</span></Label>
                 <Input
                   value={storeName}
-                  onChange={(e) => setStoreName(e.target.value)}
+                  onChange={(e) => {
+                    setStoreName(e.target.value);
+                    if (getFieldError(validationErrors, 'store_name')) {
+                      setValidationErrors(validationErrors.filter(err => err.field !== 'store_name'));
+                    }
+                  }}
+                  className={getFieldError(validationErrors, 'store_name') ? 'border-destructive' : ''}
                 />
+                {getFieldError(validationErrors, 'store_name') && (
+                  <p className="text-sm text-destructive">
+                    {getFieldError(validationErrors, 'store_name')}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label>Logo (URL)</Label>
-                <Input
-                  value={storeLogo}
-                  onChange={(e) => setStoreLogo(e.target.value)}
-                  placeholder="https://..."
-                />
+                <Label>Logo</Label>
+                <div className="space-y-2">
+                  {/* Upload Button */}
+                  <div className="flex gap-2">
+                    <label className="flex-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                        disabled={uploadingLogo !== null}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        disabled={uploadingLogo !== null}
+                        asChild
+                      >
+                        <span>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Chọn file
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
+
+                  {/* URL Input */}
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="https://example.com/logo.jpg"
+                      value={currentLogoUrl}
+                      onChange={(e) => {
+                        setCurrentLogoUrl(e.target.value);
+                        if (getFieldError(validationErrors, 'store_logo')) {
+                          setValidationErrors(validationErrors.filter(err => err.field !== 'store_logo'));
+                        }
+                      }}
+                      disabled={uploadingLogo !== null}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={handleAddLogoUrl}
+                      disabled={!currentLogoUrl || uploadingLogo !== null}
+                    >
+                      Thêm
+                    </Button>
+                  </div>
+                </div>
+
+                {getFieldError(validationErrors, 'store_logo') && (
+                  <p className="text-sm text-destructive">
+                    {getFieldError(validationErrors, 'store_logo')}
+                  </p>
+                )}
+
+                {/* Logo Preview */}
+                {(pendingLogoFile || uploadedLogoUrl || uploadingLogo !== null) ? (
+                  <div className="relative rounded-lg overflow-hidden border border-border">
+                    {uploadingLogo !== null ? (
+                      <div className="w-full h-32 flex flex-col items-center justify-center bg-muted/50">
+                        <div className="text-sm text-muted-foreground mb-2">Đang upload...</div>
+                        <div className="w-3/4 h-1 bg-secondary rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary transition-all duration-300"
+                            style={{ width: `${uploadingLogo}%` }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <img
+                          src={pendingLogoFile?.preview || uploadedLogoUrl}
+                          alt="Logo preview"
+                          className="w-full h-32 object-contain bg-muted/30"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleRemoveLogo}
+                          className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                        {pendingLogoFile && (
+                          <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-yellow-500/80 text-white text-xs rounded">
+                            Chờ upload
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="h-32 flex flex-col items-center justify-center border-2 border-dashed rounded-lg text-muted-foreground bg-muted/30">
+                    <Upload className="w-8 h-8 mb-2 opacity-50" />
+                    <span className="text-sm">Chưa có logo</span>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label>Số điện thoại hotline</Label>
+                <Label>Số điện thoại hotline <span className="text-destructive">*</span></Label>
                 <Input
                   value={storePhone}
-                  onChange={(e) => setStorePhone(e.target.value)}
+                  onChange={(e) => {
+                    setStorePhone(e.target.value);
+                    if (getFieldError(validationErrors, 'store_phone')) {
+                      setValidationErrors(validationErrors.filter(err => err.field !== 'store_phone'));
+                    }
+                  }}
+                  className={getFieldError(validationErrors, 'store_phone') ? 'border-destructive' : ''}
                 />
+                {getFieldError(validationErrors, 'store_phone') && (
+                  <p className="text-sm text-destructive">
+                    {getFieldError(validationErrors, 'store_phone')}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label>Email liên hệ</Label>
+                <Label>Email liên hệ <span className="text-destructive">*</span></Label>
                 <Input
                   type="email"
                   value={storeEmail}
-                  onChange={(e) => setStoreEmail(e.target.value)}
+                  onChange={(e) => {
+                    setStoreEmail(e.target.value);
+                    if (getFieldError(validationErrors, 'store_email')) {
+                      setValidationErrors(validationErrors.filter(err => err.field !== 'store_email'));
+                    }
+                  }}
+                  className={getFieldError(validationErrors, 'store_email') ? 'border-destructive' : ''}
                 />
+                {getFieldError(validationErrors, 'store_email') && (
+                  <p className="text-sm text-destructive">
+                    {getFieldError(validationErrors, 'store_email')}
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Địa chỉ</Label>
+              <Label>Địa chỉ <span className="text-destructive">*</span></Label>
               <Textarea
                 value={storeAddress}
-                onChange={(e) => setStoreAddress(e.target.value)}
-                className="min-h-[80px]"
+                onChange={(e) => {
+                  setStoreAddress(e.target.value);
+                  if (getFieldError(validationErrors, 'store_address')) {
+                    setValidationErrors(validationErrors.filter(err => err.field !== 'store_address'));
+                  }
+                }}
+                className={`min-h-[80px] ${getFieldError(validationErrors, 'store_address') ? 'border-destructive' : ''}`}
               />
+              {getFieldError(validationErrors, 'store_address') && (
+                <p className="text-sm text-destructive">
+                  {getFieldError(validationErrors, 'store_address')}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label>Mô tả ngắn</Label>
               <Textarea
                 value={storeDescription}
-                onChange={(e) => setStoreDescription(e.target.value)}
-                className="min-h-[100px]"
+                onChange={(e) => {
+                  setStoreDescription(e.target.value);
+                  if (getFieldError(validationErrors, 'store_description')) {
+                    setValidationErrors(validationErrors.filter(err => err.field !== 'store_description'));
+                  }
+                }}
+                className={`min-h-[100px] ${getFieldError(validationErrors, 'store_description') ? 'border-destructive' : ''}`}
               />
+              {getFieldError(validationErrors, 'store_description') && (
+                <p className="text-sm text-destructive">
+                  {getFieldError(validationErrors, 'store_description')}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Giờ làm việc</Label>
+              <Input
+                value={workingHours}
+                onChange={(e) => {
+                  setWorkingHours(e.target.value);
+                  if (getFieldError(validationErrors, 'working_hours')) {
+                    setValidationErrors(validationErrors.filter(err => err.field !== 'working_hours'));
+                  }
+                }}
+                placeholder="VD: T2-T6: 8:00-17:00, T7-CN: 9:00-18:00"
+                className={getFieldError(validationErrors, 'working_hours') ? 'border-destructive' : ''}
+              />
+              {getFieldError(validationErrors, 'working_hours') && (
+                <p className="text-sm text-destructive">
+                  {getFieldError(validationErrors, 'working_hours')}
+                </p>
+              )}
             </div>
 
             <div className="space-y-4 border-t pt-4">
@@ -260,9 +611,9 @@ export function SettingsPage() {
               </div>
             </div>
 
-            <Button onClick={handleSave} className="w-full sm:w-auto">
+            <Button onClick={() => handleSave('store')} className="w-full sm:w-auto" disabled={isSaving}>
               <Save className="mr-2 h-4 w-4" />
-              Lưu thay đổi
+              {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
             </Button>
           </div>
         </TabsContent>
@@ -325,9 +676,9 @@ export function SettingsPage() {
               </div>
             </div>
 
-            <Button onClick={handleSave} className="w-full sm:w-auto">
+            <Button onClick={() => handleSave('payment')} className="w-full sm:w-auto" disabled={isSaving}>
               <Save className="mr-2 h-4 w-4" />
-              Lưu thay đổi
+              {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
             </Button>
           </div>
         </TabsContent>
@@ -378,7 +729,7 @@ export function SettingsPage() {
               </div>
             </div>
 
-            <Button onClick={handleSave} className="w-full sm:w-auto" disabled={isSaving}>
+            <Button onClick={() => handleSave('policies')} className="w-full sm:w-auto" disabled={isSaving}>
               <Save className="mr-2 h-4 w-4" />
               {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
             </Button>

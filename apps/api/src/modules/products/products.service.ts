@@ -56,7 +56,7 @@ export class ProductsService {
   }
 
   async findAll(query: QueryProductDto): Promise<PaginatedResponse<any>> {
-    const { page = 1, limit = 20, search, category, brand, status, sortBy = 'created_at', sortOrder = 'desc' } = query;
+    const { page = 1, limit = 20, search, category, brand, status, featured, sortBy = 'created_at', sortOrder = 'desc' } = query;
 
     const where: any = {};
 
@@ -84,8 +84,18 @@ export class ProductsService {
       where.status = status;
     }
 
+    // Filter by featured
+    if (featured !== undefined) {
+      where.featured = featured;
+    }
+
     // Sort
-    const orderByField = sortBy === 'created_at' ? 'createdAt' : sortBy;
+    let orderByField = sortBy;
+    if (sortBy === 'created_at') {
+      orderByField = 'createdAt';
+    } else if (sortBy === 'sold') {
+      orderByField = 'soldCount';
+    }
     const orderBy: any = { [orderByField]: sortOrder === 'asc' ? 'ASC' : 'DESC' };
 
     // Pagination

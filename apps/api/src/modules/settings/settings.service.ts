@@ -39,5 +39,24 @@ export class SettingsService {
     await this.em.persistAndFlush(setting);
     return setting;
   }
+
+  async batchUpdate(settings: Record<string, any>): Promise<Setting[]> {
+    const results: Setting[] = [];
+
+    for (const [key, value] of Object.entries(settings)) {
+      let setting = await this.em.findOne(Setting, { key });
+
+      if (!setting) {
+        setting = this.em.create(Setting, { key, value });
+      } else {
+        setting.value = value;
+      }
+
+      results.push(setting);
+    }
+
+    await this.em.persistAndFlush(results);
+    return results;
+  }
 }
 

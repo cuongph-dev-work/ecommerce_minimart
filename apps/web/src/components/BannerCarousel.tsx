@@ -3,28 +3,77 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
 import { motion, AnimatePresence } from 'motion/react';
-import { banners } from '../data/banners';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { bannersService } from '../services/banners.service';
+import type { Banner } from '../types';
+import { useTranslation } from 'react-i18next';
 
 export function BannerCarousel() {
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Load banners from API
+  useEffect(() => {
+    const loadBanners = async () => {
+      try {
+        const data = await bannersService.getAll();
+        // Sort by sortOrder if available, otherwise keep original order
+        const sortedBanners = [...data].sort((a, b) => {
+          const orderA = a.sortOrder ?? 0;
+          const orderB = b.sortOrder ?? 0;
+          return orderA - orderB;
+        });
+        setBanners(sortedBanners);
+      } catch (error) {
+        console.error('Failed to load banners:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadBanners();
+  }, []);
 
   // Auto slide
   useEffect(() => {
+    if (banners.length === 0) return;
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % banners.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [banners.length]);
 
   const goToPrevious = () => {
+    if (banners.length === 0) return;
     setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
   };
 
   const goToNext = () => {
+    if (banners.length === 0) return;
     setCurrentIndex((prev) => (prev + 1) % banners.length);
   };
+
+  const handleBannerClick = () => {
+    const currentBanner = banners[currentIndex];
+    if (currentBanner?.link) {
+      navigate(currentBanner.link);
+    } else {
+      navigate('/products');
+    }
+  };
+
+  // Don't render if loading or no banners
+  if (loading) {
+    return (
+      <div className="relative h-[400px] sm:h-[500px] overflow-hidden rounded-2xl bg-gray-200 animate-pulse" />
+    );
+  }
+
+  if (banners.length === 0) {
+    return null;
+  }
 
   return (
     <div className="relative h-[400px] sm:h-[500px] overflow-hidden rounded-2xl">
@@ -74,11 +123,11 @@ export function BannerCarousel() {
                 transition={{ delay: 0.4 }}
               >
                 <Button
-                  onClick={() => navigate('/products')}
+                  onClick={handleBannerClick}
                   size="lg"
                   className="bg-white text-red-600 hover:bg-gray-100 shadow-xl"
                 >
-                  Mua ngay
+                  {t('home.view_more')}
                 </Button>
               </motion.div>
             </div>

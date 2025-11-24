@@ -3,8 +3,6 @@ import { Sidebar } from '@/components/Sidebar';
 
 import { LogOut } from 'lucide-react';
 // import { Bell, Search } from 'lucide-react'; // Temporarily hidden
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import {
   DropdownMenu,
@@ -73,7 +71,7 @@ export function AdminLayout() {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                   <LogOut className="w-4 h-4 mr-2" />
-                  Logout
+                  Đăng Xuất
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

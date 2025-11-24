@@ -14,6 +14,7 @@
         "hero_title": "Công nghệ cho cuộc sống",
         "hero_subtitle": "Khám phá các sản phẩm công nghệ cao cấp tại Minimart",
         "shop_now": "Mua ngay",
+        "view_more": "Xem thêm",
         "featured_products": "Sản phẩm nổi bật",
         "flash_sale": "Flash Sale",
         "categories": "Danh mục"
@@ -33,5 +34,85 @@
         "users": "Người dùng",
         "settings": "Cài đặt",
         "logout": "Đăng xuất"
+    },
+    "contact": {
+        "title": "Liên hệ với chúng tôi",
+        "subtitle": "Chúng tôi luôn sẵn sàng hỗ trợ bạn. Hãy liên hệ với chúng tôi qua các kênh bên dưới",
+        "send_message": "Gửi tin nhắn cho chúng tôi",
+        "name": "Họ và tên",
+        "phone": "Số điện thoại",
+        "message": "Nội dung",
+        "name_placeholder": "Nhập họ và tên",
+        "phone_placeholder": "0912345678",
+        "message_placeholder": "Nhập nội dung cần hỗ trợ...",
+        "send_button": "Gửi tin nhắn",
+        "validation": {
+            "name_required": "Họ và tên là bắt buộc",
+            "name_empty": "Họ và tên không được để trống",
+            "name_max_length": "Họ và tên không được vượt quá 100 ký tự",
+            "phone_invalid": "Số điện thoại không hợp lệ",
+            "phone_max_length": "Số điện thoại không được vượt quá 20 ký tự",
+            "message_required": "Nội dung là bắt buộc",
+            "message_empty": "Nội dung không được để trống",
+            "message_max_length": "Nội dung không được vượt quá 2000 ký tự"
+        },
+        "errors": {
+            "check_info": "Vui lòng kiểm tra lại thông tin đã nhập",
+            "no_email_config": "Chưa cấu hình email liên hệ. Vui lòng liên hệ qua số điện thoại."
+        },
+        "success": {
+            "opening_email": "Đang mở ứng dụng email..."
+        },
+        "info": {
+            "title": "Thông tin liên hệ",
+            "hotline": "Hotline",
+            "hotline_hours": "8:00 - 21:00",
+            "hotline_support": "Hỗ trợ khách hàng 24/7",
+            "email": "Email",
+            "email_response": "Phản hồi trong 24h",
+            "address": "Địa chỉ cửa hàng",
+            "not_updated": "Chưa cập nhật"
+        },
+        "faq": {
+            "title": "Câu hỏi thường gặp",
+            "delivery_time_q": "Thời gian giao hàng bao lâu?",
+            "delivery_time_a": "1-3 ngày nội thành, 3-7 ngày ngoại thành",
+            "return_policy_q": "Chính sách đổi trả như thế nào?",
+            "return_policy_a": "Đổi trả trong 7 ngày với sản phẩm còn nguyên tem",
+            "installment_q": "Có hỗ trợ trả góp không?",
+            "installment_a": "Hỗ trợ trả góp 0% qua thẻ tín dụng"
+        }
+    },
+    "stores": {
+        "title": "Hệ thống cửa hàng",
+        "subtitle": "Tìm cửa hàng gần bạn nhất để trải nghiệm sản phẩm trực tiếp",
+        "loading": "Đang tải cửa hàng...",
+        "no_stores": "Không có cửa hàng nào",
+        "get_directions": "Chỉ đường",
+        "call": "Gọi",
+        "call_phone": "Gọi điện",
+        "open_in_maps": "Mở trong Google Maps",
+        "map_title": "Bản đồ",
+        "contact_info": "Thông tin liên hệ",
+        "address": "Địa chỉ",
+        "phone": "Điện thoại",
+        "email": "Email",
+        "working_hours": "Giờ làm việc",
+        "services": "Dịch vụ tại cửa hàng",
+        "weekdays": "T2-T6",
+        "weekends": "T7-CN",
+        "default_weekdays": "8:00 - 21:00",
+            "default_weekends": "9:00 - 20:00"
+    },
+    "contact_methods": {
+        "phone": "Điện thoại",
+        "phone_call_now": "Gọi ngay",
+        "email": "Email",
+        "email_send": "Gửi email",
+        "zalo": "Zalo",
+        "zalo_chat": "Chat Zalo",
+        "zalo_content": "Chat với chúng tôi",
+        "address": "Địa chỉ",
+        "address_view_map": "Xem bản đồ"
     }
 }

@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -18,6 +19,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { UserRole } from '../../entities/user.entity';
+import { Public } from '../auth/decorators/public.decorator';
+import { ProductStatus } from '../../entities/product.entity';
 
 @Controller('admin/products')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -76,6 +79,54 @@ export class ProductsController {
   @Post('import')
   async import() {
     const data = await this.productsService.import(null);
+    return { success: true, data };
+  }
+}
+
+@Controller('products')
+export class PublicProductsController {
+  constructor(private readonly productsService: ProductsService) {}
+
+  @Public()
+  @Get()
+  async findAll(@Query() query: QueryProductDto) {
+    // Only return active products for public
+    const publicQuery = {
+      ...query,
+      status: ProductStatus.ACTIVE,
+    };
+    const result = await this.productsService.findAll(publicQuery);
+    return {
+      success: true,
+      data: {
+        products: result.data,
+        pagination: result.pagination,
+      },
+    };
+  }
+
+  @Public()
+  @Get('featured')
+  async findFeatured(@Query('limit') limit?: number) {
+    const result = await this.productsService.findAll({
+      featured: true,
+      status: ProductStatus.ACTIVE,
+      sortBy: 'sold',
+      sortOrder: 'desc',
+      limit: limit || 5,
+      page: 1,
+    });
+    return { success: true, data: result.data };
+  }
+
+  @Public()
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    const data = await this.productsService.findOne(id);
+    // Only return if product is active
+    if (data.status !== ProductStatus.ACTIVE) {
+      throw new NotFoundException('Product not found');
+    }
     return { success: true, data };
   }
 }

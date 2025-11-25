@@ -16,5 +16,9 @@ export class QueryReviewDto extends PaginationDto {
   @IsOptional()
   @IsEnum(ReviewStatus)
   status?: ReviewStatus;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
 }
 

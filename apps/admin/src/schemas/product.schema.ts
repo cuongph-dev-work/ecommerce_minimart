@@ -40,12 +40,9 @@ export const productSchema = v.object({
       v.maxValue(100, 'Giảm giá phải <= 100')
     )
   ),
-  description: v.optional(
-    v.pipe(
-      v.string(),
-      v.maxLength(2000, 'Mô tả không được vượt quá 2000 ký tự')
-    )
-  ),
+  description: v.optional(v.string()),
+  specifications: v.optional(v.string()),
+  usageGuide: v.optional(v.string()),
   warrantyPeriod: v.optional(v.string()),
   subcategoryId: v.optional(v.string()),
   isOfficial: v.optional(v.boolean()),

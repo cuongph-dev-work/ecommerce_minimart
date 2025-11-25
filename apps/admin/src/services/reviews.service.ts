@@ -9,8 +9,7 @@ export interface Review {
   rating: number;
   comment?: string;
   reply?: string;
-  isApproved: boolean;
-  isHidden: boolean;
+  status: 'pending' | 'approved' | 'hidden';
   createdAt: string;
 }
 
@@ -23,8 +22,8 @@ export interface QueryReviewParams {
   limit?: number;
   productId?: string;
   rating?: number;
-  isApproved?: boolean;
-  isHidden?: boolean;
+  status?: string;
+  search?: string;
 }
 
 class ReviewsService {
@@ -45,14 +44,14 @@ class ReviewsService {
   }
 
   async approve(id: string): Promise<Review> {
-    const response = await apiClient.patch<{ success: boolean; data: Review }>(
+    const response = await apiClient.put<{ success: boolean; data: Review }>(
       `/admin/reviews/${id}/approve`
     );
     return response.data.data;
   }
 
   async hide(id: string): Promise<Review> {
-    const response = await apiClient.patch<{ success: boolean; data: Review }>(
+    const response = await apiClient.put<{ success: boolean; data: Review }>(
       `/admin/reviews/${id}/hide`
     );
     return response.data.data;

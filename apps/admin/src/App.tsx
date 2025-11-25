@@ -8,7 +8,7 @@ import { BannersPage } from '@/pages/BannersPage';
 // Tạm thời comment do chưa implement
 // import { FlashSalesPage } from '@/pages/FlashSalesPage';
 // import { VouchersPage } from '@/pages/VouchersPage';
-// import { ReviewsPage } from '@/pages/ReviewsPage';
+import { ReviewsPage } from '@/pages/ReviewsPage';
 import { StoresPage } from '@/pages/StoresPage';
 import { OrdersPage } from '@/pages/OrdersPage';
 import { UsersPage } from '@/pages/UsersPage';
@@ -36,8 +36,7 @@ function App() {
         {/* <Route path="vouchers" element={<VouchersPage />} /> */}
         <Route path="stores" element={<StoresPage />} />
         <Route path="orders" element={<OrdersPage />} />
-        {/* Tạm thời comment do chưa implement */}
-        {/* <Route path="reviews" element={<ReviewsPage />} /> */}
+        <Route path="reviews" element={<ReviewsPage />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>

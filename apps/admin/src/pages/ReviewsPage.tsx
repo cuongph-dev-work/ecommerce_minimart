@@ -54,6 +54,7 @@ export interface Review {
 
 export function ReviewsPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'hidden'>('all');
   const [ratingFilter, setRatingFilter] = useState<'all' | '1' | '2' | '3' | '4' | '5'>('all');
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -65,20 +66,29 @@ export function ReviewsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   useEffect(() => {
     const controller = new AbortController();
     fetchReviews(controller.signal);
     return () => controller.abort();
-  }, [statusFilter, ratingFilter]);
+  }, [statusFilter, ratingFilter, debouncedSearchTerm]);
 
   const fetchReviews = async (signal?: AbortSignal) => {
     try {
       setIsLoading(true);
       setError(null);
       const response = await reviewsService.getAll({
-        isApproved: statusFilter === 'approved' ? true : statusFilter === 'pending' ? false : undefined,
-        isHidden: statusFilter === 'hidden' ? true : undefined,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
         rating: ratingFilter !== 'all' ? Number(ratingFilter) : undefined,
+        search: debouncedSearchTerm || undefined,
       }, signal);
       // Transform API response to match frontend Review type
       const transformed = response.reviews.map((r: any) => ({
@@ -86,7 +96,7 @@ export function ReviewsPage() {
         userName: r.userName || r.user?.name || 'Anonymous',
         productName: r.productName || r.product?.name || 'Unknown Product',
         date: r.createdAt || r.date,
-        status: r.isApproved ? 'approved' : r.isHidden ? 'hidden' : 'pending',
+        status: r.status?.toLowerCase() || 'pending',
       }));
       setReviews(transformed);
     } catch (err: any) {
@@ -96,16 +106,6 @@ export function ReviewsPage() {
       setIsLoading(false);
     }
   };
-
-  const filteredReviews = reviews.filter((review) => {
-    const matchesSearch =
-      review.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      review.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      review.comment.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || review.status === statusFilter;
-    const matchesRating = ratingFilter === 'all' || review.rating.toString() === ratingFilter;
-    return matchesSearch && matchesStatus && matchesRating;
-  });
 
   const handleApprove = async (id: string) => {
     try {
@@ -268,14 +268,14 @@ export function ReviewsPage() {
                   Đang tải đánh giá...
                 </TableCell>
               </TableRow>
-            ) : filteredReviews.length === 0 ? (
+            ) : reviews.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   Không tìm thấy đánh giá
                 </TableCell>
               </TableRow>
             ) : (
-              filteredReviews.map((review) => (
+              reviews.map((review) => (
               <TableRow key={review.id} className="group">
                 <TableCell className="font-medium">{review.productName}</TableCell>
                 <TableCell>{review.userName}</TableCell>
@@ -320,12 +320,14 @@ export function ReviewsPage() {
                           <X className="mr-2 h-4 w-4" /> Ẩn
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem onSelect={() => {
-                        setSelectedReview(review);
-                        setIsReplyOpen(true);
-                      }}>
-                        <MessageSquare className="mr-2 h-4 w-4" /> Phản hồi
-                      </DropdownMenuItem>
+                      {!review.reply && (
+                        <DropdownMenuItem onSelect={() => {
+                          setSelectedReview(review);
+                          setIsReplyOpen(true);
+                        }}>
+                          <MessageSquare className="mr-2 h-4 w-4" /> Phản hồi
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
                         onSelect={() => handleDelete(review.id)}

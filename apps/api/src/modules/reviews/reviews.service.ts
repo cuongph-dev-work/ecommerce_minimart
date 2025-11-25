@@ -55,6 +55,15 @@ export class ReviewsService {
       where.status = status;
     }
 
+    if (query.search) {
+      const search = query.search.toLowerCase();
+      where.$or = [
+        { userName: { $ilike: `%${search}%` } },
+        { comment: { $ilike: `%${search}%` } },
+        { product: { name: { $ilike: `%${search}%` } } },
+      ];
+    }
+
     const offset = (page - 1) * limit;
 
     const [reviews, total] = await this.em.findAndCount(Review, where, {

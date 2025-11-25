@@ -9,7 +9,7 @@ import {
   // Zap, // Tạm thời comment do chưa implement Flash Sale
   // Ticket, // Tạm thời comment do chưa implement Vouchers
   MapPin,
-  // Star, // Tạm thời comment do chưa implement Reviews
+  Star,
   Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -59,12 +59,11 @@ export function Sidebar() {
       label: 'Đơn hàng',
       path: '/orders',
     },
-    // Tạm thời ẩn Đánh giá do chưa implement
-    // {
-    //   icon: Star,
-    //   label: 'Đánh giá',
-    //   path: '/reviews',
-    // },
+    {
+      icon: Star,
+      label: 'Đánh giá',
+      path: '/reviews',
+    },
     // Tạm thời ẩn tab Người dùng do chưa có chức năng đăng ký user
     // {
     //   icon: Users,

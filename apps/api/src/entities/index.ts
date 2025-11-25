@@ -9,6 +9,7 @@ export * from './flash-sale-product.entity';
 export * from './voucher.entity';
 export * from './store.entity';
 export * from './review.entity';
+export * from './search-query.entity';
 export * from './setting.entity';
 export * from './contact-history.entity';
 

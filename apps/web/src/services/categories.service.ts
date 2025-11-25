@@ -22,6 +22,14 @@ class CategoriesService {
     return response.data.data;
   }
 
+  async getBySlug(slug: string, signal?: AbortSignal): Promise<Category> {
+    const response = await apiClient.get<{ success: boolean; data: Category }>(
+      `/categories/slug/${slug}`,
+      { signal }
+    );
+    return response.data.data;
+  }
+
   async getTopBySales(limit?: number, signal?: AbortSignal): Promise<CategoryWithSales[]> {
     const response = await apiClient.get<{ success: boolean; data: CategoryWithSales[] }>(
       '/categories/top-by-sales',

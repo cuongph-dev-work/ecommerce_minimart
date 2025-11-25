@@ -7,6 +7,7 @@ import {
 import { EntityManager } from '@mikro-orm/core';
 import { Product, ProductStatus } from '../../entities/product.entity';
 import { Category } from '../../entities/category.entity';
+import { SearchQuery } from '../../entities/search-query.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
@@ -67,11 +68,38 @@ export class ProductsService {
         { sku: { $ilike: `%${search}%` } },
         { brand: { $ilike: `%${search}%` } },
       ];
+      
+      // Track search query (async, don't wait for it)
+      this.trackSearchQuery(search.trim()).catch(err => {
+        console.error('Failed to track search query:', err);
+      });
     }
 
     // Filter by category
     if (category) {
-      where.category = category;
+      // Try to find category by ID or slug
+      let categoryEntity: Category | null = null;
+      try {
+        // Try by ID first (UUID format)
+        categoryEntity = await this.em.findOne(Category, { id: category });
+      } catch {
+        // If not found by ID, try by slug
+        try {
+          categoryEntity = await this.em.findOne(Category, { slug: category });
+        } catch {
+          // Category not found, skip filter
+        }
+      }
+
+      if (categoryEntity) {
+        // If category has a parent, it's a subcategory - filter by subcategory
+        if (categoryEntity.parent) {
+          where.subcategory = categoryEntity.id;
+        } else {
+          // If category has no parent, it's a parent category - filter by category
+          where.category = categoryEntity.id;
+        }
+      }
     }
 
     // Filter by brand
@@ -223,43 +251,56 @@ export class ProductsService {
     throw new BadRequestException('Import not implemented yet');
   }
 
+  /**
+   * Track a search query - increment count if exists, create if not
+   */
+  private async trackSearchQuery(query: string): Promise<void> {
+    if (!query || query.trim().length < 2) {
+      return; // Don't track very short queries
+    }
+
+    const normalizedQuery = query.trim().toLowerCase();
+    
+    try {
+      let searchQuery = await this.em.findOne(SearchQuery, { query: normalizedQuery });
+      
+      if (searchQuery) {
+        // Increment count and update lastSearchedAt
+        searchQuery.count += 1;
+        searchQuery.lastSearchedAt = new Date();
+      } else {
+        // Create new search query
+        searchQuery = this.em.create(SearchQuery, {
+          query: normalizedQuery,
+          count: 1,
+          lastSearchedAt: new Date(),
+        });
+      }
+      
+      await this.em.flush();
+    } catch (error) {
+      // Silently fail - don't break the main query if tracking fails
+      console.error('Error tracking search query:', error);
+    }
+  }
+
   async getPopularSearches(limit: number = 5): Promise<string[]> {
-    // Get most popular products by sold count and extract unique search terms
-    const products = await this.em.find(
-      Product,
-      { status: ProductStatus.ACTIVE },
+    // Get top search queries by count, ordered by count desc and lastSearchedAt desc
+    // Only return actual search queries from users - no fallback
+    const searchQueries = await this.em.find(
+      SearchQuery,
+      {},
       {
-        populate: ['category'],
-        orderBy: { soldCount: 'DESC' },
-        limit: limit * 3, // Get more to extract unique terms
+        orderBy: [
+          { count: 'DESC' },
+          { lastSearchedAt: 'DESC' },
+        ],
+        limit,
       },
     );
 
-    // Extract unique search terms from product names and brands
-    const searchTerms = new Set<string>();
-    
-    products.forEach((product) => {
-      // Add brand if exists
-      if (product.brand) {
-        searchTerms.add(product.brand);
-      }
-      
-      // Add category name
-      if (product.category?.name) {
-        searchTerms.add(product.category.name);
-      }
-      
-      // Add first 2 words from product name as potential search terms
-      const words = product.name.split(' ').slice(0, 2);
-      words.forEach(word => {
-        if (word.length > 2) { // Only add meaningful words
-          searchTerms.add(word);
-        }
-      });
-    });
-
-    // Convert to array and return top N
-    return Array.from(searchTerms).slice(0, limit);
+    // Return only tracked searches - empty array if no searches yet
+    return searchQueries.map(sq => sq.query);
   }
 }
 

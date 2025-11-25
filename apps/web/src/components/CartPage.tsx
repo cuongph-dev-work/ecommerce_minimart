@@ -120,7 +120,12 @@ export function CartPage() {
                     <div className="flex gap-4">
                       <div className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden">
                         <ImageWithFallback
-                          src={item.image}
+                          src={
+                            item.thumbnailUrls?.[0] ||
+                            item.images?.[0] ||
+                            item.image ||
+                            ''
+                          }
                           alt={item.name}
                           className="w-full h-full object-cover"
                         />
@@ -130,7 +135,9 @@ export function CartPage() {
                         <div className="flex justify-between gap-4 mb-2">
                           <div>
                             <h3 className="mb-1 line-clamp-2">{item.name}</h3>
-                            <p className="text-sm text-gray-500">{item.category}</p>
+                            <p className="text-sm text-gray-500">
+                              {typeof item.category === 'string' ? item.category : item.category?.name || ''}
+                            </p>
                           </div>
                           <Button
                             variant="ghost"

@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
@@ -77,6 +78,8 @@ export function ProductsPage() {
   const [newProductWarranty, setNewProductWarranty] = useState('');
   const [newProductIsOfficial, setNewProductIsOfficial] = useState(false);
   const [newProductDescription, setNewProductDescription] = useState('');
+  const [newProductSpecifications, setNewProductSpecifications] = useState('');
+  const [newProductUsageGuide, setNewProductUsageGuide] = useState('');
   // Store pending files (not yet uploaded) and uploaded URLs separately
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
@@ -264,7 +267,9 @@ export function ProductsPage() {
       categoryId: newProductCategory || '',
       discount: newProductDiscount ? Number(newProductDiscount) : undefined,
       brand: newProductBrand?.trim() || undefined,
-      description: newProductDescription?.trim() || undefined,
+      description: newProductDescription || undefined,
+      specifications: newProductSpecifications || undefined,
+      usageGuide: newProductUsageGuide || undefined,
       warrantyPeriod: newProductWarranty?.trim() || undefined,
       subcategoryId: newProductSubcategory || undefined,
       isOfficial: newProductIsOfficial,
@@ -329,6 +334,8 @@ export function ProductsPage() {
       const productData = {
         name: newProductName,
         description: newProductDescription,
+        specifications: newProductSpecifications || undefined,
+        usageGuide: newProductUsageGuide || undefined,
         price: Number(newProductPrice),
         discount: newProductDiscount ? Number(newProductDiscount) : undefined,
         stock: Number(newProductStock),
@@ -398,6 +405,8 @@ export function ProductsPage() {
     setNewProductWarranty(product.warrantyPeriod || '');
     setNewProductIsOfficial(product.isOfficial || false);
     setNewProductDescription(product.description || '');
+    setNewProductSpecifications((product as any).specifications || '');
+    setNewProductUsageGuide((product as any).usageGuide || '');
     // When editing, images are already uploaded URLs
     setUploadedImageUrls(product.images || (product.image ? [product.image] : []));
     setPendingFiles([]);
@@ -427,6 +436,8 @@ export function ProductsPage() {
     setNewProductWarranty('');
     setNewProductIsOfficial(false);
     setNewProductDescription('');
+    setNewProductSpecifications('');
+    setNewProductUsageGuide('');
     
     // Clean up preview URLs before clearing state
     pendingFiles.forEach(pf => UploadHelper.revokePreview(pf.preview));
@@ -817,22 +828,60 @@ export function ProductsPage() {
 
                 {/* Description */}
                 <div className="space-y-2 col-span-2">
-                  <Label htmlFor="description">Mô tả</Label>
-                  <Textarea
-                    id="description"
+                  <Label htmlFor="description">Mô tả sản phẩm</Label>
+                  <RichTextEditor
                     value={newProductDescription}
-                    onChange={(e) => {
-                      setNewProductDescription(e.target.value);
+                    onChange={(html) => {
+                      setNewProductDescription(html);
                       if (getFieldError(validationErrors, 'description')) {
                         setValidationErrors(validationErrors.filter(err => err.field !== 'description'));
                       }
                     }}
                     placeholder="Mô tả chi tiết sản phẩm..."
-                    className={`min-h-[120px] ${getFieldError(validationErrors, 'description') ? 'border-destructive' : ''}`}
                   />
                   {getFieldError(validationErrors, 'description') && (
                     <p className="text-sm text-destructive mt-1">
                       {getFieldError(validationErrors, 'description')}
+                    </p>
+                  )}
+                </div>
+
+                {/* Specifications */}
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="specifications">Thông số kỹ thuật</Label>
+                  <RichTextEditor
+                    value={newProductSpecifications}
+                    onChange={(html) => {
+                      setNewProductSpecifications(html);
+                      if (getFieldError(validationErrors, 'specifications')) {
+                        setValidationErrors(validationErrors.filter(err => err.field !== 'specifications'));
+                      }
+                    }}
+                    placeholder="Nhập thông số kỹ thuật của sản phẩm..."
+                  />
+                  {getFieldError(validationErrors, 'specifications') && (
+                    <p className="text-sm text-destructive mt-1">
+                      {getFieldError(validationErrors, 'specifications')}
+                    </p>
+                  )}
+                </div>
+
+                {/* Usage Guide */}
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="usageGuide">Hướng dẫn sử dụng</Label>
+                  <RichTextEditor
+                    value={newProductUsageGuide}
+                    onChange={(html) => {
+                      setNewProductUsageGuide(html);
+                      if (getFieldError(validationErrors, 'usageGuide')) {
+                        setValidationErrors(validationErrors.filter(err => err.field !== 'usageGuide'));
+                      }
+                    }}
+                    placeholder="Nhập hướng dẫn sử dụng sản phẩm..."
+                  />
+                  {getFieldError(validationErrors, 'usageGuide') && (
+                    <p className="text-sm text-destructive mt-1">
+                      {getFieldError(validationErrors, 'usageGuide')}
                     </p>
                   )}
                 </div>

@@ -17,6 +17,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { UserRole } from '../../entities/user.entity';
+import { Public } from '../auth/decorators/public.decorator';
+import { ReviewStatus } from '../../entities/review.entity';
 
 @Controller('admin/reviews')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -64,6 +66,54 @@ export class ReviewsController {
   async remove(@Param('id') id: string) {
     await this.reviewsService.remove(id);
     return { success: true, message: 'Review deleted successfully' };
+  }
+}
+
+@Controller('reviews')
+export class PublicReviewsController {
+  constructor(private readonly reviewsService: ReviewsService) {}
+
+  @Public()
+  @Get()
+  async findAll(@Query() query: QueryReviewDto) {
+    // Only return approved reviews for public
+    const publicQuery = {
+      ...query,
+      status: ReviewStatus.APPROVED,
+    };
+    const result = await this.reviewsService.findAll(publicQuery);
+    return {
+      success: true,
+      data: {
+        reviews: result.data,
+        pagination: result.pagination,
+      },
+    };
+  }
+
+  @Public()
+  @Get('product/:productId')
+  async findByProduct(@Param('productId') productId: string, @Query('page') page?: number, @Query('limit') limit?: number) {
+    const result = await this.reviewsService.findAll({
+      productId,
+      status: ReviewStatus.APPROVED,
+      page: page || 1,
+      limit: limit || 20,
+    });
+    return {
+      success: true,
+      data: {
+        reviews: result.data,
+        pagination: result.pagination,
+      },
+    };
+  }
+
+  @Public()
+  @Post()
+  async create(@Body() createDto: CreateReviewDto) {
+    const data = await this.reviewsService.create(createDto);
+    return { success: true, data };
   }
 }
 

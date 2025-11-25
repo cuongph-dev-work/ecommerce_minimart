@@ -82,6 +82,13 @@ export class PublicCategoriesController {
   }
 
   @Public()
+  @Get('slug/:slug')
+  async findBySlug(@Param('slug') slug: string) {
+    const data = await this.categoriesService.findBySlug(slug);
+    return { success: true, data };
+  }
+
+  @Public()
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const data = await this.categoriesService.findOne(id);

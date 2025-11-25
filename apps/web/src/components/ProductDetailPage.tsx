@@ -1,53 +1,109 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Minus, ShoppingCart, Check, Star, Truck, Shield } from 'lucide-react';
+import { ArrowLeft, Plus, Minus, ShoppingCart, Star, Truck, Shield, Package, BadgeCheck, Award } from 'lucide-react';
 import { Button } from './ui/button';
 import { motion } from 'motion/react';
-import { products } from '../data/products';
 import { useCart } from '../context/CartContext';
 import { useRecentlyViewed } from '../context/RecentlyViewedContext';
 import { toast } from 'sonner';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { ProductReviews } from './ProductReviews';
+import { ProductDescription } from './ProductDescription';
+import { productsService } from '../services/products.service';
+import { settingsService } from '../services/settings.service';
+import type { Product } from '../types';
+import { useTranslation } from 'react-i18next';
 
 interface ProductDetailPageProps {
   productId: string;
 }
 
 export function ProductDetailPage({ productId }: ProductDetailPageProps) {
-  const product = products.find((p) => p.id === productId);
+  const { t, i18n } = useTranslation();
+  
+  const formatNumber = (value: number) => {
+    return new Intl.NumberFormat(i18n.language === 'en' ? 'en-US' : 'vi-VN').format(value);
+  };
   const { addToCart } = useCart();
   const { addToRecentlyViewed } = useRecentlyViewed();
   const navigate = useNavigate();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
   useEffect(() => {
-    if (product) {
-      addToRecentlyViewed(product);
-    }
+    const abortController = new AbortController();
+    
+    const loadProduct = async () => {
+      try {
+        setLoading(true);
+        
+        // Load settings and product in parallel
+        const [data, settingsData] = await Promise.all([
+          productsService.getById(productId, abortController.signal),
+          settingsService.getAll(abortController.signal).catch(() => ({})),
+        ]);
+        
+        if (!abortController.signal.aborted) {
+          setProduct(data);
+          setSettings(settingsData);
+          addToRecentlyViewed(data);
+          
+          // Load related products from same category
+          const categoryId = typeof data.category === 'string' ? data.category : data.category?.id;
+          if (categoryId) {
+            const related = await productsService.getByCategory(categoryId, 4, 'sold', 'desc', abortController.signal);
+            const filtered = related.filter(p => p.id !== productId).slice(0, 4);
+            if (!abortController.signal.aborted) {
+              setRelatedProducts(filtered);
+            }
+          }
+        }
+      } catch (error) {
+        if (error instanceof Error && error.name !== 'AbortError') {
+          console.error('Failed to load product:', error);
+        }
+      } finally {
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadProduct();
+
+    return () => abortController.abort();
   }, [productId, addToRecentlyViewed]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-24 pb-12">
+        <div className="container mx-auto px-4 sm:px-6 text-center">
+          <p>{t('products.loading')}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
       <div className="min-h-screen pt-24 pb-12">
         <div className="container mx-auto px-4 sm:px-6 text-center">
-          <h2 className="mb-4">Không tìm thấy sản phẩm</h2>
+          <h2 className="mb-4">{t('products.not_found')}</h2>
           <Button onClick={() => navigate('/products')}>
-            Quay lại danh sách
+            {t('products.back_to_list')}
           </Button>
         </div>
       </div>
     );
   }
 
-  const relatedProducts = products
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
-
   const handleAddToCart = () => {
     addToCart(product, quantity);
-    toast.success(`Đã thêm ${quantity} ${product.name} vào giỏ hàng`);
+    toast.success(t('products.add_to_cart_success').replace('{name}', product.name));
   };
 
   const formatPrice = (price: number) => {
@@ -69,8 +125,14 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
     }
   };
 
-  // Mock images - in real scenario, product would have multiple images
-  const images = [product.image, product.image, product.image];
+  // Get images from product - use thumbnailUrls or images array
+  const images = product.thumbnailUrls && product.thumbnailUrls.length > 0
+    ? product.thumbnailUrls
+    : product.images && product.images.length > 0
+    ? product.images
+    : product.image
+    ? [product.image]
+    : [];
 
   return (
     <div className="min-h-screen pt-24 pb-12">
@@ -87,7 +149,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
             className="group"
           >
             <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-            Quay lại
+            {t('products.back')}
           </Button>
         </motion.div>
 
@@ -135,8 +197,16 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <div className="inline-block px-3 py-1 bg-red-50 text-red-600 rounded-full text-sm mb-4">
-              {product.category}
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-red-50 to-orange-50 text-red-600 rounded-full text-sm font-medium border border-red-100">
+                <span>{typeof product.category === 'string' ? product.category : product.category?.name || ''}</span>
+              </div>
+              {product.brand && (
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 rounded-full text-sm font-medium border border-blue-100 shadow-sm">
+                  <Award className="h-4 w-4" />
+                  <span className="font-semibold">{product.brand}</span>
+                </div>
+              )}
             </div>
 
             <h1 className="mb-4">{product.name}</h1>
@@ -148,12 +218,14 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                   <Star
                     key={i}
                     className={`h-5 w-5 ${
-                      i < 4 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                      i < Math.floor(product.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
                     }`}
                   />
                 ))}
               </div>
-              <span className="text-gray-600">4.5 (128 đánh giá)</span>
+              <span className="text-gray-600">
+                {(product.rating || 0).toFixed(1)} ({t('reviews.review_count').replace('{count}', formatNumber(product.reviewCount || 0))})
+              </span>
             </div>
 
             <div className="mb-6">{formatPrice(product.price)}</div>
@@ -165,52 +237,69 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
             {/* Features */}
             <div className="bg-gray-50 rounded-2xl p-6 mb-8">
               <div className="grid sm:grid-cols-2 gap-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Check className="h-5 w-5 text-green-600" />
+                {/* Authentic/Official */}
+                {product.isOfficial && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center shrink-0">
+                      <BadgeCheck className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <div className="mb-1">{t('product_detail.features.authentic.title')}</div>
+                      <p className="text-sm text-gray-600">
+                        {settings.authentic_description || t('product_detail.features.authentic.description')}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <div className="mb-1">Chính hãng 100%</div>
-                    <p className="text-sm text-gray-600">
-                      Sản phẩm chính hãng có tem
-                    </p>
-                  </div>
-                </div>
+                )}
+                
+                {/* Fast Delivery */}
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center shrink-0">
                     <Truck className="h-5 w-5 text-red-600" />
                   </div>
                   <div>
-                    <div className="mb-1">Giao hàng nhanh</div>
-                    <p className="text-sm text-gray-600">1-3 ngày nội thành</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Shield className="h-5 w-5 text-orange-600" />
-                  </div>
-                  <div>
-                    <div className="mb-1">Bảo hành chính hãng</div>
-                    <p className="text-sm text-gray-600">12-24 tháng</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Check className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <div className="mb-1">Còn hàng</div>
+                    <div className="mb-1">{t('product_detail.features.delivery.title')}</div>
                     <p className="text-sm text-gray-600">
-                      {product.stock} sản phẩm
+                      {settings.delivery_info || t('product_detail.features.delivery.default')}
                     </p>
                   </div>
                 </div>
+                
+                {/* Warranty */}
+                {(product.warrantyPeriod || settings.warranty_info) && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center shrink-0">
+                      <Shield className="h-5 w-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <div className="mb-1">{t('product_detail.features.warranty.title')}</div>
+                      <p className="text-sm text-gray-600">
+                        {product.warrantyPeriod || settings.warranty_info || t('product_detail.features.warranty.default')}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Stock */}
+                {product.stock > 0 && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center shrink-0">
+                      <Package className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <div className="mb-1">{t('product_detail.features.stock.title')}</div>
+                      <p className="text-sm text-gray-600">
+                        {t('product_detail.features.stock.description').replace('{count}', formatNumber(product.stock))}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Quantity */}
             <div className="mb-6">
-              <label className="block mb-3">Số lượng</label>
+              <label className="block mb-3">{t('product_detail.quantity')}</label>
               <div className="flex items-center gap-4">
                 <div className="flex items-center bg-gray-100 rounded-xl">
                   <Button
@@ -234,7 +323,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                   </Button>
                 </div>
                 <span className="text-gray-600 text-sm">
-                  {product.stock} sản phẩm có sẵn
+                  {t('product_detail.stock_available').replace('{count}', formatNumber(product.stock))}
                 </span>
               </div>
             </div>
@@ -248,7 +337,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                 disabled={product.stock === 0}
               >
                 <ShoppingCart className="mr-2 h-5 w-5" />
-                Thêm vào giỏ
+                {t('product_detail.add_to_cart')}
               </Button>
               <Button
                 onClick={() => {
@@ -259,16 +348,30 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                 size="lg"
                 disabled={product.stock === 0}
               >
-                Mua ngay
+                {t('product_detail.buy_now')}
               </Button>
             </div>
           </motion.div>
         </div>
 
+        {/* Product Description Tabs */}
+        <section className="mt-12">
+          <ProductDescription 
+            description={(product as any).description}
+            specifications={(product as any).specifications}
+            usageGuide={(product as any).usageGuide}
+          />
+        </section>
+
+        {/* Product Reviews */}
+        <section className="mt-12">
+          <ProductReviews productId={productId} />
+        </section>
+
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <section>
-            <h2 className="mb-8">Sản phẩm liên quan</h2>
+          <section className="mt-12">
+            <h2 className="mb-8">{t('products.related_products')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map((relatedProduct, index) => (
                 <motion.div
@@ -283,14 +386,14 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                 >
                   <div className="aspect-square overflow-hidden bg-gray-100">
                     <ImageWithFallback
-                      src={relatedProduct.image}
+                      src={relatedProduct.thumbnailUrls?.[0] || relatedProduct.images?.[0] || relatedProduct.image || ''}
                       alt={relatedProduct.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>
                   <div className="p-5">
                     <div className="text-sm text-gray-500 mb-1">
-                      {relatedProduct.category}
+                      {typeof relatedProduct.category === 'string' ? relatedProduct.category : relatedProduct.category?.name || ''}
                     </div>
                     <h3 className="mb-2 line-clamp-2">{relatedProduct.name}</h3>
                     <div className="mb-4">{formatPrice(relatedProduct.price)}</div>
@@ -298,11 +401,11 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                       onClick={(e) => {
                         e.stopPropagation();
                         addToCart(relatedProduct);
-                        toast.success(`Đã thêm ${relatedProduct.name} vào giỏ hàng`);
+                        toast.success(t('products.add_to_cart_success').replace('{name}', relatedProduct.name));
                       }}
                       className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
                     >
-                      Thêm vào giỏ
+                      {t('products.add_to_cart')}
                     </Button>
                   </div>
                 </motion.div>
@@ -310,12 +413,6 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
             </div>
           </section>
         )}
-
-        {/* Product Reviews */}
-        <section className="mt-12">
-          <h2 className="mb-8">Đánh giá sản phẩm</h2>
-          <ProductReviews productId={productId} />
-        </section>
       </div>
     </div>
   );

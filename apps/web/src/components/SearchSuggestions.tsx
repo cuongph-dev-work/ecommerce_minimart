@@ -39,11 +39,17 @@ export function SearchSuggestions({
     const loadPopularSearches = async () => {
       try {
         const response = await productsService.getPopularSearches(5);
-        setPopularSearches(response);
+        // Only set if we have actual data from API
+        if (response && response.length > 0) {
+          setPopularSearches(response);
+        } else {
+          // Don't show fallback - let it be empty
+          setPopularSearches([]);
+        }
       } catch (error) {
         console.error('Failed to load popular searches:', error);
-        // Fallback to default if API fails
-        setPopularSearches(['Tai nghe', 'Laptop', 'Điện thoại']);
+        // Don't show fallback on error either
+        setPopularSearches([]);
       }
     };
 

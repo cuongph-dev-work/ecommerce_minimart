@@ -3,6 +3,8 @@ export interface Product {
   name: string;
   price: number;
   description?: string;
+  specifications?: string; // HTML content for specifications tab
+  usageGuide?: string; // HTML content for usage guide tab
   image?: string; // Thumbnail image for list view
   category: string | { id: string; name: string }; // Can be string (from mock) or object (from API)
   subcategory?: string; // Danh mục con

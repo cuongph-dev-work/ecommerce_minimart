@@ -11,11 +11,12 @@ import { useTranslation } from 'react-i18next';
 
 interface CategoryProductSectionProps {
   categoryName: string;
+  categorySlug?: string;
   products: Product[];
   icon?: React.ReactNode;
 }
 
-export function CategoryProductSection({ categoryName, products, icon }: CategoryProductSectionProps) {
+export function CategoryProductSection({ categoryName, categorySlug, products, icon }: CategoryProductSectionProps) {
   const { t, i18n } = useTranslation();
   const { addToCart } = useCart();
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ export function CategoryProductSection({ categoryName, products, icon }: Categor
   const handleAddToCart = (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
     addToCart(product);
-    toast.success(t('home.add_to_cart_success', { name: product.name }));
+    toast.success(t('home.add_to_cart_success').replace('{name}', product.name));
   };
 
   const formatPrice = (price: number) => {
@@ -38,7 +39,8 @@ export function CategoryProductSection({ categoryName, products, icon }: Categor
   };
 
   const handleViewAll = () => {
-    navigate(`/products?category=${encodeURIComponent(categoryName)}`);
+    const categoryParam = categorySlug || categoryName;
+    navigate(`/products?category=${encodeURIComponent(categoryParam)}`);
   };
 
   // Show max 10 products

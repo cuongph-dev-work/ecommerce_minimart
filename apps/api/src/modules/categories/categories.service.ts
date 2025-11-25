@@ -94,6 +94,22 @@ export class CategoriesService {
     return category;
   }
 
+  async findBySlug(slug: string): Promise<Category> {
+    const category = await this.em.findOne(
+      Category,
+      { slug },
+      {
+        populate: ['parent', 'children', 'products'],
+      },
+    );
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    return category;
+  }
+
   async update(id: string, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
     const category = await this.findOne(id);
 

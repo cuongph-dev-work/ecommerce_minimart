@@ -59,9 +59,12 @@ export function ProductsPage() {
   // State
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [allCategories, setAllCategories] = useState<Category[]>([]); // All categories including subcategories
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  const [selectedCategory, setSelectedCategory] = useState<string>(searchParams.get('category') || 'all');
+  const categoryParam = searchParams.get('category') || '';
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [isInitialLoad, setIsInitialLoad] = useState(true); // Track initial load to prevent URL update loop
   const [selectedBrand, setSelectedBrand] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('default');
   const [showFilterSheet, setShowFilterSheet] = useState(false);
@@ -81,6 +84,16 @@ export function ProductsPage() {
     return Array.from(brandSet);
   }, [products]);
 
+  const activeParentCategory = useMemo(() => {
+    return categories.find((category) => {
+      if (category.id === selectedCategory) return true;
+      return category.children?.some((child) => child.id === selectedCategory);
+    });
+  }, [categories, selectedCategory]);
+
+  const activeSubcategories = activeParentCategory?.children || [];
+  const selectedSubcategory = activeSubcategories.find((sub) => sub.id === selectedCategory);
+
   // Load categories
   useEffect(() => {
     const abortController = new AbortController();
@@ -89,6 +102,19 @@ export function ProductsPage() {
       try {
         const cats = await categoriesService.getAll(abortController.signal);
         setCategories(cats);
+        
+        // Flatten all categories including subcategories for display
+        const allCats: Category[] = [];
+        const flattenCategories = (cats: Category[]) => {
+          cats.forEach(cat => {
+            allCats.push(cat);
+            if (cat.children && cat.children.length > 0) {
+              flattenCategories(cat.children);
+            }
+          });
+        };
+        flattenCategories(cats);
+        setAllCategories(allCats);
       } catch (error) {
         if (error instanceof Error && error.name !== 'AbortError') {
           console.error('Failed to load categories:', error);
@@ -100,6 +126,48 @@ export function ProductsPage() {
 
     return () => abortController.abort();
   }, []);
+
+  // Resolve category from URL (slug or ID) - only on mount or external URL change
+  useEffect(() => {
+    if (!categoryParam) {
+      if (selectedCategory !== 'all') {
+        setSelectedCategory('all');
+      }
+      setIsInitialLoad(false);
+      return;
+    }
+
+    const resolveCategory = async () => {
+      try {
+        // Try to find by slug first
+        let category: Category | null = null;
+        try {
+          category = await categoriesService.getBySlug(categoryParam);
+        } catch {
+          // If not found by slug, try by ID
+          try {
+            category = await categoriesService.getById(categoryParam);
+          } catch {
+            // Category not found
+            setSelectedCategory('all');
+            setIsInitialLoad(false);
+            return;
+          }
+        }
+        
+        if (category && selectedCategory !== category.id) {
+          setSelectedCategory(category.id);
+        }
+        setIsInitialLoad(false);
+      } catch (error) {
+        console.error('Failed to resolve category:', error);
+        setSelectedCategory('all');
+        setIsInitialLoad(false);
+      }
+    };
+
+    resolveCategory();
+  }, [categoryParam]); // Only depend on categoryParam, not selectedCategory
 
   // Load products
   useEffect(() => {
@@ -165,18 +233,40 @@ export function ProductsPage() {
     return () => abortController.abort();
   }, [debouncedSearch, selectedCategory, selectedBrand, sortBy, page]);
 
-  // Update URL params
+  // Update URL params when selectedCategory changes (from user click)
   useEffect(() => {
+    // Skip during initial load or if categories not loaded yet
+    if (isInitialLoad || allCategories.length === 0) {
+      return;
+    }
+
     const params = new URLSearchParams();
     if (searchQuery) params.set('search', searchQuery);
-    if (selectedCategory !== 'all') params.set('category', selectedCategory);
-    setSearchParams(params, { replace: true });
-  }, [searchQuery, selectedCategory, setSearchParams]);
+    if (selectedCategory !== 'all') {
+      const category = allCategories.find(c => c.id === selectedCategory);
+      if (category && category.slug) {
+        params.set('category', category.slug);
+      } else if (selectedCategory) {
+        params.set('category', selectedCategory);
+      }
+    }
+    
+    // Check if URL needs to be updated
+    const currentCategory = searchParams.get('category') || '';
+    const currentSearch = searchParams.get('search') || '';
+    const newCategory = params.get('category') || '';
+    const newSearch = params.get('search') || '';
+    
+    // Only update if different to avoid unnecessary updates
+    if (currentCategory !== newCategory || currentSearch !== newSearch) {
+      setSearchParams(params, { replace: true });
+    }
+  }, [searchQuery, selectedCategory, allCategories, setSearchParams, searchParams, isInitialLoad]);
 
   const handleAddToCart = (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
     addToCart(product);
-    toast.success(t('products.add_to_cart_success', { name: product.name }));
+    toast.success(t('products.add_to_cart_success').replace('{name}', product.name));
   };
 
   const formatPrice = (price: number) => {
@@ -284,36 +374,89 @@ export function ProductsPage() {
             </div>
 
             {/* Categories */}
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-              <button
-                onClick={() => {
-                  setSelectedCategory('all');
-                  setPage(1);
-                }}
-                className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all ${
-                  selectedCategory === 'all'
-                    ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md'
-                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
-                }`}
-              >
-                {t('products.all_categories')}
-              </button>
-              {categories.map((category) => (
+            <div className="space-y-4">
+              {/* Main Categories */}
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 <button
-                  key={category.id}
                   onClick={() => {
-                    setSelectedCategory(category.id);
+                    setSelectedCategory('all');
                     setPage(1);
                   }}
-                  className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all ${
-                    selectedCategory === category.id
+                  className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all font-medium ${
+                    selectedCategory === 'all'
                       ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md'
                       : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
                   }`}
                 >
-                  {category.name}
+                  {t('products.all_categories')}
                 </button>
-              ))}
+                {categories.map((category) => {
+                  const isActive =
+                    selectedCategory === category.id ||
+                    category.children?.some((child) => child.id === selectedCategory);
+                  return (
+                    <button
+                      key={category.id}
+                      onClick={() => {
+                        setSelectedCategory(category.id);
+                        setPage(1);
+                      }}
+                      className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all font-medium ${
+                        isActive
+                          ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md'
+                          : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                      }`}
+                    >
+                      {category.name}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Selected Summary */}
+              {selectedCategory !== 'all' && activeParentCategory && (
+                <div className="flex items-center gap-2 text-sm text-gray-600 flex-wrap">
+                  <span className="font-medium">{t('products.selected_category')}:</span>
+                  <span className="px-3 py-1 rounded-full bg-red-50 text-red-600 border border-red-100">
+                    {activeParentCategory.name}
+                  </span>
+                  {selectedSubcategory && (
+                    <>
+                      <span className="text-gray-400">›</span>
+                      <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+                        {selectedSubcategory.name}
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Subcategories - Show when parent has children */}
+              {activeParentCategory && activeSubcategories.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap bg-gray-50 border border-gray-100 rounded-2xl p-3">
+                  <span className="text-sm text-gray-500 font-medium whitespace-nowrap">
+                    {t('products.subcategories')}:
+                  </span>
+                  <div className="flex gap-2 flex-wrap">
+                    {activeSubcategories.map((sub) => (
+                      <button
+                        key={sub.id}
+                        onClick={() => {
+                          setSelectedCategory(sub.id);
+                          setPage(1);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg whitespace-nowrap text-sm transition-all border ${
+                          selectedCategory === sub.id
+                            ? 'bg-blue-500/10 text-blue-700 border-blue-300 font-medium shadow-sm'
+                            : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'
+                        }`}
+                      >
+                        {sub.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
@@ -390,7 +533,7 @@ export function ProductsPage() {
               <div className="flex flex-wrap gap-2 mb-6">
                 {searchQuery && (
                   <Badge variant="secondary" className="gap-1">
-                    {t('products.search_badge', { query: searchQuery })}
+                    {t('products.search_badge').replace('{query}', searchQuery)}
                     <X 
                       className="h-3 w-3 cursor-pointer" 
                       onClick={() => setSearchQuery('')}
@@ -399,7 +542,7 @@ export function ProductsPage() {
                 )}
                 {selectedCategory !== 'all' && (
                   <Badge variant="secondary" className="gap-1">
-                    {t('products.category_badge', { name: categories.find(c => c.id === selectedCategory)?.name })}
+                    {t('products.category_badge').replace('{name}', allCategories.find(c => c.id === selectedCategory)?.name || '')}
                     <X 
                       className="h-3 w-3 cursor-pointer" 
                       onClick={() => setSelectedCategory('all')}
@@ -466,7 +609,7 @@ export function ProductsPage() {
                     >
                       <div className="aspect-square overflow-hidden bg-gray-100 relative">
                         <ImageWithFallback
-                          src={product.thumbnailUrls?.[0] || product.images?.[0] || product.image || ''}
+                          src={product.images?.[0] || product.image || ''}
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />

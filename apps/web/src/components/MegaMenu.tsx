@@ -46,8 +46,9 @@ export function MegaMenu() {
     loadCategories();
   }, []);
 
-  const handleCategoryClick = (categoryId: string, categoryName: string) => {
-    navigate(`/products?category=${encodeURIComponent(categoryId)}`);
+  const handleCategoryClick = (category: Category) => {
+    const slug = category.slug || category.id;
+    navigate(`/products?category=${encodeURIComponent(slug)}`);
     setIsOpen(false);
   };
 
@@ -86,7 +87,7 @@ export function MegaMenu() {
                   return (
                     <div key={category.id} className="group">
                       <button
-                        onClick={() => handleCategoryClick(category.id, category.name)}
+                        onClick={() => handleCategoryClick(category)}
                         className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-orange-50 transition-all mb-2"
                       >
                         <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
@@ -108,7 +109,7 @@ export function MegaMenu() {
                           {subcategories.slice(0, 4).map((sub) => (
                             <button
                               key={sub.id}
-                              onClick={() => handleCategoryClick(sub.id, sub.name)}
+                              onClick={() => handleCategoryClick(sub)}
                               className="block text-sm text-gray-600 hover:text-red-600 hover:translate-x-1 transition-all py-1"
                             >
                               {sub.name}
@@ -116,7 +117,7 @@ export function MegaMenu() {
                           ))}
                           {subcategories.length > 4 && (
                             <button
-                              onClick={() => handleCategoryClick(category.id, category.name)}
+                              onClick={() => handleCategoryClick(category)}
                               className="text-xs text-red-600 hover:underline"
                             >
                               {t('mega_menu.more_items', { count: subcategories.length - 4 })}

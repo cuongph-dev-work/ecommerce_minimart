@@ -21,6 +21,8 @@
         "view_all_products": "View All Products",
         "sold_count": "Sold {count}",
         "add_to_cart_success": "Added {name} to cart",
+        "not_found": "Product not found",
+        "related_products": "Related Products",
         "products_count": "{count} products",
         "view_all_category": "View All {category}",
         "product_categories": "Product Categories",
@@ -63,6 +65,9 @@
         "select_brand": "Select brand",
         "all": "All",
         "all_categories": "All",
+        "subcategories": "Subcategories",
+        "selected_category": "Selected",
+        "subcategories": "Subcategories",
         "price": "Price",
         "add_to_cart": "Add to Cart",
         "out_of_stock": "Out of Stock",
@@ -73,7 +78,7 @@
         "no_products_desc": "Try searching with different keywords or select a different category",
         "clear_filters": "Clear Filters",
         "apply": "Apply",
-        "search_badge": "Search: \"{query}\"",
+        "search_badge": "Search: {query}",
         "category_badge": "Category: {name}",
         "brand_badge": "Brand: {brand}",
         "sold_count": "Sold {count}",
@@ -81,7 +86,11 @@
         "previous": "Previous",
         "next": "Next",
         "load_error": "Cannot load products",
-        "add_to_cart_success": "Added {name} to cart"
+        "add_to_cart_success": "Added {name} to cart",
+        "back": "Back",
+        "back_to_list": "Back to list",
+        "not_found": "Not found",
+        "related_products": "Related Products"
     },
     "admin": {
         "dashboard": "Dashboard",
@@ -189,5 +198,81 @@
     },
     "search": {
         "popular_searches": "Popular Searches"
+    },
+    "reviews": {
+        "title": "Product Reviews",
+        "no_reviews": "No reviews yet",
+        "be_first": "Be the first to review this product",
+        "review_count": "{count} reviews",
+        "helpful": "Helpful",
+        "write_review": "Write a Review",
+        "form": {
+            "name": "Your Name",
+            "name_placeholder": "Enter your name",
+            "rating": "Rating",
+            "rating_label": "Your Rating",
+            "stars": "stars",
+            "comment": "Comment",
+            "comment_label": "Review Content",
+            "comment_placeholder": "Share your experience with this product...",
+            "rating_labels": {
+                "5": "Excellent",
+                "4": "Good",
+                "3": "Average",
+                "2": "Poor",
+                "1": "Very Poor"
+            }
+        },
+        "validation": {
+            "name_required": "Name is required",
+            "name_empty": "Name cannot be empty",
+            "name_max_length": "Name cannot exceed 100 characters",
+            "rating_required": "Rating is required",
+            "rating_min": "Rating must be at least 1 star",
+            "rating_max": "Rating cannot exceed 5 stars",
+            "comment_max_length": "Comment cannot exceed 2000 characters",
+            "error": "Please check the information you entered"
+        },
+        "submit": "Submit Review",
+        "submitting": "Submitting...",
+        "submit_success": "Your review has been submitted successfully!",
+        "submit_error": "Failed to submit review. Please try again later.",
+        "cancel": "Cancel",
+        "admin_response": "Response from store",
+        "load_more": "Load More",
+        "loading_more": "Loading..."
+    },
+    "product_detail": {
+        "features": {
+            "authentic": {
+                "title": "100% Authentic",
+                "description": "Genuine product with seal"
+            },
+            "delivery": {
+                "title": "Fast Delivery",
+                "default": "1-3 days within city"
+            },
+            "warranty": {
+                "title": "Official Warranty",
+                "default": "12-24 months"
+            },
+            "stock": {
+                "title": "In Stock",
+                "description": "{count} products"
+            }
+        },
+        "quantity": "Quantity",
+        "add_to_cart": "Add to Cart",
+        "buy_now": "Buy Now",
+        "stock_available": "{count} products available",
+        "brand": "Brand"
+    },
+    "product_description": {
+        "tabs": {
+            "description": "Product Description",
+            "specifications": "Specifications",
+            "guide": "User Guide"
+        },
+        "no_content": "No information available"
     }
 }

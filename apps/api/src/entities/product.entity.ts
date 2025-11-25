@@ -30,6 +30,12 @@ export class Product {
   @Property({ nullable: true })
   description?: string;
 
+  @Property({ type: 'text', nullable: true })
+  specifications?: string;
+
+  @Property({ type: 'text', nullable: true })
+  usageGuide?: string;
+
   @Property({ type: 'decimal', precision: 10, scale: 2 })
   price!: number;
 

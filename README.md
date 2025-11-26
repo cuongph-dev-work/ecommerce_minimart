@@ -35,8 +35,8 @@ npm run dev
 ```
 
 This will start:
-- **Web App**: http://localhost:5173 (Vite dev server)
-- **API**: http://localhost:3001 (NestJS server)
+- **Web App**: http://localhost:3000 (Vite dev server)
+- **API**: http://localhost:8000 (NestJS server)
 
 Run individual apps:
 
@@ -95,7 +95,7 @@ npm run format
 - **Framework**: NestJS 10
 - **Runtime**: Node.js
 - **Language**: TypeScript
-- **Port**: 3001
+- **Port**: 8000
 
 **Endpoints**:
 - `GET /` - Welcome message

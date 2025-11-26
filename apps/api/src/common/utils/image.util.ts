@@ -11,8 +11,8 @@ export function getThumbnailUrl(originalUrl: string): string {
     return originalUrl.replace('/original/', '/thumbnail/');
   }
 
-  // Disk storage format: http://localhost:3001/uploads/product/original/filename.jpg
-  // Convert to: http://localhost:3001/uploads/product/thumbnail/filename.jpg
+  // Disk storage format: http://localhost:8000/uploads/product/original/filename.jpg
+  // Convert to: http://localhost:8000/uploads/product/thumbnail/filename.jpg
   if (originalUrl.includes('/uploads/') && originalUrl.includes('/original/')) {
     return originalUrl.replace('/original/', '/thumbnail/');
   }

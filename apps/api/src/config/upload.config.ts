@@ -3,7 +3,7 @@ import { registerAs } from '@nestjs/config';
 export default registerAs('upload', () => ({
   dest: process.env.UPLOAD_DEST || './uploads',
   maxFileSize: parseInt(process.env.MAX_FILE_SIZE, 10) || 5242880, // 5MB
-  publicUrl: process.env.UPLOAD_PUBLIC_URL || 'http://localhost:3001/uploads',
+  publicUrl: process.env.UPLOAD_PUBLIC_URL,
   enableOptimization: process.env.ENABLE_IMAGE_OPTIMIZATION === 'true',
   imageQuality: parseInt(process.env.IMAGE_QUALITY, 10) || 85,
   thumbnailSize: parseInt(process.env.THUMBNAIL_SIZE, 10) || 150,

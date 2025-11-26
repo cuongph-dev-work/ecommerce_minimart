@@ -65,7 +65,7 @@ export function ProductDescription({ description, specifications, usageGuide }: 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="prose prose-gray max-w-none"
+            className="prose prose-gray prose-headings:font-semibold prose-h2:text-2xl prose-h3:text-xl prose-h4:text-lg prose-p:text-gray-700 prose-p:leading-relaxed prose-ul:space-y-2 prose-li:text-gray-700 prose-img:rounded-lg prose-img:shadow-md max-w-none"
           >
             {description ? (
               <div dangerouslySetInnerHTML={{ __html: description }} />
@@ -81,7 +81,7 @@ export function ProductDescription({ description, specifications, usageGuide }: 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="prose prose-gray max-w-none"
+            className="prose prose-gray prose-headings:font-semibold prose-h2:text-2xl prose-h3:text-xl prose-table:w-full prose-td:p-4 prose-td:border prose-td:border-gray-200 prose-th:bg-gray-50 prose-th:p-4 prose-th:font-semibold max-w-none"
           >
             {specifications ? (
               <div dangerouslySetInnerHTML={{ __html: specifications }} />
@@ -97,7 +97,7 @@ export function ProductDescription({ description, specifications, usageGuide }: 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="prose prose-gray max-w-none"
+            className="prose prose-gray prose-headings:font-semibold prose-h2:text-2xl prose-h3:text-xl prose-h4:text-lg prose-p:text-gray-700 prose-p:leading-relaxed prose-ul:space-y-2 prose-ol:space-y-2 prose-li:text-gray-700 prose-img:rounded-lg prose-strong:text-gray-900 max-w-none"
           >
             {usageGuide ? (
               <div dangerouslySetInnerHTML={{ __html: usageGuide }} />

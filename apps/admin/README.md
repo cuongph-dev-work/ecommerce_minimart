@@ -22,7 +22,7 @@ Cập nhật các biến môi trường trong file `.env`:
 
 ```env
 # API Configuration
-VITE_API_URL=http://localhost:3001/api
+VITE_API_URL=http://localhost:8000/api
 
 # Google Maps API (cho tính năng lấy tọa độ từ địa chỉ)
 VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
@@ -32,7 +32,7 @@ VITE_NODE_ENV=development
 ```
 
 **Lưu ý:** 
-- `VITE_API_URL`: URL của API backend (mặc định: `http://localhost:3001/api`)
+- `VITE_API_URL`: URL của API backend (mặc định: `http://localhost:8000/api`)
 - `VITE_GOOGLE_MAPS_API_KEY`: API key từ Google Cloud Console (bật Geocoding API)
 - Đảm bảo backend API đang chạy trước khi start admin dashboard
 

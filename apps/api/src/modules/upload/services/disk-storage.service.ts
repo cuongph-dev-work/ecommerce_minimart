@@ -18,7 +18,7 @@ export class DiskStorageService {
     type: 'product' | 'banner' | 'category' | 'store',
   ): Promise<UploadResultDto> {
     const uploadDest = this.configService.get<string>('upload.dest') || './uploads';
-    const publicUrl = this.configService.get<string>('upload.publicUrl') || 'http://localhost:3001/uploads';
+    const publicUrl = this.configService.get<string>('upload.publicUrl');
 
     // Generate unique filename
     const ext = path.extname(file.originalname);

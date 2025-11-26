@@ -3,6 +3,8 @@ export interface Product {
   name: string;
   price: number;
   description: string;
+  specifications?: string; // HTML content for specifications tab
+  usageGuide?: string; // HTML content for usage guide tab
   image?: string; // For backward compatibility with mock data
   images?: string[]; // Array of images from API
   thumbnailUrls?: string[]; // Thumbnail URLs from API

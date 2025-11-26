@@ -4,7 +4,7 @@
 cat > .env << 'EOF'
 # Application
 NODE_ENV=development
-PORT=3001
+PORT=8000
 API_PREFIX=api
 
 # Database (Docker PostgreSQL)
@@ -21,7 +21,7 @@ JWT_EXPIRES_IN=7d
 # File Upload
 UPLOAD_DEST=./uploads
 MAX_FILE_SIZE=5242880
-UPLOAD_PUBLIC_URL=http://localhost:3001/uploads
+UPLOAD_PUBLIC_URL=http://localhost:8000/uploads
 ENABLE_IMAGE_OPTIMIZATION=true
 IMAGE_QUALITY=85
 THUMBNAIL_SIZE=150

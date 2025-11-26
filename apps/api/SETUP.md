@@ -54,7 +54,7 @@ npm run build
 npm run start:prod
 ```
 
-Server sẽ chạy tại: **http://localhost:3001**
+Server sẽ chạy tại: **http://localhost:8000**
 
 ## 📝 Default Credentials
 
@@ -66,18 +66,18 @@ Sau khi seed database:
 
 ### Test API Health
 ```bash
-curl http://localhost:3001/api
+curl http://localhost:8000/api
 ```
 
 ### Test Login
 ```bash
-curl -X POST http://localhost:3001/api/admin/auth/login \
+curl -X POST http://localhost:8000/api/admin/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "admin@store.vn", "password": "admin123"}'
 ```
 
 ### Swagger Documentation
-Truy cập: **http://localhost:3001/api/docs**
+Truy cập: **http://localhost:8000/api/docs**
 
 ## 🛠️ Useful Commands
 

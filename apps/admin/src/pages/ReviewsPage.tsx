@@ -97,6 +97,7 @@ export function ReviewsPage() {
         productName: r.productName || r.product?.name || 'Unknown Product',
         date: r.createdAt || r.date,
         status: r.status?.toLowerCase() || 'pending',
+        reply: r.adminResponse || r.reply,
       }));
       setReviews(transformed);
     } catch (err: any) {

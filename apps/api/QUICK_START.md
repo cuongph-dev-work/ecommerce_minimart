@@ -14,7 +14,7 @@ cd apps/api
 npm run dev
 ```
 
-Server sẽ chạy tại: **http://localhost:3001**
+Server sẽ chạy tại: **http://localhost:8000**
 
 ## 🔑 Default Login Credentials
 
@@ -24,11 +24,11 @@ Server sẽ chạy tại: **http://localhost:3001**
 ## 📚 API Endpoints
 
 ### Swagger Documentation
-Truy cập: **http://localhost:3001/api/docs**
+Truy cập: **http://localhost:8000/api/docs**
 
 ### Test Login
 ```bash
-curl -X POST http://localhost:3001/api/admin/auth/login \
+curl -X POST http://localhost:8000/api/admin/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "admin@store.vn", "password": "admin123"}'
 ```
@@ -60,7 +60,7 @@ npm run seed           # Seed data
 
 ## ⚠️ Troubleshooting
 
-**Port 3001 đã được sử dụng:**
+**Port 8000 đã được sử dụng:**
 - Đổi `PORT` trong `.env`
 
 **Database connection error:**

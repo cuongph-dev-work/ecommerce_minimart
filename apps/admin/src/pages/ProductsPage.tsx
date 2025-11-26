@@ -89,6 +89,7 @@ export function ProductsPage() {
   const [newProductSubcategory, setNewProductSubcategory] = useState('');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [isLoadingProductDetail, setIsLoadingProductDetail] = useState(false);
 
   // Remove client-side filtering, use server-side search instead
 
@@ -373,44 +374,60 @@ export function ProductsPage() {
     }
   };
 
-  const handleEditProduct = (product: Product) => {
-    setEditingProduct(product);
-    setNewProductName(product.name);
-    setNewProductPrice(product.price.toString());
-    setNewProductDiscount(product.discount?.toString() || '');
-    // Find category by name - we'll need to fetch categories from API later
-    const categoryId = categories.find(c => c.name === product.category)?.id || '';
-    setNewProductCategory(categoryId);
-    // Handle subcategory: can be Category object (from API) or string (legacy)
-    let subcategoryId = '';
-    if (product.subcategory) {
-      if (typeof product.subcategory === 'object' && product.subcategory !== null) {
-        // If subcategory is Category object, get its ID
-        subcategoryId = (product.subcategory as any).id || '';
-      } else {
-        // If subcategory is string (name), find ID from available subcategories
-        const selectedCat = categories.find(c => c.id === categoryId);
-        if (selectedCat?.children) {
-          const subCat = selectedCat.children.find((child: any) => 
-            (typeof child === 'object' ? child.name : child) === product.subcategory
-          );
-          subcategoryId = subCat && typeof subCat === 'object' ? subCat.id : '';
+  const handleEditProduct = async (product: Product) => {
+    try {
+      setIsLoadingProductDetail(true);
+      
+      // Fetch full product details from API
+      const fullProduct = await productsService.getById(product.id);
+      
+      setEditingProduct(fullProduct);
+      setNewProductName(fullProduct.name);
+      setNewProductPrice(fullProduct.price.toString());
+      setNewProductDiscount(fullProduct.discount?.toString() || '');
+      
+      // Find category by name - we'll need to fetch categories from API later
+      const categoryId = categories.find(c => c.name === fullProduct.category)?.id || '';
+      setNewProductCategory(categoryId);
+      
+      // Handle subcategory: can be Category object (from API) or string (legacy)
+      let subcategoryId = '';
+      if (fullProduct.subcategory) {
+        if (typeof fullProduct.subcategory === 'object' && fullProduct.subcategory !== null) {
+          // If subcategory is Category object, get its ID
+          subcategoryId = (fullProduct.subcategory as any).id || '';
+        } else {
+          // If subcategory is string (name), find ID from available subcategories
+          const selectedCat = categories.find(c => c.id === categoryId);
+          if (selectedCat?.children) {
+            const subCat = selectedCat.children.find((child: any) => 
+              (typeof child === 'object' ? child.name : child) === fullProduct.subcategory
+            );
+            subcategoryId = subCat && typeof subCat === 'object' ? subCat.id : '';
+          }
         }
       }
+      setNewProductSubcategory(subcategoryId);
+      setNewProductStock(fullProduct.stock.toString());
+      setNewProductBrand(fullProduct.brand || '');
+      setNewProductSku(fullProduct.sku || '');
+      setNewProductWarranty(fullProduct.warrantyPeriod || '');
+      setNewProductIsOfficial(fullProduct.isOfficial || false);
+      setNewProductDescription(fullProduct.description || '');
+      setNewProductSpecifications(fullProduct.specifications || '');
+      setNewProductUsageGuide(fullProduct.usageGuide || '');
+      
+      // When editing, images are already uploaded URLs
+      setUploadedImageUrls(fullProduct.images || (fullProduct.image ? [fullProduct.image] : []));
+      setPendingFiles([]);
+      setIsAddSheetOpen(true);
+    } catch (err: unknown) {
+      console.error('Failed to load product details:', err);
+      const apiError = extractApiError(err);
+      setValidationErrors([{ field: 'name', message: apiError.message || 'Không thể tải thông tin sản phẩm' }]);
+    } finally {
+      setIsLoadingProductDetail(false);
     }
-    setNewProductSubcategory(subcategoryId);
-    setNewProductStock(product.stock.toString());
-    setNewProductBrand(product.brand || '');
-    setNewProductSku(product.sku || '');
-    setNewProductWarranty(product.warrantyPeriod || '');
-    setNewProductIsOfficial(product.isOfficial || false);
-    setNewProductDescription(product.description || '');
-    setNewProductSpecifications((product as any).specifications || '');
-    setNewProductUsageGuide((product as any).usageGuide || '');
-    // When editing, images are already uploaded URLs
-    setUploadedImageUrls(product.images || (product.image ? [product.image] : []));
-    setPendingFiles([]);
-    setIsAddSheetOpen(true);
   };
 
   const handleDeleteProduct = async (id: string) => {
@@ -479,6 +496,15 @@ export function ProductsPage() {
                   : 'Điền thông tin để thêm sản phẩm mới vào danh mục.'}
               </SheetDescription>
             </SheetHeader>
+            
+            {isLoadingProductDetail ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Đang tải thông tin sản phẩm...</p>
+                </div>
+              </div>
+            ) : (
             <div className="grid gap-6 py-6">
               {/* Images Section */}
               <div className="space-y-4">
@@ -887,11 +913,12 @@ export function ProductsPage() {
                 </div>
               </div>
             </div>
+            )}
             <SheetFooter>
-              <Button variant="outline" onClick={() => setIsAddSheetOpen(false)} disabled={isSaving}>
+              <Button variant="outline" onClick={() => setIsAddSheetOpen(false)} disabled={isSaving || isLoadingProductDetail}>
                 Hủy
               </Button>
-              <Button type="submit" onClick={handleSaveProduct} disabled={isSaving}>
+              <Button type="submit" onClick={handleSaveProduct} disabled={isSaving || isLoadingProductDetail}>
                 {isSaving ? 'Đang lưu...' : editingProduct ? 'Cập nhật sản phẩm' : 'Lưu sản phẩm'}
               </Button>
             </SheetFooter>

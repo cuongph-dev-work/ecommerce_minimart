@@ -57,7 +57,7 @@ DB_NAME=ecommerce_minimart
 JWT_SECRET=your-secret-key
 
 # Server
-PORT=3001
+PORT=8000
 API_PREFIX=api
 ```
 
@@ -78,7 +78,7 @@ npm run db:logs
 
 ## 📚 API Documentation
 
-- **Swagger UI**: http://localhost:3001/api/docs (when `SWAGGER_ENABLED=true`)
+- **Swagger UI**: http://localhost:8000/api/docs (when `SWAGGER_ENABLED=true`)
 - **API Spec**: See `API_SPEC.md` in project root
 
 ## 🔑 Default Credentials

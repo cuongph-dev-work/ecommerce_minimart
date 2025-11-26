@@ -357,9 +357,9 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
         {/* Product Description Tabs */}
         <section className="mt-12">
           <ProductDescription 
-            description={(product as any).description}
-            specifications={(product as any).specifications}
-            usageGuide={(product as any).usageGuide}
+            description={product.description}
+            specifications={product.specifications}
+            usageGuide={product.usageGuide}
           />
         </section>
 

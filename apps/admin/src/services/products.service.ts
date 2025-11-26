@@ -4,6 +4,8 @@ import type { Product } from '@/types';
 export interface CreateProductData {
   name: string;
   description?: string;
+  specifications?: string;
+  usageGuide?: string;
   price: number;
   discount?: number;
   stock: number;

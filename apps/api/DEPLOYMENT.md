@@ -36,7 +36,7 @@ Edit `.env` với credentials thực tế:
 
 ```env
 NODE_ENV=production
-PORT=3001
+PORT=8000
 DB_HOST=your-db-host
 DB_PORT=5432
 DB_USER=your-db-user
@@ -82,14 +82,14 @@ RUN npm ci --only=production
 COPY . .
 RUN npm run build
 
-EXPOSE 3001
+EXPOSE 8000
 
 CMD ["npm", "run", "start:prod"]
 ```
 
 ```bash
 docker build -t ecommerce-api .
-docker run -p 3001:3001 --env-file .env ecommerce-api
+docker run -p 8000:8000 --env-file .env ecommerce-api
 ```
 
 ## Verification
@@ -97,20 +97,20 @@ docker run -p 3001:3001 --env-file .env ecommerce-api
 Test API health:
 
 ```bash
-curl http://localhost:3001/api
+curl http://localhost:8000/api
 ```
 
 Test login:
 
 ```bash
-curl -X POST http://localhost:3001/api/admin/auth/login \
+curl -X POST http://localhost:8000/api/admin/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "admin@store.vn", "password": "admin123"}'
 ```
 
 ## Swagger Documentation
 
-Access tại: `http://localhost:3001/api/docs` (nếu SWAGGER_ENABLED=true)
+Access tại: `http://localhost:8000/api/docs` (nếu SWAGGER_ENABLED=true)
 
 ## Production Checklist
 

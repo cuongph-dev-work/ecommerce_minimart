@@ -312,11 +312,19 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
             <input
               type="text"
               value={formData.userName}
-              onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, userName: e.target.value });
+                // Clear error when user starts typing
+                if (getFieldError('userName')) {
+                  setValidationErrors(prev => prev.filter(err => err.field !== 'userName'));
+                }
+              }}
               placeholder={t('reviews.form.name_placeholder')}
-              className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                getFieldError('userName') ? 'border-red-500' : 'border-gray-300'
-              }`}
+              style={{
+                borderWidth: '2px',
+                borderColor: getFieldError('userName') ? '#ef4444' : '#d1d5db',
+              }}
+              className="w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 transition-all"
               disabled={submitting}
             />
             {getFieldError('userName') && (
@@ -331,12 +339,20 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
             </label>
             <textarea
               value={formData.comment}
-              onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, comment: e.target.value });
+                // Clear error when user starts typing
+                if (getFieldError('comment')) {
+                  setValidationErrors(prev => prev.filter(err => err.field !== 'comment'));
+                }
+              }}
               placeholder={t('reviews.form.comment_placeholder')}
               rows={4}
-              className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all resize-none ${
-                getFieldError('comment') ? 'border-red-500' : 'border-gray-300'
-              }`}
+              style={{
+                borderWidth: '2px',
+                borderColor: getFieldError('comment') ? '#ef4444' : '#d1d5db',
+              }}
+              className="w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 transition-all resize-none"
               disabled={submitting}
             />
             {getFieldError('comment') && (

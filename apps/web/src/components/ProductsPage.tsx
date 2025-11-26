@@ -266,7 +266,7 @@ export function ProductsPage() {
   const handleAddToCart = (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
     addToCart(product);
-    toast.success(t('products.add_to_cart_success').replace('{name}', product.name));
+    toast.success(t('products.add_to_cart_success', { name: product.name }));
   };
 
   const formatPrice = (price: number) => {
@@ -542,7 +542,7 @@ export function ProductsPage() {
                 )}
                 {selectedCategory !== 'all' && (
                   <Badge variant="secondary" className="gap-1">
-                    {t('products.category_badge').replace('{name}', allCategories.find(c => c.id === selectedCategory)?.name || '')}
+                    {t('products.category_badge', { name: allCategories.find(c => c.id === selectedCategory)?.name || '' })}
                     <X 
                       className="h-3 w-3 cursor-pointer" 
                       onClick={() => setSelectedCategory('all')}
@@ -662,7 +662,7 @@ export function ProductsPage() {
                             {product.soldCount && t('products.sold_count', { count: product.soldCount })}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {t('products.stock_remaining').replace('{stock}', formatNumber(product.stock))}
+                            {t('products.stock_remaining', { stock: product.stock })}
                           </div>
                         </div>
                         <Button

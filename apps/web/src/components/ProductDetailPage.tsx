@@ -99,7 +99,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
 
   const handleAddToCart = () => {
     addToCart(product, quantity);
-    toast.success(t('products.add_to_cart_success').replace('{name}', product.name));
+    toast.success(t('products.add_to_cart_success', { name: product.name }));
   };
 
   const formatPrice = (price: number) => {
@@ -392,7 +392,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                       onClick={(e) => {
                         e.stopPropagation();
                         addToCart(relatedProduct);
-                        toast.success(t('products.add_to_cart_success').replace('{name}', relatedProduct.name));
+                        toast.success(t('products.add_to_cart_success', { name: relatedProduct.name }));
                       }}
                       className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
                     >

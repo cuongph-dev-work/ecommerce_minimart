@@ -79,7 +79,7 @@ export function HomePage() {
   const handleAddToCart = (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
     addToCart(product);
-    toast.success(t('home.add_to_cart_success').replace('{name}', product.name));
+    toast.success(t('home.add_to_cart_success', { name: product.name }));
   };
 
   const formatPrice = (price: number) => {

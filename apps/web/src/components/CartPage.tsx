@@ -60,7 +60,7 @@ export function CartPage() {
         }
       } catch (err) {
         console.error('Failed to load stores:', err);
-        toast.error('Không thể tải danh sách cửa hàng');
+        toast.error(t('cart.errors.load_stores_failed'));
       } finally {
         setIsLoadingStores(false);
       }
@@ -147,7 +147,7 @@ export function CartPage() {
       if (apiError.errors) {
         setValidationErrors(apiError.errors);
       } else {
-        toast.error(apiError.message || 'Không thể tạo đơn hàng. Vui lòng thử lại.');
+        toast.error(apiError.message || t('cart.errors.create_order_failed'));
       }
     } finally {
       setIsSubmitting(false);
@@ -166,16 +166,16 @@ export function CartPage() {
             <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
               <ShoppingBag className="h-12 w-12 text-gray-400" />
             </div>
-            <h2 className="mb-4">Giỏ hàng trống</h2>
+            <h2 className="mb-4">{t('cart.empty_title')}</h2>
             <p className="text-gray-600 mb-8">
-              Bạn chưa có sản phẩm nào trong giỏ hàng
+              {t('cart.empty_message')}
             </p>
             <Button
               onClick={() => navigate('/products')}
               size="lg"
               className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
             >
-              Khám phá sản phẩm
+              {t('cart.explore_products')}
             </Button>
           </motion.div>
         </div>
@@ -191,8 +191,8 @@ export function CartPage() {
           animate={{ y: 0, opacity: 1 }}
           className="mb-6"
         >
-          <h1 className="mb-2">Giỏ hàng</h1>
-          <p className="text-gray-600">Bạn có {cart.length} sản phẩm trong giỏ hàng</p>
+          <h1 className="mb-2">{t('cart.title')}</h1>
+          <p className="text-gray-600">{t('cart.items_count', { count: cart.length })}</p>
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -287,21 +287,21 @@ export function CartPage() {
               transition={{ delay: 0.2 }}
               className="bg-white rounded-2xl p-6 shadow-md sticky top-24"
             >
-              <h3 className="mb-6">Tổng đơn hàng</h3>
+              <h3 className="mb-6">{t('cart.order_summary')}</h3>
 
               <div className="space-y-3 mb-6 pb-6 border-b">
                 <div className="flex justify-between text-gray-600">
-                  <span>Tạm tính</span>
+                  <span>{t('cart.subtotal')}</span>
                   <span>{formatPrice(getTotalPrice())}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>Phí vận chuyển</span>
-                  <span className="text-green-600">Miễn phí</span>
+                  <span>{t('cart.shipping_fee')}</span>
+                  <span className="text-green-600">{t('cart.free')}</span>
                 </div>
               </div>
 
               <div className="flex justify-between mb-6">
-                <span>Tổng cộng</span>
+                <span>{t('cart.total')}</span>
                 <span className="text-red-600">{formatPrice(getTotalPrice())}</span>
               </div>
 
@@ -310,7 +310,7 @@ export function CartPage() {
                 size="lg"
                 className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 group mb-3"
               >
-                Đặt hàng
+                {t('cart.place_order')}
                 <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Button>
 
@@ -320,7 +320,7 @@ export function CartPage() {
                 size="lg"
                 className="w-full"
               >
-                Tiếp tục mua sắm
+                {t('cart.continue_shopping')}
               </Button>
             </motion.div>
           </div>
@@ -331,9 +331,9 @@ export function CartPage() {
       <Dialog open={showCheckout} onOpenChange={setShowCheckout}>
         <DialogContent className="!max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Thông tin đặt hàng</DialogTitle>
+            <DialogTitle>{t('cart.checkout_title')}</DialogTitle>
             <DialogDescription>
-              Vui lòng điền thông tin và chọn địa điểm nhận hàng
+              {t('cart.checkout_description')}
             </DialogDescription>
           </DialogHeader>
 
@@ -342,7 +342,7 @@ export function CartPage() {
             <form onSubmit={handleCheckout} className="space-y-4" id="checkout-form">
               <div>
                 <label className="block mb-2">
-                  Họ và tên <span className="text-red-500">*</span>
+                  {t('cart.full_name')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -356,7 +356,7 @@ export function CartPage() {
                   className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none ${
                     getFieldError(validationErrors, 'name') ? 'border-red-500' : 'border-gray-200'
                   }`}
-                  placeholder="Nguyễn Văn A"
+                  placeholder={t('cart.name_placeholder')}
                 />
                 {getFieldError(validationErrors, 'name') && (
                   <p className="text-sm text-red-500 mt-1">
@@ -367,7 +367,7 @@ export function CartPage() {
 
               <div>
                 <label className="block mb-2">
-                  Số điện thoại <span className="text-red-500">*</span>
+                  {t('cart.phone_number')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
@@ -392,7 +392,7 @@ export function CartPage() {
 
               <div>
                 <label className="block mb-2">
-                  Email <span className="text-red-500">*</span>
+                  {t('cart.email')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
@@ -417,7 +417,7 @@ export function CartPage() {
 
               <div>
                 <label className="block mb-2">
-                  Địa điểm nhận hàng <span className="text-red-500">*</span>
+                  {t('cart.pickup_location')} <span className="text-red-500">*</span>
                 </label>
                 <Select 
                   value={selectedStoreId} 
@@ -468,18 +468,18 @@ export function CartPage() {
               </div>
 
               <div>
-                <label className="block mb-2">Ghi chú đơn hàng</label>
+                <label className="block mb-2">{t('cart.order_notes')}</label>
                 <textarea
                   value={checkoutData.notes}
                   onChange={(e) => setCheckoutData({ ...checkoutData, notes: e.target.value })}
                   rows={3}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none resize-none"
-                  placeholder="Ghi chú về đơn hàng..."
+                  placeholder={t('cart.order_notes_placeholder')}
                 />
               </div>
 
               <div className="bg-red-50 rounded-xl p-4">
-                <h4 className="mb-2">Tóm tắt đơn hàng</h4>
+                <h4 className="mb-2">{t('cart.order_summary_title')}</h4>
                 <div className="space-y-2 text-sm">
                   {cart.map((item) => (
                     <div key={item.id} className="flex justify-between text-gray-600">
@@ -488,7 +488,7 @@ export function CartPage() {
                     </div>
                   ))}
                   <div className="pt-2 border-t flex justify-between">
-                    <span>Tổng cộng:</span>
+                    <span>{t('cart.total')}:</span>
                     <span className="text-red-600">{formatPrice(getTotalPrice())}</span>
                   </div>
                 </div>
@@ -507,13 +507,13 @@ export function CartPage() {
                       style={{ border: 0 }}
                       src={`https://www.google.com/maps?q=${selectedStore.lat},${selectedStore.lng}&z=15&output=embed`}
                       allowFullScreen
-                      title={`Bản đồ ${selectedStore.name}`}
+                      title={t('cart.map_title', { storeName: selectedStore.name })}
                     />
                   </div>
                   <div className="mt-3 p-4 bg-white rounded-xl border">
                     <h4 className="mb-2 flex items-center gap-2">
                       <MapPin className="h-5 w-5 text-red-500" />
-                      Địa điểm nhận hàng
+                      {t('cart.pickup_location_label')}
                     </h4>
                     <p className="text-sm text-gray-600 mb-1">{selectedStore.name}</p>
                     <p className="text-xs text-gray-500">{selectedStore.address}</p>
@@ -531,7 +531,7 @@ export function CartPage() {
               onClick={() => setShowCheckout(false)}
               className="flex-1"
             >
-              Hủy
+              {t('cart.cancel')}
             </Button>
             <Button
               type="submit"

@@ -5,6 +5,7 @@ import ProductDetailPage from '../pages/ProductDetailPage';
 import CartPage from '../pages/CartPage';
 import ContactPage from '../pages/ContactPage';
 import StoresPage from '../pages/StoresPage';
+import OrderTrackingPage from '../pages/OrderTrackingPage';
 import NotFoundPage from '../pages/NotFoundPage';
 
 export const routes: RouteObject[] = [
@@ -31,6 +32,10 @@ export const routes: RouteObject[] = [
   {
     path: '/stores',
     element: <StoresPage />,
+  },
+  {
+    path: '/order-tracking',
+    element: <OrderTrackingPage />,
   },
   {
     path: '*',

@@ -134,7 +134,7 @@ export function StoresPage() {
             >
               <div className="flex items-start gap-3 mb-4">
                 <div
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
                     selectedStore.id === store.id
                       ? 'bg-white/20'
                       : 'bg-red-100'
@@ -154,7 +154,7 @@ export function StoresPage() {
               {/* Store Info */}
               <div className="space-y-3">
                 <div className="flex items-start gap-2">
-                  <MapPin className={`h-4 w-4 mt-0.5 flex-shrink-0 ${
+                  <MapPin className={`h-4 w-4 mt-0.5 shrink-0 ${
                     selectedStore.id === store.id ? 'text-white/80' : 'text-gray-500'
                   }`} />
                   <span className={`text-sm ${
@@ -165,7 +165,7 @@ export function StoresPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Phone className={`h-4 w-4 flex-shrink-0 ${
+                  <Phone className={`h-4 w-4 shrink-0 ${
                     selectedStore.id === store.id ? 'text-white/80' : 'text-gray-500'
                   }`} />
                   <span className={`text-sm ${
@@ -177,7 +177,7 @@ export function StoresPage() {
 
                 {store.email && (
                   <div className="flex items-center gap-2">
-                    <Mail className={`h-4 w-4 flex-shrink-0 ${
+                    <Mail className={`h-4 w-4 shrink-0 ${
                       selectedStore.id === store.id ? 'text-white/80' : 'text-gray-500'
                     }`} />
                     <span className={`text-sm ${
@@ -189,7 +189,7 @@ export function StoresPage() {
                 )}
 
                 <div className="flex items-start gap-2">
-                  <Clock className={`h-4 w-4 mt-0.5 flex-shrink-0 ${
+                  <Clock className={`h-4 w-4 mt-0.5 shrink-0 ${
                     selectedStore.id === store.id ? 'text-white/80' : 'text-gray-500'
                   }`} />
                   <div className={`text-sm ${
@@ -304,7 +304,7 @@ export function StoresPage() {
               <h3 className="mb-6">{t('stores.contact_info')}</h3>
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
                     <MapPin className="h-5 w-5 text-blue-600" />
                   </div>
                   <div className="flex-1">
@@ -314,7 +314,7 @@ export function StoresPage() {
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center shrink-0">
                     <Phone className="h-5 w-5 text-green-600" />
                   </div>
                   <div className="flex-1">
@@ -330,7 +330,7 @@ export function StoresPage() {
 
                 {selectedStore.email && (
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center shrink-0">
                       <Mail className="h-5 w-5 text-purple-600" />
                     </div>
                     <div className="flex-1">
@@ -346,7 +346,7 @@ export function StoresPage() {
                 )}
 
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center shrink-0">
                     <Clock className="h-5 w-5 text-orange-600" />
                   </div>
                   <div className="flex-1">
@@ -366,7 +366,7 @@ export function StoresPage() {
                 <ul className="space-y-3">
                   {selectedStore.services.map((service, index) => (
                     <li key={index} className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-red-600 rounded-full flex-shrink-0" />
+                      <div className="w-2 h-2 bg-red-600 rounded-full shrink-0" />
                       <span className="text-gray-700">{service}</span>
                     </li>
                   ))}

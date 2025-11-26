@@ -194,7 +194,7 @@ export function SearchSuggestions({
                     selectedIndex === index ? 'bg-gray-100' : ''
                   }`}
                 >
-                  <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                  <div className="w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-gray-100">
                     <ImageWithFallback
                       src={product.thumbnailUrls?.[0] || product.images?.[0] || product.image || ''}
                       alt={product.name}
@@ -209,7 +209,7 @@ export function SearchSuggestions({
                       {product.brand || (typeof product.category === 'string' ? product.category : product.category?.name)}
                     </div>
                   </div>
-                  <div className="text-sm font-semibold text-purple-600 flex-shrink-0">
+                  <div className="text-sm font-semibold text-purple-600 shrink-0">
                     {product.discount ? (
                       <div className="text-right">
                         <div>{formatPrice(product.price * (1 - product.discount / 100))}</div>
@@ -258,7 +258,7 @@ export function SearchSuggestions({
                     selectedIndex === index ? 'bg-gray-100' : ''
                   }`}
                 >
-                  <Clock className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                  <Clock className="h-4 w-4 text-gray-400 shrink-0" />
                   <span className="flex-1 text-left text-sm">{item}</span>
                   <button
                     onClick={(e) => {
@@ -288,7 +288,7 @@ export function SearchSuggestions({
                   selectedIndex === (searchHistory.length + index) ? 'bg-gray-100' : ''
                 }`}
               >
-                <TrendingUp className="h-4 w-4 text-orange-500 flex-shrink-0" />
+                <TrendingUp className="h-4 w-4 text-orange-500 shrink-0" />
                 <span className="flex-1 text-left text-sm">{item}</span>
               </button>
             ))}

@@ -1,19 +1,36 @@
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { ContactPage as ContactPageComponent } from '../components/ContactPage';
 
+const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://yourdomain.com';
+
 export default function ContactPage() {
+  const { t } = useTranslation();
+  const siteName = t('meta.site_name');
+  const title = t('meta.contact.title');
+  const description = t('meta.contact.description');
+  const keywords = t('meta.contact.keywords');
+
   return (
     <>
       <Helmet>
-        <title>Liên hệ - Ecommerce Store</title>
-        <meta 
-          name="description" 
-          content="Liên hệ với chúng tôi qua email, điện thoại hoặc đến trực tiếp cửa hàng. Hỗ trợ 24/7." 
-        />
-        <meta property="og:title" content="Liên hệ - Ecommerce Store" />
-        <meta property="og:description" content="Liên hệ với chúng tôi qua email, điện thoại hoặc đến trực tiếp cửa hàng" />
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <meta name="keywords" content={keywords} />
+        
+        {/* Open Graph */}
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
         <meta property="og:type" content="website" />
-        <link rel="canonical" href="https://yourdomain.com/contact" />
+        <meta property="og:url" content={`${SITE_URL}/contact`} />
+        <meta property="og:site_name" content={siteName} />
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        
+        <link rel="canonical" href={`${SITE_URL}/contact`} />
       </Helmet>
       <ContactPageComponent />
     </>

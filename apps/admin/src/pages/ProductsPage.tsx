@@ -19,15 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetFooter,
-} from "@/components/ui/sheet";
+
 import {
   Dialog,
   DialogContent,
@@ -35,6 +27,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus, Search, Edit, Trash2, Filter, MoreHorizontal, Upload, X } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -59,7 +52,7 @@ export function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
@@ -356,7 +349,7 @@ export function ProductsPage() {
       }
 
       // Step 3: Success - cleanup and close
-      setIsAddSheetOpen(false);
+      setIsAddDialogOpen(false);
       resetForm();
       await fetchProducts();
     } catch (err: unknown) {
@@ -420,7 +413,7 @@ export function ProductsPage() {
       // When editing, images are already uploaded URLs
       setUploadedImageUrls(fullProduct.images || (fullProduct.image ? [fullProduct.image] : []));
       setPendingFiles([]);
-      setIsAddSheetOpen(true);
+      setIsAddDialogOpen(true);
     } catch (err: unknown) {
       console.error('Failed to load product details:', err);
       const apiError = extractApiError(err);
@@ -478,24 +471,24 @@ export function ProductsPage() {
             Quản lý danh mục sản phẩm và kho hàng.
           </p>
         </div>
-        <Sheet open={isAddSheetOpen} onOpenChange={(open) => {
-          setIsAddSheetOpen(open);
+        <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+          setIsAddDialogOpen(open);
           if (!open) resetForm();
         }}>
-          <SheetTrigger asChild>
+          <DialogTrigger asChild>
             <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
               <Plus className="mr-2 h-4 w-4" /> Thêm sản phẩm
             </Button>
-          </SheetTrigger>
-          <SheetContent className="sm:max-w-2xl overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>{editingProduct ? 'Sửa sản phẩm' : 'Thêm sản phẩm mới'}</SheetTitle>
-              <SheetDescription>
+          </DialogTrigger>
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingProduct ? 'Sửa sản phẩm' : 'Thêm sản phẩm mới'}</DialogTitle>
+              <DialogDescription>
                 {editingProduct 
                   ? 'Cập nhật thông tin sản phẩm bên dưới.' 
                   : 'Điền thông tin để thêm sản phẩm mới vào danh mục.'}
-              </SheetDescription>
-            </SheetHeader>
+              </DialogDescription>
+            </DialogHeader>
             
             {isLoadingProductDetail ? (
               <div className="flex items-center justify-center py-12">
@@ -914,16 +907,16 @@ export function ProductsPage() {
               </div>
             </div>
             )}
-            <SheetFooter>
-              <Button variant="outline" onClick={() => setIsAddSheetOpen(false)} disabled={isSaving || isLoadingProductDetail}>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isSaving || isLoadingProductDetail}>
                 Hủy
               </Button>
               <Button type="submit" onClick={handleSaveProduct} disabled={isSaving || isLoadingProductDetail}>
                 {isSaving ? 'Đang lưu...' : editingProduct ? 'Cập nhật sản phẩm' : 'Lưu sản phẩm'}
               </Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="flex items-center gap-4 bg-card p-4 rounded-xl shadow-sm border border-border">

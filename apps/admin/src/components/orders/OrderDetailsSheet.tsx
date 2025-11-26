@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import type { Order, OrderStatus } from '@/types';
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -86,14 +86,14 @@ export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate }:
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="text-2xl">Chi tiết đơn hàng</SheetTitle>
-          <SheetDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl">Chi tiết đơn hàng</DialogTitle>
+          <DialogDescription>
             Mã đơn: <span className="font-mono font-semibold">{displayOrder?.orderNumber || displayOrder?.id}</span>
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
@@ -341,7 +341,7 @@ export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate }:
           </div>
         </div>
         )}
-      </SheetContent>
+      </DialogContent>
 
       {/* Status Update Dialog */}
       {displayOrder && (
@@ -371,6 +371,6 @@ export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate }:
           />
         </>
       )}
-    </Sheet>
+    </Dialog>
   );
 }

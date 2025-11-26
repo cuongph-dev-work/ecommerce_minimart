@@ -19,11 +19,7 @@ interface ProductDetailPageProps {
 }
 
 export function ProductDetailPage({ productId }: ProductDetailPageProps) {
-  const { t, i18n } = useTranslation();
-  
-  const formatNumber = (value: number) => {
-    return new Intl.NumberFormat(i18n.language === 'en' ? 'en-US' : 'vi-VN').format(value);
-  };
+  const { t } = useTranslation();
   const { addToCart } = useCart();
   const { addToRecentlyViewed } = useRecentlyViewed();
   const navigate = useNavigate();
@@ -224,16 +220,11 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                 ))}
               </div>
               <span className="text-gray-600">
-                {(product.rating || 0).toFixed(1)} ({t('reviews.review_count').replace('{count}', formatNumber(product.reviewCount || 0))})
+                {(product.rating || 0).toFixed(1)} ({t('reviews.review_count', { count: product.reviewCount || 0 })})
               </span>
             </div>
 
             <div className="mb-6">{formatPrice(product.price)}</div>
-
-            <p className="text-gray-600 mb-8 leading-relaxed">
-              {product.description}
-            </p>
-
             {/* Features */}
             <div className="bg-gray-50 rounded-2xl p-6 mb-8">
               <div className="grid sm:grid-cols-2 gap-4">
@@ -289,7 +280,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                     <div>
                       <div className="mb-1">{t('product_detail.features.stock.title')}</div>
                       <p className="text-sm text-gray-600">
-                        {t('product_detail.features.stock.description').replace('{count}', formatNumber(product.stock))}
+                        {t('product_detail.features.stock.description', { count: product.stock })}
                       </p>
                     </div>
                   </div>
@@ -323,7 +314,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                   </Button>
                 </div>
                 <span className="text-gray-600 text-sm">
-                  {t('product_detail.stock_available').replace('{count}', formatNumber(product.stock))}
+                  {t('product_detail.stock_available', { count: product.stock })}
                 </span>
               </div>
             </div>

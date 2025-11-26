@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Menu, X, Search } from 'lucide-react';
+import { ShoppingCart, Menu, X, Search, ClipboardList } from 'lucide-react';
 import { Button } from './ui/button';
 import { useCart } from '../context/CartContext';
 import { motion, AnimatePresence } from 'motion/react';
@@ -121,6 +121,16 @@ export function Header() {
               onClick={() => navigate('/products')}
             >
               <Search className="h-5 w-5" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => navigate('/order-tracking')}
+              title={t('common.orderTracking')}
+            >
+              <ClipboardList className="h-5 w-5" />
             </Button>
 
             <Button

@@ -8,7 +8,8 @@
         "login": "Đăng nhập",
         "search": "Tìm kiếm sản phẩm...",
         "footer_text": "© 2024 Minimart. Bảo lưu mọi quyền.",
-        "language": "Ngôn ngữ"
+        "language": "Ngôn ngữ",
+        "order_tracking": "Tra cứu đơn hàng"
     },
     "home": {
         "hero_title": "Công nghệ cho cuộc sống",
@@ -19,18 +20,18 @@
         "featured_products_subtitle": "Khám phá những sản phẩm được yêu thích nhất",
         "view_all": "Xem tất cả",
         "view_all_products": "Xem tất cả sản phẩm",
-        "sold_count": "Đã bán {count}",
-        "add_to_cart_success": "Đã thêm {name} vào giỏ hàng",
+        "sold_count": "Đã bán {{count, number}}",
+        "add_to_cart_success": "Đã thêm {{name}} vào giỏ hàng",
         "not_found": "Không tìm thấy sản phẩm",
         "related_products": "Sản phẩm liên quan",
-        "products_count": "{count} sản phẩm",
-        "view_all_category": "Xem tất cả {category}",
+        "products_count": "{{count, number}} sản phẩm",
+        "view_all_category": "Xem tất cả {{category}}",
         "product_categories": "Danh mục sản phẩm",
         "collapse": "Thu gọn",
-        "view_all_count": "Xem tất cả ({count})",
+        "view_all_count": "Xem tất cả ({{count, number}})",
         "loading": "Đang tải...",
         "no_categories": "Không có danh mục",
-        "types_count": "{count} loại",
+        "types_count": "{{count, number}} loại",
         "trust_badges": {
             "genuine_title": "Chính hãng 100%",
             "genuine_desc": "Cam kết hàng chính hãng",
@@ -72,20 +73,20 @@
         "out_of_stock": "Hết hàng",
         "almost_out": "Sắp hết",
         "loading": "Đang tải...",
-        "found_products": "Tìm thấy {count} sản phẩm",
+        "found_products": "Tìm thấy {{count, number}} sản phẩm",
         "no_products": "Không tìm thấy sản phẩm",
         "no_products_desc": "Thử tìm kiếm với từ khóa khác hoặc chọn danh mục khác",
         "clear_filters": "Xóa bộ lọc",
         "apply": "Áp dụng",
-        "search_badge": "Tìm kiếm: {query}",
-        "category_badge": "Danh mục: {name}",
-        "brand_badge": "Thương hiệu: {brand}",
-        "sold_count": "Đã bán {count}",
-        "stock_remaining": "Còn {stock}",
+        "search_badge": "Tìm kiếm: {{query}}",
+        "category_badge": "Danh mục: {{name}}",
+        "brand_badge": "Thương hiệu: {{brand}}",
+        "sold_count": "Đã bán {{count, number}}",
+        "stock_remaining": "Còn {{stock}}",
         "previous": "Trước",
         "next": "Sau",
         "load_error": "Không thể tải sản phẩm",
-        "add_to_cart_success": "Đã thêm {name} vào giỏ hàng",
+        "add_to_cart_success": "Đã thêm {{name}} vào giỏ hàng",
         "back": "Quay lại",
         "back_to_list": "Quay lại danh sách",
         "not_found": "Không tìm thấy",
@@ -192,8 +193,8 @@
     },
     "mega_menu": {
         "categories": "Danh mục",
-        "categories_count": "{count} danh mục",
-        "more_items": "+{count} mục khác"
+        "categories_count": "{{count}} danh mục",
+        "more_items": "+{{count}} mục khác"
     },
     "search": {
         "popular_searches": "Tìm kiếm phổ biến"
@@ -202,7 +203,7 @@
         "title": "Đánh giá sản phẩm",
         "no_reviews": "Chưa có đánh giá nào",
         "be_first": "Hãy là người đầu tiên đánh giá sản phẩm này",
-        "review_count": "{count} đánh giá",
+        "review_count": "{{count, number}} đánh giá",
         "helpful": "Hữu ích",
         "write_review": "Viết đánh giá",
         "form": {
@@ -257,13 +258,13 @@
             },
             "stock": {
                 "title": "Còn hàng",
-                "description": "{count} sản phẩm"
+                "description": "{{count, number}} sản phẩm"
             }
         },
         "quantity": "Số lượng",
         "add_to_cart": "Thêm vào giỏ",
         "buy_now": "Mua ngay",
-        "stock_available": "{count} sản phẩm có sẵn",
+        "stock_available": "{{count, number}} sản phẩm có sẵn",
         "brand": "Thương hiệu"
     },
     "product_description": {
@@ -273,5 +274,129 @@
             "guide": "Hướng dẫn sử dụng"
         },
         "no_content": "Chưa có thông tin"
+    },
+    "order_tracking": {
+        "title": "Tra cứu đơn hàng",
+        "subtitle": "Nhập mã đơn hàng và số điện thoại để theo dõi trạng thái đơn hàng của bạn",
+        "order_number": "Mã đơn hàng",
+        "order_number_placeholder": "Ví dụ: ORD-001",
+        "phone_number": "Số điện thoại",
+        "phone_number_placeholder": "Nhập số điện thoại",
+        "search_button": "Tra cứu đơn hàng",
+        "searching": "Đang tìm kiếm...",
+        "required": "bắt buộc",
+        "hint_title": "Lưu ý:",
+        "hint_message": "Mã đơn hàng được gửi qua email hoặc SMS sau khi đặt hàng thành công",
+        "not_found_title": "Không tìm thấy đơn hàng",
+        "not_found_message": "Vui lòng kiểm tra lại mã đơn hàng và số điện thoại",
+        "order_details": "Đơn hàng #{{orderNumber}}",
+        "order_date": "Ngày đặt:",
+        "date_format": {
+            "at": "lúc",
+            "month": "tháng",
+            "year": "năm"
+        },
+        "customer_info": "Thông tin khách hàng",
+        "pickup_location": "Địa điểm nhận hàng",
+        "products": "Sản phẩm ({{count}})",
+        "quantity": "Số lượng:",
+        "subtotal": "Tạm tính",
+        "discount": "Giảm giá",
+        "total": "Tổng cộng",
+        "notes_label": "Ghi chú:",
+        "status_title": "Trạng thái đơn hàng",
+        "status": {
+            "pending": "Chờ xác nhận",
+            "confirmed": "Đã xác nhận",
+            "processing": "Đang chuẩn bị",
+            "ready": "Sẵn sàng lấy hàng",
+            "completed": "Hoàn thành",
+            "cancelled": "Đã hủy"
+        },
+        "tracking_steps": {
+            "placed": {
+                "title": "Đơn hàng đã được đặt",
+                "description": "Đơn hàng của bạn đã được tiếp nhận"
+            },
+            "confirmed": {
+                "title": "Đã xác nhận",
+                "description": "Chúng tôi đã xác nhận đơn hàng"
+            },
+            "processing": {
+                "title": "Đang chuẩn bị",
+                "description": "Đơn hàng đang được chuẩn bị"
+            },
+            "ready": {
+                "title": "Sẵn sàng nhận hàng",
+                "description": "Đơn hàng đã sẵn sàng để bạn đến lấy"
+            },
+            "completed": {
+                "title": "Hoàn thành",
+                "description": "Đơn hàng đã hoàn thành"
+            }
+        },
+        "validation": {
+            "order_number_required": "Mã đơn hàng là bắt buộc",
+            "order_number_empty": "Mã đơn hàng không được để trống",
+            "phone_required": "Số điện thoại là bắt buộc",
+            "phone_invalid": "Số điện thoại phải có 10-11 chữ số"
+        },
+        "not_found": "Không tìm thấy đơn hàng",
+        "updated": "Đã cập nhật thông tin đơn hàng",
+        "removed_from_history": "Đã xóa khỏi lịch sử",
+        "delivery_address": "Địa chỉ giao hàng"
+    },
+    "cart": {
+        "order_created": "Đơn hàng đã được tạo thành công! Mã đơn hàng: {{orderNumber}}",
+        "product_removed": "Đã xóa sản phẩm khỏi giỏ hàng",
+        "loading_stores": "Đang tải...",
+        "select_store": "Chọn chi nhánh",
+        "processing": "Đang xử lý...",
+        "confirm_order": "Xác nhận đặt hàng"
+    },
+    "meta": {
+        "site_name": "Minimart",
+        "site_description": "Minimart - Cửa hàng công nghệ hàng đầu. Hàng chính hãng 100%, bảo hành uy tín, giao hàng nhanh. Flash sale hàng ngày với giá tốt nhất thị trường.",
+        "home": {
+            "title": "Trang chủ - Minimart | Công nghệ cho cuộc sống",
+            "description": "Khám phá các sản phẩm công nghệ cao cấp tại Minimart. Flash sale hàng ngày, miễn phí vận chuyển, bảo hành uy tín. Hơn 50.000 khách hàng tin tưởng.",
+            "keywords": "minimart, công nghệ, điện tử, flash sale, mua sắm online, hàng chính hãng"
+        },
+        "products": {
+            "title_default": "Sản phẩm - Minimart | Danh mục đầy đủ",
+            "title_search": "Tìm kiếm \"{{query}}\" - Minimart",
+            "title_category": "Sản phẩm {{category}} - Minimart",
+            "description_default": "Khám phá toàn bộ sản phẩm công nghệ tại Minimart. Bộ lọc thông minh theo danh mục, thương hiệu, giá cả. Hàng chính hãng 100%, bảo hành uy tín.",
+            "description_search": "Kết quả tìm kiếm cho \"{{query}}\" tại Minimart. Hàng chính hãng, giá tốt nhất thị trường.",
+            "description_category": "Danh sách sản phẩm {{category}} tại Minimart. Hàng chính hãng, bảo hành uy tín, giao hàng nhanh.",
+            "keywords": "minimart, sản phẩm, mua sắm online, hàng chính hãng"
+        },
+        "product_detail": {
+            "title": "{{name}} - Minimart | Giá {{price}}",
+            "description_default": "{{name}} - Hàng chính hãng tại Minimart. Giá tốt nhất, bảo hành uy tín, giao hàng nhanh.",
+            "keywords": "{{name}}, {{category}}, {{brand}}, minimart, hàng chính hãng"
+        },
+        "cart": {
+            "title": "Giỏ hàng - Minimart",
+            "description": "Xem giỏ hàng và thanh toán đơn hàng của bạn tại Minimart"
+        },
+        "contact": {
+            "title": "Liên hệ - Minimart | Hỗ trợ khách hàng 24/7",
+            "description": "Liên hệ với Minimart qua email, điện thoại hoặc đến trực tiếp cửa hàng. Hỗ trợ khách hàng 24/7, tư vấn miễn phí, giải đáp mọi thắc mắc về sản phẩm và dịch vụ.",
+            "keywords": "liên hệ minimart, hỗ trợ khách hàng, tư vấn sản phẩm, địa chỉ cửa hàng"
+        },
+        "stores": {
+            "title": "Cửa hàng - Minimart | Hệ thống cửa hàng trên toàn quốc",
+            "description": "Tìm cửa hàng Minimart gần bạn. Hệ thống cửa hàng trên toàn quốc với địa chỉ, số điện thoại, giờ mở cửa và bản đồ chỉ đường chi tiết.",
+            "keywords": "cửa hàng minimart, địa chỉ cửa hàng, hệ thống cửa hàng, mua hàng trực tiếp"
+        },
+        "order_tracking": {
+            "title": "Tra cứu đơn hàng - Minimart",
+            "description": "Tra cứu và theo dõi trạng thái đơn hàng của bạn tại Minimart. Nhập mã đơn hàng để xem chi tiết vận chuyển."
+        },
+        "not_found": {
+            "title": "404 - Không tìm thấy trang | Minimart",
+            "description": "Trang bạn tìm kiếm không tồn tại. Vui lòng quay lại trang chủ hoặc sử dụng menu điều hướng."
+        }
     }
 }

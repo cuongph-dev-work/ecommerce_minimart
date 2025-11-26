@@ -239,7 +239,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
               />
             ))}
           </div>
-          <p className="text-sm text-gray-600">{t('reviews.review_count').replace('{count}', formatNumber(allReviews.length))}</p>
+          <p className="text-sm text-gray-600">{t('reviews.review_count', { count: allReviews.length })}</p>
         </div>
 
         <div className="md:col-span-2">
@@ -324,7 +324,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                 borderWidth: '2px',
                 borderColor: getFieldError('userName') ? '#ef4444' : '#d1d5db',
               }}
-              className="w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 transition-all"
+              className="w-full px-4 py-3 rounded-xl focus:outline-none transition-all"
               disabled={submitting}
             />
             {getFieldError('userName') && (
@@ -352,7 +352,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                 borderWidth: '2px',
                 borderColor: getFieldError('comment') ? '#ef4444' : '#d1d5db',
               }}
-              className="w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 transition-all resize-none"
+              className="w-full px-4 py-3 rounded-xl focus:outline-none transition-all resize-none"
               disabled={submitting}
             />
             {getFieldError('comment') && (

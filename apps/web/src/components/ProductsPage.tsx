@@ -332,7 +332,7 @@ export function ProductsPage() {
                       setShowSuggestions(false);
                     }
                   }}
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-red-500 transition-all"
+                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none transition-all"
                 />
                 {searchQuery && (
                   <button
@@ -467,7 +467,7 @@ export function ProductsPage() {
             {/* Filter & Sort Bar */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-6 border-b">
               <div className="text-sm text-gray-600">
-                {loading ? t('products.loading') : t('products.found_products').replace('{count}', formatNumber(products.length))}
+                {loading ? t('products.loading') : t('products.found_products', { count: products.length })}
               </div>
               
               {/* Desktop Filter & Sort */}
@@ -659,7 +659,7 @@ export function ProductsPage() {
 
                         <div className="flex items-center justify-between mb-4">
                           <div className="text-sm text-gray-500">
-                            {product.soldCount && t('products.sold_count').replace('{count}', formatNumber(product.soldCount))}
+                            {product.soldCount && t('products.sold_count', { count: product.soldCount })}
                           </div>
                           <div className="text-sm text-gray-500">
                             {t('products.stock_remaining').replace('{stock}', formatNumber(product.stock))}

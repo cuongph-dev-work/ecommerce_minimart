@@ -185,6 +185,57 @@ export class OrdersService {
     return order;
   }
 
+  /**
+   * Track order by order number and phone number (public endpoint)
+   */
+  async trackOrder(orderNumber: string, phone: string): Promise<any> {
+    const order = await this.em.findOne(
+      Order,
+      { 
+        orderNumber: orderNumber.toUpperCase(), 
+        customerPhone: phone 
+      },
+      {
+        populate: ['pickupStore', 'items', 'items.product'],
+      }
+    );
+
+    if (!order) {
+      throw new NotFoundException('Không tìm thấy đơn hàng. Vui lòng kiểm tra lại mã đơn hàng và số điện thoại.');
+    }
+
+    // Serialize order to ensure enum values are converted to strings
+    return {
+      id: order.id,
+      orderNumber: order.orderNumber,
+      status: String(order.status), // Explicitly convert enum to string
+      createdAt: order.createdAt.toISOString(),
+      customerName: order.customerName,
+      customerPhone: order.customerPhone,
+      customerEmail: order.customerEmail,
+      notes: order.notes,
+      subtotal: Number(order.subtotal),
+      discount: Number(order.discount),
+      total: Number(order.total),
+      pickupStore: order.pickupStore ? {
+        id: order.pickupStore.id,
+        name: order.pickupStore.name,
+        address: order.pickupStore.address,
+        phone: order.pickupStore.phone,
+      } : undefined,
+      items: order.items.getItems().map(item => ({
+        product: {
+          id: item.product.id,
+          name: item.product.name,
+          price: Number(item.product.price),
+          image: item.product.image,
+        },
+        quantity: item.quantity,
+        price: Number(item.price),
+      })),
+    };
+  }
+
   async updateStatus(id: string, status: OrderStatus, note: string, updatedBy: string): Promise<Order> {
     const order = await this.findOne(id);
 

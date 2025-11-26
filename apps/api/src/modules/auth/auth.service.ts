@@ -45,7 +45,7 @@ export class AuthService {
     const user = await this.validateUser(loginDto.username, loginDto.password);
 
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('User or password is incorrect');
     }
 
     const payload = { sub: user.id, email: user.email, role: user.role };

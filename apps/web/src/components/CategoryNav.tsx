@@ -59,7 +59,7 @@ export function CategoryNav({ onCategoryClick }: CategoryNavProps) {
             onClick={() => setShowAll(!showAll)}
             className="text-sm text-[rgb(7,0,11)] hover:underline"
           >
-            {showAll ? t('home.collapse') : t('home.view_all_count').replace('{count}', formatNumber(categories.length))}
+            {showAll ? t('home.collapse') : t('home.view_all_count', { count: categories.length })}
           </button>
         )}
       </div>
@@ -90,7 +90,7 @@ export function CategoryNav({ onCategoryClick }: CategoryNavProps) {
                 <div className="text-sm mb-1">{category.name}</div>
                 {subcategories.length > 0 && (
                   <div className="text-xs text-gray-500">
-                    {t('home.types_count').replace('{count}', formatNumber(subcategories.length))}
+                    {t('home.types_count', { count: subcategories.length })}
                   </div>
                 )}
               </motion.button>

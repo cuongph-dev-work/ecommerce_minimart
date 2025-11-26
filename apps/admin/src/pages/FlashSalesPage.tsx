@@ -12,15 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetFooter,
-} from '@/components/ui/sheet';
+
 import {
   Dialog,
   DialogContent,
@@ -28,6 +20,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Plus, Search, Edit, Trash2, MoreHorizontal, Clock } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -48,11 +41,11 @@ import axios from 'axios';
 export function FlashSalesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [flashSales, setFlashSales] = useState<FlashSale[]>([]);
-  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingFlashSale, setEditingFlashSale] = useState<FlashSale | null>(null);
   const [flashSaleToDelete, setFlashSaleToDelete] = useState<string | null>(null);
   const [selectedFlashSale, setSelectedFlashSale] = useState<FlashSale | null>(null);
-  const [isProductSheetOpen, setIsProductSheetOpen] = useState(false);
+  const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<FlashSaleProduct | null>(null);
   const [productToRemove, setProductToRemove] = useState<string | null>(null);
@@ -135,7 +128,7 @@ export function FlashSalesPage() {
         await flashSalesService.create(flashSaleData);
       }
 
-      setIsAddSheetOpen(false);
+      setIsAddDialogOpen(false);
       resetForm();
       await fetchFlashSales();
     } catch (err: any) {
@@ -151,7 +144,7 @@ export function FlashSalesPage() {
     setNewFlashSaleStartTime(flashSale.startTime.split('T')[0] + 'T' + flashSale.startTime.split('T')[1].split('.')[0]);
     setNewFlashSaleEndTime(flashSale.endTime.split('T')[0] + 'T' + flashSale.endTime.split('T')[1].split('.')[0]);
     setNewFlashSaleStatus(flashSale.status);
-    setIsAddSheetOpen(true);
+    setIsAddDialogOpen(true);
   };
 
   const handleDeleteFlashSale = async (id: string) => {
@@ -304,22 +297,22 @@ export function FlashSalesPage() {
             Quản lý các chương trình flash sale
           </p>
         </div>
-        <Sheet open={isAddSheetOpen} onOpenChange={(open) => {
-          setIsAddSheetOpen(open);
+        <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+          setIsAddDialogOpen(open);
           if (!open) resetForm();
         }}>
-          <SheetTrigger asChild>
+          <DialogTrigger asChild>
             <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
               <Plus className="mr-2 h-4 w-4" /> Tạo Flash Sale
             </Button>
-          </SheetTrigger>
-          <SheetContent className="sm:max-w-2xl overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>{editingFlashSale ? 'Sửa Flash Sale' : 'Tạo Flash Sale Mới'}</SheetTitle>
-              <SheetDescription>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingFlashSale ? 'Sửa Flash Sale' : 'Tạo Flash Sale Mới'}</DialogTitle>
+              <DialogDescription>
                 {editingFlashSale ? 'Cập nhật thông tin flash sale' : 'Tạo chương trình flash sale mới'}
-              </SheetDescription>
-            </SheetHeader>
+              </DialogDescription>
+            </DialogHeader>
             <div className="grid gap-6 py-6">
               <div className="space-y-2">
                 <Label>Tên chương trình <span className="text-destructive">*</span></Label>
@@ -368,16 +361,16 @@ export function FlashSalesPage() {
                 {error}
               </div>
             )}
-            <SheetFooter>
-              <Button variant="outline" onClick={() => setIsAddSheetOpen(false)} disabled={isSaving}>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isSaving}>
                 Hủy
               </Button>
               <Button onClick={handleSaveFlashSale} disabled={isSaving}>
                 {isSaving ? 'Đang lưu...' : editingFlashSale ? 'Cập nhật' : 'Tạo'}
               </Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="flex items-center gap-4 bg-card p-4 rounded-xl shadow-sm border border-border">
@@ -442,7 +435,7 @@ export function FlashSalesPage() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onSelect={() => {
                         setSelectedFlashSale(flashSale);
-                        setIsProductSheetOpen(true);
+                        setIsProductDialogOpen(true);
                       }}>
                         Quản lý sản phẩm
                       </DropdownMenuItem>
@@ -466,22 +459,22 @@ export function FlashSalesPage() {
       </div>
 
       {/* Product Management Sheet */}
-      <Sheet open={isProductSheetOpen} onOpenChange={(open) => {
-        setIsProductSheetOpen(open);
+      <Dialog open={isProductDialogOpen} onOpenChange={(open) => {
+        setIsProductDialogOpen(open);
         if (!open) {
           setSelectedFlashSale(null);
           resetProductForm();
         }
       }}>
-        <SheetContent className="sm:max-w-4xl overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
               Quản lý sản phẩm - {selectedFlashSale?.name}
-            </SheetTitle>
-            <SheetDescription>
+            </DialogTitle>
+            <DialogDescription>
               Thêm, sửa hoặc xóa sản phẩm trong flash sale này
-            </SheetDescription>
-          </SheetHeader>
+            </DialogDescription>
+          </DialogHeader>
           
           <div className="mt-6">
             <Button
@@ -558,8 +551,8 @@ export function FlashSalesPage() {
               </Table>
             </div>
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       {/* Add/Edit Product Dialog */}
       <Dialog open={isAddProductOpen} onOpenChange={(open) => {

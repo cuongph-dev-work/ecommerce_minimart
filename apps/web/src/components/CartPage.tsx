@@ -1,11 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, MapPin } from 'lucide-react';
 import { Button } from './ui/button';
 import { motion, AnimatePresence } from 'motion/react';
 import { useCart } from '../context/CartContext';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import * as v from 'valibot';
+import { checkoutSchema } from '../schemas/checkout.schema';
+import { getFieldError, extractApiError, type ValidationError } from '../lib/error-handler';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +17,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from './ui/dialog';
-import { storeLocations } from '../data/stores';
+import { storesService } from '../services/stores.service';
+import { ordersService } from '../services/orders.service';
+import type { Store } from '../types';
 import {
   Select,
   SelectContent,
@@ -23,18 +29,49 @@ import {
 } from './ui/select';
 
 export function CartPage() {
+  const { t } = useTranslation();
   const { cart, removeFromCart, updateQuantity, clearCart, getTotalPrice } = useCart();
   const navigate = useNavigate();
   const [showCheckout, setShowCheckout] = useState(false);
-  const [selectedStoreId, setSelectedStoreId] = useState(storeLocations[0].id);
+  const [stores, setStores] = useState<Store[]>([]);
+  const [selectedStoreId, setSelectedStoreId] = useState('');
+  const [isLoadingStores, setIsLoadingStores] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkoutData, setCheckoutData] = useState({
     name: '',
     phone: '',
     email: '',
     notes: '',
   });
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
 
-  const selectedStore = storeLocations.find(store => store.id === selectedStoreId) || storeLocations[0];
+  // Fetch stores from API
+  useEffect(() => {
+    const controller = new AbortController();
+    
+    const fetchStores = async () => {
+      try {
+        setIsLoadingStores(true);
+        const storesData = await storesService.getAll(controller.signal);
+        setStores(storesData);
+        // Set first store as default if available
+        if (storesData.length > 0) {
+          setSelectedStoreId(storesData[0].id);
+        }
+      } catch (err) {
+        console.error('Failed to load stores:', err);
+        toast.error('Không thể tải danh sách cửa hàng');
+      } finally {
+        setIsLoadingStores(false);
+      }
+    };
+    
+    fetchStores();
+    
+    return () => controller.abort();
+  }, []);
+
+  const selectedStore = stores.find(store => store.id === selectedStoreId) || stores[0];
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -43,23 +80,78 @@ export function CartPage() {
     }).format(price);
   };
 
-  const handleCheckout = (e: React.FormEvent) => {
+  const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Simulate sending order to admin
-    const orderDetails = {
-      customer: checkoutData,
-      items: cart,
-      total: getTotalPrice(),
-      orderDate: new Date().toISOString(),
-    };
-
-    console.log('Order submitted:', orderDetails);
+    // Validate with valibot
+    setValidationErrors([]);
     
-    toast.success('Đơn hàng đã được gửi thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất.');
-    clearCart();
-    setShowCheckout(false);
-    navigate('/');
+    const formData = {
+      name: checkoutData.name,
+      phone: checkoutData.phone,
+      email: checkoutData.email,
+      storeId: selectedStoreId,
+      notes: checkoutData.notes || undefined,
+    };
+    
+    const result = v.safeParse(checkoutSchema, formData);
+    
+    if (!result.success) {
+      // Convert valibot issues to ValidationError[]
+      const errors: ValidationError[] = result.issues.map(issue => {
+        const fieldPath = issue.path?.map(p => p.key).join('.') || 'unknown';
+        return {
+          field: fieldPath,
+          message: issue.message,
+        };
+      });
+      
+      setValidationErrors(errors);
+      // Scroll to top of dialog to show errors
+      setTimeout(() => {
+        const dialogContent = document.querySelector('[role="dialog"]');
+        if (dialogContent) {
+          dialogContent.scrollTop = 0;
+        }
+      }, 100);
+      return;
+    }
+    
+    // Create order via API
+    setIsSubmitting(true);
+    try {
+      const orderData = {
+        customerName: checkoutData.name,
+        customerPhone: checkoutData.phone,
+        customerEmail: checkoutData.email,
+        notes: checkoutData.notes || undefined,
+        pickupStoreId: selectedStoreId,
+        items: cart.map(item => ({
+          productId: item.id,
+          quantity: item.quantity,
+        })),
+      };
+
+      const response = await ordersService.create(orderData);
+      
+      toast.success(t('cart.order_created', { orderNumber: response.orderNumber }));
+      clearCart();
+      setShowCheckout(false);
+      
+      // Navigate to order tracking page after 2 seconds
+      setTimeout(() => {
+        navigate('/order-tracking');
+      }, 2000);
+    } catch (err) {
+      const apiError = extractApiError(err);
+      if (apiError.errors) {
+        setValidationErrors(apiError.errors);
+      } else {
+        toast.error(apiError.message || 'Không thể tạo đơn hàng. Vui lòng thử lại.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (cart.length === 0) {
@@ -118,7 +210,7 @@ export function CartPage() {
                     className="bg-white rounded-2xl p-4 sm:p-6 shadow-md hover:shadow-lg transition-shadow"
                   >
                     <div className="flex gap-4">
-                      <div className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden">
+                      <div className="w-24 h-24 sm:w-32 sm:h-32 shrink-0 bg-gray-100 rounded-xl overflow-hidden">
                         <ImageWithFallback
                           src={
                             item.thumbnailUrls?.[0] ||
@@ -144,9 +236,9 @@ export function CartPage() {
                             size="icon"
                             onClick={() => {
                               removeFromCart(item.id);
-                              toast.success('Đã xóa sản phẩm khỏi giỏ hàng');
+                              toast.success(t('cart.product_removed'));
                             }}
-                            className="text-red-500 hover:text-red-600 hover:bg-red-50 flex-shrink-0"
+                            className="text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0"
                           >
                             <Trash2 className="h-5 w-5" />
                           </Button>
@@ -254,12 +346,23 @@ export function CartPage() {
                 </label>
                 <input
                   type="text"
-                  required
                   value={checkoutData.name}
-                  onChange={(e) => setCheckoutData({ ...checkoutData, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-red-500"
+                  onChange={(e) => {
+                    setCheckoutData({ ...checkoutData, name: e.target.value });
+                    if (getFieldError(validationErrors, 'name')) {
+                      setValidationErrors(validationErrors.filter(err => err.field !== 'name'));
+                    }
+                  }}
+                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none ${
+                    getFieldError(validationErrors, 'name') ? 'border-red-500' : 'border-gray-200'
+                  }`}
                   placeholder="Nguyễn Văn A"
                 />
+                {getFieldError(validationErrors, 'name') && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {getFieldError(validationErrors, 'name')}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -268,55 +371,100 @@ export function CartPage() {
                 </label>
                 <input
                   type="tel"
-                  required
                   value={checkoutData.phone}
-                  onChange={(e) => setCheckoutData({ ...checkoutData, phone: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-red-500"
+                  onChange={(e) => {
+                    setCheckoutData({ ...checkoutData, phone: e.target.value });
+                    if (getFieldError(validationErrors, 'phone')) {
+                      setValidationErrors(validationErrors.filter(err => err.field !== 'phone'));
+                    }
+                  }}
+                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none ${
+                    getFieldError(validationErrors, 'phone') ? 'border-red-500' : 'border-gray-200'
+                  }`}
                   placeholder="0912345678"
                 />
+                {getFieldError(validationErrors, 'phone') && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {getFieldError(validationErrors, 'phone')}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="block mb-2">Email</label>
+                <label className="block mb-2">
+                  Email <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="email"
                   value={checkoutData.email}
-                  onChange={(e) => setCheckoutData({ ...checkoutData, email: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-red-500"
+                  onChange={(e) => {
+                    setCheckoutData({ ...checkoutData, email: e.target.value });
+                    if (getFieldError(validationErrors, 'email')) {
+                      setValidationErrors(validationErrors.filter(err => err.field !== 'email'));
+                    }
+                  }}
+                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none ${
+                    getFieldError(validationErrors, 'email') ? 'border-red-500' : 'border-gray-200'
+                  }`}
                   placeholder="email@example.com"
                 />
+                {getFieldError(validationErrors, 'email') && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {getFieldError(validationErrors, 'email')}
+                  </p>
+                )}
               </div>
 
               <div>
                 <label className="block mb-2">
                   Địa điểm nhận hàng <span className="text-red-500">*</span>
                 </label>
-                <Select value={selectedStoreId} onValueChange={setSelectedStoreId}>
-                  <SelectTrigger className="w-full h-12 bg-gray-50 border-gray-200 rounded-xl">
-                    <SelectValue placeholder="Chọn chi nhánh" />
+                <Select 
+                  value={selectedStoreId} 
+                  onValueChange={(value) => {
+                    setSelectedStoreId(value);
+                    if (getFieldError(validationErrors, 'storeId')) {
+                      setValidationErrors(validationErrors.filter(err => err.field !== 'storeId'));
+                    }
+                  }}
+                >
+                  <SelectTrigger 
+                    disabled={isLoadingStores}
+                    className={`w-full h-12 bg-gray-50 rounded-xl ${
+                      getFieldError(validationErrors, 'storeId') ? 'border-red-500' : 'border-gray-200'
+                    }`}
+                  >
+                    <SelectValue placeholder={isLoadingStores ? t('cart.loading_stores') : t('cart.select_store')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {storeLocations.map((store) => (
+                    {stores.map((store) => (
                       <SelectItem key={store.id} value={store.id}>
                         {store.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {getFieldError(validationErrors, 'storeId') && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {getFieldError(validationErrors, 'storeId')}
+                  </p>
+                )}
                 
                 {/* Display selected store info */}
-                <div className="mt-4 p-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-xl border border-red-100 shadow-sm">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0">
-                      <MapPin className="h-5 w-5 text-red-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm mb-1.5">{selectedStore.name}</p>
-                      <p className="text-xs text-gray-600 mb-1 leading-relaxed">{selectedStore.address}</p>
-                      <p className="text-xs text-gray-600">📞 {selectedStore.phone}</p>
+                {selectedStore && (
+                  <div className="mt-4 p-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-xl border border-red-100 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0">
+                        <MapPin className="h-5 w-5 text-red-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm mb-1.5">{selectedStore.name}</p>
+                        <p className="text-xs text-gray-600 mb-1 leading-relaxed">{selectedStore.address}</p>
+                        <p className="text-xs text-gray-600">📞 {selectedStore.phone}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
 
               <div>
@@ -325,7 +473,7 @@ export function CartPage() {
                   value={checkoutData.notes}
                   onChange={(e) => setCheckoutData({ ...checkoutData, notes: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-red-500 resize-none"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none resize-none"
                   placeholder="Ghi chú về đơn hàng..."
                 />
               </div>
@@ -348,29 +496,31 @@ export function CartPage() {
             </form>
 
             {/* Map Section */}
-            <div className="hidden md:block">
-              <div className="sticky top-4">
-                <div className="bg-gray-100 rounded-xl overflow-hidden h-[500px]">
-                  <iframe
-                    width="100%"
-                    height="100%"
-                    frameBorder="0"
-                    style={{ border: 0 }}
-                    src={`https://www.google.com/maps?q=${selectedStore.lat},${selectedStore.lng}&z=15&output=embed`}
-                    allowFullScreen
-                    title={`Bản đồ ${selectedStore.name}`}
-                  />
-                </div>
-                <div className="mt-3 p-4 bg-white rounded-xl border">
-                  <h4 className="mb-2 flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-red-500" />
-                    Địa điểm nhận hng
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-1">{selectedStore.name}</p>
-                  <p className="text-xs text-gray-500">{selectedStore.address}</p>
+            {selectedStore && (
+              <div className="hidden md:block">
+                <div className="sticky top-4">
+                  <div className="bg-gray-100 rounded-xl overflow-hidden h-[500px]">
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      frameBorder="0"
+                      style={{ border: 0 }}
+                      src={`https://www.google.com/maps?q=${selectedStore.lat},${selectedStore.lng}&z=15&output=embed`}
+                      allowFullScreen
+                      title={`Bản đồ ${selectedStore.name}`}
+                    />
+                  </div>
+                  <div className="mt-3 p-4 bg-white rounded-xl border">
+                    <h4 className="mb-2 flex items-center gap-2">
+                      <MapPin className="h-5 w-5 text-red-500" />
+                      Địa điểm nhận hàng
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-1">{selectedStore.name}</p>
+                    <p className="text-xs text-gray-500">{selectedStore.address}</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Action Buttons */}
@@ -386,9 +536,10 @@ export function CartPage() {
             <Button
               type="submit"
               form="checkout-form"
+              disabled={isSubmitting}
               className="flex-1 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
             >
-              Xác nhận đặt hàng
+              {isSubmitting ? t('cart.processing') : t('cart.confirm_order')}
             </Button>
           </div>
         </DialogContent>

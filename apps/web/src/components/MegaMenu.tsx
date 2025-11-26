@@ -90,14 +90,14 @@ export function MegaMenu() {
                         onClick={() => handleCategoryClick(category)}
                         className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-orange-50 transition-all mb-2"
                       >
-                        <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                        <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           {Icon && <Icon className="h-5 w-5 text-white" />}
                         </div>
                         <div className="text-left">
                           <div className="font-medium">{category.name}</div>
                           {subcategories.length > 0 && (
                             <div className="text-xs text-gray-500">
-                              {t('mega_menu.categories_count').replace('{count}', formatNumber(subcategories.length))}
+                              {t('mega_menu.categories_count', { count: subcategories.length })}
                             </div>
                           )}
                         </div>

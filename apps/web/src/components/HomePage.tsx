@@ -239,7 +239,7 @@ export function HomePage() {
                   {/* Sold Count */}
                   {product.soldCount && (
                     <div className="text-xs text-gray-500 mb-2">
-                      {t('home.sold_count').replace('{count}', formatNumber(product.soldCount))}
+                      {t('home.sold_count', { count: product.soldCount })}
                     </div>
                   )}
 

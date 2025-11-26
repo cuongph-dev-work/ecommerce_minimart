@@ -14,15 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetFooter,
-} from '@/components/ui/sheet';
+
 import {
   Dialog,
   DialogContent,
@@ -30,6 +22,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Plus, Search, Edit, Trash2, MoreHorizontal, Phone, Mail } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -48,7 +41,7 @@ type Store = StoreServiceType;
 export function StoresPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [stores, setStores] = useState<Store[]>([]);
-  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingStore, setEditingStore] = useState<Store | null>(null);
   const [storeToDelete, setStoreToDelete] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -205,7 +198,7 @@ export function StoresPage() {
         await storesService.create(storeData);
       }
 
-      setIsAddSheetOpen(false);
+      setIsAddDialogOpen(false);
       resetForm();
       await fetchStores();
     } catch (err: unknown) {
@@ -237,7 +230,7 @@ export function StoresPage() {
     setNewStoreAllowPickup(store.allowPickup ?? true);
     setNewStorePreparationTime(store.preparationTime || '1-2 ngày');
     setNewStoreStatus((store.status as 'active' | 'inactive') || 'active');
-    setIsAddSheetOpen(true);
+    setIsAddDialogOpen(true);
   };
 
   const handleDeleteStore = async (id: string) => {
@@ -282,22 +275,22 @@ export function StoresPage() {
             Quản lý các chi nhánh cửa hàng và địa điểm nhận hàng
           </p>
         </div>
-        <Sheet open={isAddSheetOpen} onOpenChange={(open) => {
-          setIsAddSheetOpen(open);
+        <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+          setIsAddDialogOpen(open);
           if (!open) resetForm();
         }}>
-          <SheetTrigger asChild>
+          <DialogTrigger asChild>
             <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
               <Plus className="mr-2 h-4 w-4" /> Thêm cửa hàng
             </Button>
-          </SheetTrigger>
-          <SheetContent className="sm:max-w-3xl overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>{editingStore ? 'Sửa cửa hàng' : 'Thêm cửa hàng mới'}</SheetTitle>
-              <SheetDescription>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingStore ? 'Sửa cửa hàng' : 'Thêm cửa hàng mới'}</DialogTitle>
+              <DialogDescription>
                 {editingStore ? 'Cập nhật thông tin cửa hàng' : 'Thêm chi nhánh cửa hàng mới'}
-              </SheetDescription>
-            </SheetHeader>
+              </DialogDescription>
+            </DialogHeader>
             <div className="grid gap-6 py-6">
               <div className="space-y-2">
                 <Label>Tên chi nhánh *</Label>
@@ -551,19 +544,19 @@ export function StoresPage() {
                 </select>
               </div>
             </div>
-            <SheetFooter>
+            <DialogFooter>
               <Button variant="outline" onClick={() => {
                 resetForm();
-                setIsAddSheetOpen(false);
+                setIsAddDialogOpen(false);
               }} disabled={isSaving}>
                 Hủy
               </Button>
               <Button onClick={handleSaveStore} disabled={isSaving}>
                 {isSaving ? 'Đang lưu...' : editingStore ? 'Cập nhật' : 'Lưu'}
               </Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="flex items-center gap-4 bg-card p-4 rounded-xl shadow-sm border border-border">

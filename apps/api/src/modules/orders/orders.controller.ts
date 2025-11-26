@@ -7,6 +7,7 @@ import {
   Query,
   UseGuards,
   Put,
+  BadRequestException,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -58,7 +59,7 @@ export class OrdersController {
     @Body() dto: UpdateOrderStatusDto,
     @CurrentUser() user: any,
   ) {
-    const data = await this.ordersService.updateStatus(id, dto.status, dto.note || '', user.id);
+    const data = await this.ordersService.updateStatus(id, dto.status, dto.notes || '', user.id);
     return { success: true, data };
   }
 
@@ -104,6 +105,23 @@ export class PublicOrdersController {
         total: order.total,
       },
       message: 'Đơn hàng đã được tạo thành công. Chúng tôi sẽ liên hệ với bạn sớm nhất.',
+    };
+  }
+
+  @Public()
+  @Get('track')
+  async trackOrder(
+    @Query('orderNumber') orderNumber: string,
+    @Query('phone') phone: string,
+  ) {
+    if (!orderNumber || !phone) {
+      throw new BadRequestException('Vui lòng cung cấp mã đơn hàng và số điện thoại');
+    }
+
+    const order = await this.ordersService.trackOrder(orderNumber, phone);
+    return {
+      success: true,
+      data: order,
     };
   }
 }

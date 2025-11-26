@@ -56,7 +56,7 @@ export function CategoryProductSection({ categoryName, categorySlug, products, i
             <div>
               <h2 className="mb-1">{categoryName}</h2>
               <p className="text-sm text-gray-600">
-                {t('home.products_count').replace('{count}', formatNumber(products.length))}
+                {t('home.products_count', { count: products.length })}
               </p>
             </div>
           </div>
@@ -146,7 +146,7 @@ export function CategoryProductSection({ categoryName, categorySlug, products, i
                 {/* Sold Count */}
                 {product.soldCount && (
                   <div className="text-xs text-gray-500 mb-2">
-                    {t('home.sold_count').replace('{count}', formatNumber(product.soldCount))}
+                    {t('home.sold_count', { count: product.soldCount })}
                   </div>
                 )}
 

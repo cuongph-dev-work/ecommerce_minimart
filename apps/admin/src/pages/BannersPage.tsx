@@ -13,15 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetFooter,
-} from '@/components/ui/sheet';
+
 import {
   Dialog,
   DialogContent,
@@ -29,6 +21,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Plus, Search, Edit, Trash2, MoreHorizontal, X } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -57,7 +50,7 @@ import type { Banner } from '@/services/banners.service';
 export function BannersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [banners, setBanners] = useState<Banner[]>([]);
-  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [bannerToDelete, setBannerToDelete] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -255,7 +248,7 @@ export function BannersPage() {
         await bannersService.create(bannerData);
       }
 
-      setIsAddSheetOpen(false);
+      setIsAddDialogOpen(false);
       resetForm();
       await fetchBanners();
     } catch (err: unknown) {
@@ -282,7 +275,7 @@ export function BannersPage() {
     setUploadedImageUrl(banner.image);
     setPendingFile(null);
     setCurrentImageUrl('');
-    setIsAddSheetOpen(true);
+    setIsAddDialogOpen(true);
   };
 
   const handleDeleteBanner = async (id: string) => {
@@ -327,22 +320,22 @@ export function BannersPage() {
             Quản lý banner slider trên trang chủ
           </p>
         </div>
-        <Sheet open={isAddSheetOpen} onOpenChange={(open) => {
-          setIsAddSheetOpen(open);
+        <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+          setIsAddDialogOpen(open);
           if (!open) resetForm();
         }}>
-          <SheetTrigger asChild>
+          <DialogTrigger asChild>
             <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
               <Plus className="mr-2 h-4 w-4" /> Thêm Banner
             </Button>
-          </SheetTrigger>
-          <SheetContent className="sm:max-w-2xl overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>{editingBanner ? 'Sửa Banner' : 'Thêm Banner Mới'}</SheetTitle>
-              <SheetDescription>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingBanner ? 'Sửa Banner' : 'Thêm Banner Mới'}</DialogTitle>
+              <DialogDescription>
                 {editingBanner ? 'Cập nhật thông tin banner' : 'Thêm banner mới vào slider trang chủ'}
-              </SheetDescription>
-            </SheetHeader>
+              </DialogDescription>
+            </DialogHeader>
             <div className="grid gap-6 py-6">
               {/* Image Section */}
               <div className="space-y-4">
@@ -534,16 +527,16 @@ export function BannersPage() {
                 </Select>
               </div>
             </div>
-            <SheetFooter>
-              <Button variant="outline" onClick={() => setIsAddSheetOpen(false)} disabled={isSaving}>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isSaving}>
                 Hủy
               </Button>
               <Button onClick={handleSaveBanner} disabled={isSaving}>
                 {isSaving ? 'Đang lưu...' : editingBanner ? 'Cập nhật' : 'Lưu'}
               </Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="flex items-center gap-4 bg-card p-4 rounded-xl shadow-sm border border-border">

@@ -8,7 +8,8 @@
         "login": "Login",
         "search": "Search products...",
         "footer_text": "© 2024 Minimart. All rights reserved.",
-        "language": "Language"
+        "language": "Language",
+        "order_tracking": "Track Order"
     },
     "home": {
         "hero_title": "Technology for Life",
@@ -19,18 +20,18 @@
         "featured_products_subtitle": "Discover the most loved products",
         "view_all": "View All",
         "view_all_products": "View All Products",
-        "sold_count": "Sold {count}",
-        "add_to_cart_success": "Added {name} to cart",
+        "sold_count": "Sold {{count, number}}",
+        "add_to_cart_success": "Added {{name}} to cart",
         "not_found": "Product not found",
         "related_products": "Related Products",
-        "products_count": "{count} products",
-        "view_all_category": "View All {category}",
+        "products_count": "{{count, number}} products",
+        "view_all_category": "View All {{category}}",
         "product_categories": "Product Categories",
         "collapse": "Collapse",
-        "view_all_count": "View All ({count})",
+        "view_all_count": "View All ({{count, number}})",
         "loading": "Loading...",
         "no_categories": "No categories",
-        "types_count": "{count} types",
+        "types_count": "{{count, number}} types",
         "trust_badges": {
             "genuine_title": "100% Genuine",
             "genuine_desc": "Genuine product guarantee",
@@ -73,20 +74,20 @@
         "out_of_stock": "Out of Stock",
         "almost_out": "Almost Out",
         "loading": "Loading...",
-        "found_products": "Found {count} products",
+        "found_products": "Found {{count, number}} products",
         "no_products": "No products found",
         "no_products_desc": "Try searching with different keywords or select a different category",
         "clear_filters": "Clear Filters",
         "apply": "Apply",
-        "search_badge": "Search: {query}",
-        "category_badge": "Category: {name}",
-        "brand_badge": "Brand: {brand}",
-        "sold_count": "Sold {count}",
-        "stock_remaining": "Stock: {stock}",
+        "search_badge": "Search: {{query}}",
+        "category_badge": "Category: {{name}}",
+        "brand_badge": "Brand: {{brand}}",
+        "sold_count": "Sold {{count, number}}",
+        "stock_remaining": "Stock: {{stock}}",
         "previous": "Previous",
         "next": "Next",
         "load_error": "Cannot load products",
-        "add_to_cart_success": "Added {name} to cart",
+        "add_to_cart_success": "Added {{name}} to cart",
         "back": "Back",
         "back_to_list": "Back to list",
         "not_found": "Not found",
@@ -193,8 +194,8 @@
     },
     "mega_menu": {
         "categories": "Categories",
-        "categories_count": "{count} categories",
-        "more_items": "+{count} more"
+        "categories_count": "{{count}} categories",
+        "more_items": "+{{count}} more"
     },
     "search": {
         "popular_searches": "Popular Searches"
@@ -203,7 +204,7 @@
         "title": "Product Reviews",
         "no_reviews": "No reviews yet",
         "be_first": "Be the first to review this product",
-        "review_count": "{count} reviews",
+        "review_count": "{{count, number}} reviews",
         "helpful": "Helpful",
         "write_review": "Write a Review",
         "form": {
@@ -258,13 +259,13 @@
             },
             "stock": {
                 "title": "In Stock",
-                "description": "{count} products"
+                "description": "{{count, number}} products"
             }
         },
         "quantity": "Quantity",
         "add_to_cart": "Add to Cart",
         "buy_now": "Buy Now",
-        "stock_available": "{count} products available",
+        "stock_available": "{{count, number}} products available",
         "brand": "Brand"
     },
     "product_description": {
@@ -274,5 +275,129 @@
             "guide": "User Guide"
         },
         "no_content": "No information available"
+    },
+    "order_tracking": {
+        "title": "Track Your Order",
+        "subtitle": "Enter your order number and phone number to track your order status",
+        "order_number": "Order Number",
+        "order_number_placeholder": "e.g., ORD-001",
+        "phone_number": "Phone Number",
+        "phone_number_placeholder": "Enter phone number",
+        "search_button": "Track Order",
+        "searching": "Searching...",
+        "required": "required",
+        "hint_title": "Note:",
+        "hint_message": "Order number is sent via email or SMS after successful order placement",
+        "not_found_title": "Order Not Found",
+        "not_found_message": "Please check your order number and phone number",
+        "order_details": "Order #{{orderNumber}}",
+        "order_date": "Order Date:",
+        "date_format": {
+            "at": "at",
+            "month": "month",
+            "year": "year"
+        },
+        "customer_info": "Customer Information",
+        "pickup_location": "Pickup Location",
+        "products": "Products ({{count}})",
+        "quantity": "Quantity:",
+        "subtotal": "Subtotal",
+        "discount": "Discount",
+        "total": "Total",
+        "notes_label": "Notes:",
+        "status_title": "Order Status",
+        "status": {
+            "pending": "Pending",
+            "confirmed": "Confirmed",
+            "processing": "Processing",
+            "ready": "Ready for Pickup",
+            "completed": "Completed",
+            "cancelled": "Cancelled"
+        },
+        "tracking_steps": {
+            "placed": {
+                "title": "Order Placed",
+                "description": "Your order has been received"
+            },
+            "confirmed": {
+                "title": "Confirmed",
+                "description": "We have confirmed your order"
+            },
+            "processing": {
+                "title": "Processing",
+                "description": "Your order is being prepared"
+            },
+            "ready": {
+                "title": "Ready for Pickup",
+                "description": "Your order is ready to be picked up"
+            },
+            "completed": {
+                "title": "Completed",
+                "description": "Order has been completed"
+            }
+        },
+        "validation": {
+            "order_number_required": "Order number is required",
+            "order_number_empty": "Order number cannot be empty",
+            "phone_required": "Phone number is required",
+            "phone_invalid": "Phone number must be 10-11 digits"
+        },
+        "not_found": "Order not found",
+        "updated": "Order information updated",
+        "removed_from_history": "Removed from history",
+        "delivery_address": "Delivery Address"
+    },
+    "cart": {
+        "order_created": "Order created successfully! Order number: {{orderNumber}}",
+        "product_removed": "Product removed from cart",
+        "loading_stores": "Loading...",
+        "select_store": "Select branch",
+        "processing": "Processing...",
+        "confirm_order": "Confirm Order"
+    },
+    "meta": {
+        "site_name": "Minimart",
+        "site_description": "Minimart - Leading technology store. 100% genuine products, reputable warranty, fast delivery. Daily flash sales with the best prices on the market.",
+        "home": {
+            "title": "Home - Minimart | Technology for Life",
+            "description": "Discover premium technology products at Minimart. Daily flash sales, free shipping, reputable warranty. Trusted by over 50,000 customers.",
+            "keywords": "minimart, technology, electronics, flash sale, online shopping, genuine products"
+        },
+        "products": {
+            "title_default": "Products - Minimart | Full Catalog",
+            "title_search": "Search \"{{query}}\" - Minimart",
+            "title_category": "{{category}} Products - Minimart",
+            "description_default": "Explore all technology products at Minimart. Smart filters by category, brand, price. 100% genuine products, reputable warranty.",
+            "description_search": "Search results for \"{{query}}\" at Minimart. Genuine products, best prices on the market.",
+            "description_category": "List of {{category}} products at Minimart. Genuine products, reputable warranty, fast delivery.",
+            "keywords": "minimart, products, online shopping, genuine products"
+        },
+        "product_detail": {
+            "title": "{{name}} - Minimart | Price {{price}}",
+            "description_default": "{{name}} - Genuine product at Minimart. Best price, reputable warranty, fast delivery.",
+            "keywords": "{{name}}, {{category}}, {{brand}}, minimart, genuine product"
+        },
+        "cart": {
+            "title": "Cart - Minimart",
+            "description": "View your cart and checkout at Minimart"
+        },
+        "contact": {
+            "title": "Contact - Minimart | 24/7 Customer Support",
+            "description": "Contact Minimart via email, phone or visit our store directly. 24/7 customer support, free consultation, answer all questions about products and services.",
+            "keywords": "contact minimart, customer support, product consultation, store address"
+        },
+        "stores": {
+            "title": "Stores - Minimart | Store Network Nationwide",
+            "description": "Find the nearest Minimart store. Nationwide store network with address, phone number, opening hours and detailed directions.",
+            "keywords": "minimart stores, store address, store network, shop in person"
+        },
+        "order_tracking": {
+            "title": "Track Order - Minimart",
+            "description": "Track and monitor your order status at Minimart. Enter order number to view shipping details."
+        },
+        "not_found": {
+            "title": "404 - Page Not Found | Minimart",
+            "description": "The page you are looking for does not exist. Please return to the homepage or use the navigation menu."
+        }
     }
 }

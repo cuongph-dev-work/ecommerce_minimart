@@ -217,7 +217,7 @@ export function ContactPage() {
                         setValidationErrors(validationErrors.filter(err => err.field !== 'name'));
                       }
                     }}
-                    className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none focus:ring-2 focus:ring-red-500 transition-all ${
+                    className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none transition-all ${
                       getFieldError('name') ? 'border-red-500' : 'border-gray-200'
                     }`}
                     placeholder={t('contact.name_placeholder')}
@@ -239,7 +239,7 @@ export function ContactPage() {
                         setValidationErrors(validationErrors.filter(err => err.field !== 'phone'));
                       }
                     }}
-                    className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none focus:ring-2 focus:ring-red-500 transition-all ${
+                    className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none transition-all ${
                       getFieldError('phone') ? 'border-red-500' : 'border-gray-200'
                     }`}
                     placeholder={t('contact.phone_placeholder')}
@@ -263,7 +263,7 @@ export function ContactPage() {
                       }
                     }}
                     rows={5}
-                    className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none focus:ring-2 focus:ring-red-500 transition-all resize-none ${
+                    className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none transition-all resize-none ${
                       getFieldError('message') ? 'border-red-500' : 'border-gray-200'
                     }`}
                     placeholder={t('contact.message_placeholder')}
@@ -296,7 +296,7 @@ export function ContactPage() {
               <h2 className="mb-6">{t('contact.info.title')}</h2>
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
                     <Phone className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
@@ -313,7 +313,7 @@ export function ContactPage() {
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center shrink-0">
                     <Mail className="h-6 w-6 text-purple-600" />
                   </div>
                   <div>
@@ -330,7 +330,7 @@ export function ContactPage() {
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center shrink-0">
                     <MapPin className="h-6 w-6 text-green-600" />
                   </div>
                   <div>

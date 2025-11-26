@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Table,
   TableBody,
@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Eye, MoreHorizontal, Download, Plus, Calendar, X, Trash2 } from 'lucide-react';
+import { Search, Eye, MoreHorizontal, Plus, Calendar, X, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import {
   DropdownMenu,
@@ -28,34 +28,30 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import type { Order, OrderStatus, Product } from '@/types';
-import { getStatusColor, getStatusLabel, formatCurrency, getDeliveryMethodLabel } from '@/lib/order-utils';
+import { getStatusColor, getStatusLabel, formatCurrency } from '@/lib/order-utils';
 import { OrderDetailsSheet } from '@/components/orders/OrderDetailsSheet';
 import { ordersService } from '@/services/orders.service';
 import { productsService } from '@/services/products.service';
 import { storesService, type Store } from '@/services/stores.service';
 import axios from 'axios';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from '@/components/ui/sheet';
+
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { extractApiError, getFieldError, type ValidationError } from '@/lib/error-handler';
+import * as v from 'valibot';
+import { createOrderSchema } from '@/schemas/order.schema';
 
 export function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
-  const [deliveryFilter, setDeliveryFilter] = useState<'all' | 'pickup' | 'delivery'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -66,7 +62,7 @@ export function OrdersPage() {
   const itemsPerPage = 10;
 
   // Create order form state
-  const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
@@ -89,6 +85,9 @@ export function OrdersPage() {
   const [tempStartDate, setTempStartDate] = useState<string>('');
   const [tempEndDate, setTempEndDate] = useState<string>('');
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  
+  // Validation errors
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -97,12 +96,12 @@ export function OrdersPage() {
   }, [statusFilter, currentPage, searchTerm, startDate, endDate]);
 
   useEffect(() => {
-    if (isCreateSheetOpen) {
+    if (isCreateDialogOpen) {
       const controller = new AbortController();
       fetchProductsAndStores(controller.signal);
       return () => controller.abort();
     }
-  }, [isCreateSheetOpen]);
+  }, [isCreateDialogOpen]);
 
   useEffect(() => {
     if (isProductDialogOpen) {
@@ -116,7 +115,7 @@ export function OrdersPage() {
     }
   }, [isProductDialogOpen, productPage, productSearchTerm]);
 
-  const fetchProductsForDialog = async (signal?: AbortSignal) => {
+  const fetchProductsForDialog = useCallback(async (signal?: AbortSignal) => {
     try {
       setIsLoadingProductsStores(true);
       const productsRes = await productsService.getAll({ 
@@ -133,7 +132,7 @@ export function OrdersPage() {
     } finally {
       setIsLoadingProductsStores(false);
     }
-  };
+  }, [productPage, productSearchTerm]);
 
   const fetchProductsAndStores = async (signal?: AbortSignal) => {
     try {
@@ -149,7 +148,7 @@ export function OrdersPage() {
     }
   };
 
-  const fetchOrders = async (signal?: AbortSignal) => {
+  const fetchOrders = useCallback(async (signal?: AbortSignal) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -175,12 +174,7 @@ export function OrdersPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Reset to page 1 when filters change
-  const handleFilterChange = () => {
-    setCurrentPage(1);
-  };
+  }, [currentPage, itemsPerPage, statusFilter, searchTerm, startDate, endDate]);
 
   // View order details
   const handleViewDetails = (order: Order) => {
@@ -263,38 +257,73 @@ export function OrdersPage() {
     setSelectedStoreId('');
     setSelectedProducts([]);
     setVoucherCode('');
+    setValidationErrors([]);
+    setError(null);
   };
 
   // Create order
   const handleCreateOrder = async () => {
-    if (!customerName || !customerPhone || !selectedStoreId || selectedProducts.length === 0) {
-      setError('Vui lòng điền đầy đủ thông tin');
+    // Frontend validation with valibot
+    setError(null);
+    setValidationErrors([]);
+    
+    const orderData = {
+      customerName,
+      customerPhone,
+      customerEmail,
+      notes: customerNotes || undefined,
+      pickupStoreId: selectedStoreId,
+      items: selectedProducts.map(sp => ({
+        productId: sp.productId,
+        quantity: sp.quantity,
+      })),
+      voucherCode: voucherCode || undefined,
+    };
+    
+    const result = v.safeParse(createOrderSchema, orderData);
+    
+    if (!result.success) {
+      // Convert valibot issues to ValidationError[]
+      const errors: ValidationError[] = result.issues.map(issue => {
+        // Get field name from path (e.g., path = [{ key: 'customerName' }])
+        const fieldPath = issue.path?.map(p => p.key).join('.') || 'unknown';
+        return {
+          field: fieldPath,
+          message: issue.message,
+        };
+      });
+      
+      setValidationErrors(errors);
+      // Scroll to top of dialog to show validation errors
+      setTimeout(() => {
+        const dialogContent = document.querySelector('[role="dialog"]');
+        if (dialogContent) {
+          dialogContent.scrollTop = 0;
+        }
+      }, 100);
       return;
     }
 
     try {
       setIsCreating(true);
-      setError(null);
-
-      const orderData = {
-        customerName,
-        customerPhone,
-        customerEmail: customerEmail || undefined,
-        notes: customerNotes || undefined,
-        pickupStoreId: selectedStoreId,
-        items: selectedProducts.map(sp => ({
-          productId: sp.productId,
-          quantity: sp.quantity,
-        })),
-        voucherCode: voucherCode || undefined,
-      };
-
-      await ordersService.create(orderData);
-      setIsCreateSheetOpen(false);
+      await ordersService.create(result.output);
+      setIsCreateDialogOpen(false);
       resetCreateForm();
       await fetchOrders();
-    } catch (err: any) {
-      setError(err?.message || 'Failed to create order');
+    } catch (err: unknown) {
+      const apiError = extractApiError(err);
+      if (apiError.errors) {
+        setValidationErrors(apiError.errors);
+        // Scroll to top to show validation errors
+        setTimeout(() => {
+          const dialogContent = document.querySelector('[role="dialog"]');
+          if (dialogContent) {
+            dialogContent.scrollTop = 0;
+          }
+        }, 100);
+      } else {
+        setError(apiError.message);
+      }
     } finally {
       setIsCreating(false);
     }
@@ -322,7 +351,7 @@ export function OrdersPage() {
           </Button> */}
           <Button 
             className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
-            onClick={() => setIsCreateSheetOpen(true)}
+            onClick={() => setIsCreateDialogOpen(true)}
           >
             <Plus className="mr-2 h-4 w-4" />
             Tạo đơn hàng
@@ -621,18 +650,18 @@ export function OrdersPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-sm">
-                    {new Date(order.orderDate).toLocaleDateString('vi-VN', {
+                    {order.orderDate ? new Date(order.orderDate).toLocaleDateString('vi-VN', {
                       day: '2-digit',
                       month: '2-digit',
                       year: 'numeric',
-                    })}
+                    }) : 'N/A'}
                   </TableCell>
                   <TableCell className="text-sm">
                     {order.items?.length || 0} sản phẩm
                   </TableCell>
                   <TableCell>
                     <span className="text-xs px-2 py-1 rounded-full bg-muted">
-                      {order.pickupLocation?.name || 'N/A'}
+                      {typeof order.pickupLocation === 'string' ? order.pickupLocation : order.pickupLocation?.name || 'N/A'}
                     </span>
                   </TableCell>
                   <TableCell className="font-semibold">
@@ -695,7 +724,7 @@ export function OrdersPage() {
               </Button>
               <div className="flex items-center gap-1">
                 {Array.from({ length: Math.min(5, ordersPagination.totalPages) }, (_, i) => {
-                  let pageNum;
+                  let pageNum: number;
                   if (ordersPagination.totalPages <= 5) {
                     pageNum = i + 1;
                   } else if (currentPage <= 3) {
@@ -740,18 +769,25 @@ export function OrdersPage() {
         onStatusUpdate={handleStatusUpdate}
       />
 
-      {/* Create Order Sheet */}
-      <Sheet open={isCreateSheetOpen} onOpenChange={(open) => {
-        setIsCreateSheetOpen(open);
+      {/* Create Order Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+        setIsCreateDialogOpen(open);
         if (!open) resetCreateForm();
       }}>
-        <SheetContent className="sm:max-w-2xl overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>Tạo đơn hàng mới</SheetTitle>
-            <SheetDescription>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Tạo đơn hàng mới</DialogTitle>
+            <DialogDescription>
               Nhập thông tin khách hàng và chọn sản phẩm để tạo đơn hàng
-            </SheetDescription>
-          </SheetHeader>
+            </DialogDescription>
+          </DialogHeader>
+          
+          {error && (
+            <div className="p-3 bg-destructive/10 text-destructive rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+          
           <div className="grid gap-6 py-6">
             {/* Customer Information */}
             <div className="space-y-4">
@@ -762,33 +798,74 @@ export function OrdersPage() {
                   <Input
                     id="customerName"
                     value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
+                    onChange={(e) => {
+                      setCustomerName(e.target.value);
+                      if (getFieldError(validationErrors, 'customerName')) {
+                        setValidationErrors(validationErrors.filter(err => err.field !== 'customerName'));
+                      }
+                    }}
                     placeholder="Nguyễn Văn A"
+                    className={getFieldError(validationErrors, 'customerName') ? 'border-destructive' : ''}
                   />
+                  {getFieldError(validationErrors, 'customerName') && (
+                    <p className="text-sm text-destructive mt-1">
+                      {getFieldError(validationErrors, 'customerName')}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="customerPhone">Số điện thoại <span className="text-destructive">*</span></Label>
                   <Input
                     id="customerPhone"
                     value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    onChange={(e) => {
+                      setCustomerPhone(e.target.value);
+                      if (getFieldError(validationErrors, 'customerPhone')) {
+                        setValidationErrors(validationErrors.filter(err => err.field !== 'customerPhone'));
+                      }
+                    }}
                     placeholder="0901234567"
+                    className={getFieldError(validationErrors, 'customerPhone') ? 'border-destructive' : ''}
                   />
+                  {getFieldError(validationErrors, 'customerPhone') && (
+                    <p className="text-sm text-destructive mt-1">
+                      {getFieldError(validationErrors, 'customerPhone')}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="customerEmail">Email</Label>
+                  <Label htmlFor="customerEmail">Email <span className="text-destructive">*</span></Label>
                   <Input
                     id="customerEmail"
                     type="email"
                     value={customerEmail}
-                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    onChange={(e) => {
+                      setCustomerEmail(e.target.value);
+                      if (getFieldError(validationErrors, 'customerEmail')) {
+                        setValidationErrors(validationErrors.filter(err => err.field !== 'customerEmail'));
+                      }
+                    }}
                     placeholder="customer@example.com"
+                    className={getFieldError(validationErrors, 'customerEmail') ? 'border-destructive' : ''}
                   />
+                  {getFieldError(validationErrors, 'customerEmail') && (
+                    <p className="text-sm text-destructive mt-1">
+                      {getFieldError(validationErrors, 'customerEmail')}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="pickupStore">Cửa hàng nhận <span className="text-destructive">*</span></Label>
-                  <Select value={selectedStoreId} onValueChange={setSelectedStoreId}>
-                    <SelectTrigger>
+                  <Select 
+                    value={selectedStoreId} 
+                    onValueChange={(value) => {
+                      setSelectedStoreId(value);
+                      if (getFieldError(validationErrors, 'pickupStoreId')) {
+                        setValidationErrors(validationErrors.filter(err => err.field !== 'pickupStoreId'));
+                      }
+                    }}
+                  >
+                    <SelectTrigger className={getFieldError(validationErrors, 'pickupStoreId') ? 'border-destructive' : ''}>
                       <SelectValue placeholder="Chọn cửa hàng" />
                     </SelectTrigger>
                     <SelectContent>
@@ -799,6 +876,11 @@ export function OrdersPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {getFieldError(validationErrors, 'pickupStoreId') && (
+                    <p className="text-sm text-destructive mt-1">
+                      {getFieldError(validationErrors, 'pickupStoreId')}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="space-y-2">
@@ -908,23 +990,17 @@ export function OrdersPage() {
                 </div>
               </div>
             )}
-
-            {error && (
-              <div className="p-3 bg-destructive/10 text-destructive rounded-lg text-sm">
-                {error}
-              </div>
-            )}
           </div>
-          <SheetFooter>
-            <Button variant="outline" onClick={() => setIsCreateSheetOpen(false)} disabled={isCreating}>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isCreating}>
               Hủy
             </Button>
             <Button onClick={handleCreateOrder} disabled={isCreating || selectedProducts.length === 0}>
               {isCreating ? 'Đang tạo...' : 'Tạo đơn hàng'}
             </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Product Selection Dialog */}
       <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
@@ -1029,7 +1105,7 @@ export function OrdersPage() {
                       </Button>
                       <div className="flex items-center gap-1">
                         {Array.from({ length: Math.min(5, productPagination.totalPages) }, (_, i) => {
-                          let pageNum;
+                          let pageNum: number;
                           if (productPagination.totalPages <= 5) {
                             pageNum = i + 1;
                           } else if (productPage <= 3) {

@@ -105,7 +105,7 @@ export function Footer() {
             <ul className="space-y-3">
               {settings.store_phone && (
                 <li className="flex items-start gap-3 text-gray-600">
-                  <Phone className="h-5 w-5 mt-0.5 flex-shrink-0 text-blue-600" />
+                  <Phone className="h-5 w-5 mt-0.5 shrink-0 text-blue-600" />
                   <div>
                     <div>{settings.store_phone}</div>
                     <div className="text-sm">{settings.working_hours}</div>
@@ -114,7 +114,7 @@ export function Footer() {
               )}
               {settings.store_email && (
                 <li className="flex items-start gap-3 text-gray-600">
-                  <Mail className="h-5 w-5 mt-0.5 flex-shrink-0 text-blue-600" />
+                  <Mail className="h-5 w-5 mt-0.5 shrink-0 text-blue-600" />
                   <a href={`mailto:${settings.store_email}`} className="hover:text-blue-600 transition-colors">
                     {settings.store_email}
                   </a>
@@ -122,7 +122,7 @@ export function Footer() {
               )}
               {settings.store_address && (
                 <li className="flex items-start gap-3 text-gray-600">
-                  <MapPin className="h-5 w-5 mt-0.5 flex-shrink-0 text-blue-600" />
+                  <MapPin className="h-5 w-5 mt-0.5 shrink-0 text-blue-600" />
                   <div>{settings.store_address}</div>
                 </li>
               )}

@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion } from 'motion/react';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export function LoginPage() {
+  useDocumentTitle('Đăng nhập');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');

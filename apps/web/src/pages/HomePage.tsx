@@ -1,14 +1,18 @@
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { HomePage as HomePageComponent } from '../components/HomePage';
+import { useSettings } from '../context/SettingsContext';
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://yourdomain.com';
 
 export default function HomePage() {
   const { t, i18n } = useTranslation();
-  const siteName = t('meta.site_name');
-  const title = t('meta.home.title');
-  const description = t('meta.home.description');
+  const { settings } = useSettings();
+  const siteName = settings.store_name || t('meta.site_name');
+  const title = settings.store_name 
+    ? `${t('meta.home.title')} - ${settings.store_name}`
+    : t('meta.home.title');
+  const description = settings.store_description || t('meta.home.description');
   const keywords = t('meta.home.keywords');
   const locale = i18n.language === 'vi' ? 'vi_VN' : 'en_US';
   const alternateLocale = i18n.language === 'vi' ? 'en_US' : 'vi_VN';

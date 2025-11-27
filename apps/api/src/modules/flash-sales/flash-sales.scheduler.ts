@@ -9,36 +9,36 @@ export class FlashSalesScheduler {
 
   constructor(private readonly orm: MikroORM) {}
 
-  @Cron(CronExpression.EVERY_MINUTE)
-  async updateFlashSaleStatus() {
-    const em = this.orm.em.fork();
-    const now = new Date();
+  // @Cron(CronExpression.EVERY_MINUTE)
+  // async updateFlashSaleStatus() {
+  //   const em = this.orm.em.fork();
+  //   const now = new Date();
 
-    // Update to active
-    const upcomingSales = await em.find(FlashSale, {
-      status: FlashSaleStatus.UPCOMING,
-      startTime: { $lte: now },
-    });
+  //   // Update to active
+  //   const upcomingSales = await em.find(FlashSale, {
+  //     status: FlashSaleStatus.UPCOMING,
+  //     startTime: { $lte: now },
+  //   });
 
-    for (const sale of upcomingSales) {
-      sale.status = FlashSaleStatus.ACTIVE;
-      this.logger.log(`Flash sale ${sale.name} is now ACTIVE`);
-    }
+  //   for (const sale of upcomingSales) {
+  //     sale.status = FlashSaleStatus.ACTIVE;
+  //     this.logger.log(`Flash sale ${sale.name} is now ACTIVE`);
+  //   }
 
-    // Update to ended
-    const activeSales = await em.find(FlashSale, {
-      status: FlashSaleStatus.ACTIVE,
-      endTime: { $lte: now },
-    });
+  //   // Update to ended
+  //   const activeSales = await em.find(FlashSale, {
+  //     status: FlashSaleStatus.ACTIVE,
+  //     endTime: { $lte: now },
+  //   });
 
-    for (const sale of activeSales) {
-      sale.status = FlashSaleStatus.ENDED;
-      this.logger.log(`Flash sale ${sale.name} has ENDED`);
-    }
+  //   for (const sale of activeSales) {
+  //     sale.status = FlashSaleStatus.ENDED;
+  //     this.logger.log(`Flash sale ${sale.name} has ENDED`);
+  //   }
 
-    if (upcomingSales.length > 0 || activeSales.length > 0) {
-      await em.flush();
-    }
-  }
+  //   if (upcomingSales.length > 0 || activeSales.length > 0) {
+  //     await em.flush();
+  //   }
+  // }
 }
 

@@ -35,10 +35,12 @@ import {
 import { extractApiError, getFieldError, type ValidationError } from '@/lib/error-handler';
 import { storeSchema } from '@/schemas/store.schema';
 import { safeParse } from 'valibot';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 type Store = StoreServiceType;
 
 export function StoresPage() {
+  useDocumentTitle('Cửa hàng');
   const [searchTerm, setSearchTerm] = useState('');
   const [stores, setStores] = useState<Store[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);

@@ -1,24 +1,11 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Facebook, Instagram, Send } from 'lucide-react';
-import { settingsService } from '../services/settings.service';
+import { useSettings } from '../context/SettingsContext';
 import { useTranslation } from 'react-i18next';
 
 export function Footer() {
   const { t } = useTranslation();
-  const [settings, setSettings] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const data = await settingsService.getAll();
-        setSettings(data);
-      } catch (error) {
-        console.error('Failed to load settings:', error);
-      }
-    };
-    loadSettings();
-  }, []);
+  const { settings } = useSettings();
 
   return (
     <footer className="bg-gradient-to-br from-gray-50 to-gray-100 border-t mt-20">

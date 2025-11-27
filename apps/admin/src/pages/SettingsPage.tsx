@@ -11,8 +11,10 @@ import { extractApiError, getFieldError, type ValidationError } from '@/lib/erro
 import { storeSettingsSchema, paymentSettingsSchema, policySettingsSchema } from '@/schemas/settings.schema';
 import { safeParse } from 'valibot';
 import { UploadHelper, type PendingFile } from '@/lib/upload-helper';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export function SettingsPage() {
+  useDocumentTitle('Cài đặt');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -228,7 +228,7 @@ export class OrdersService {
           id: item.product.id,
           name: item.product.name,
           price: Number(item.product.price),
-          image: item.product.image,
+          image: item.product.images?.[0] || '',
         },
         quantity: item.quantity,
         price: Number(item.price),

@@ -39,6 +39,7 @@ import {
 import { categoriesService } from '@/services/categories.service';
 import axios from 'axios';
 import { extractApiError, getFieldError, type ValidationError } from '@/lib/error-handler';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 const AVAILABLE_ICONS = [
   'Package',
@@ -60,6 +61,7 @@ const AVAILABLE_ICONS = [
 ];
 
 export function CategoriesPage() {
+  useDocumentTitle('Danh mục');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);

@@ -4,7 +4,52 @@
   import path from 'path';
 
   export default defineConfig({
-    plugins: [react()],
+    plugins: [
+      react(),
+      // Plugin to inject env variables into HTML (works in both dev and build)
+      {
+        name: 'html-env-inject',
+        transformIndexHtml(html: string) {
+          const apiUrl = process.env.VITE_API_URL || 'http://localhost:8000/api';
+          // Inject env config as a script tag before the settings preload script
+          const envScript = `<script>
+            window.__ENV_CONFIG__ = {
+              VITE_API_URL: '${apiUrl}'
+            };
+          </script>`;
+          return html.replace(
+            '<script>',
+            envScript + '\n      <script>'
+          );
+        },
+        configureServer(server) {
+          // Also inject in dev mode via middleware
+          server.middlewares.use((req, res, next) => {
+            if (req.url === '/' || req.url === '/index.html') {
+              const originalEnd = res.end.bind(res);
+              res.end = function(chunk?: any, encoding?: BufferEncoding | (() => void), cb?: () => void) {
+                if (chunk && typeof chunk === 'string') {
+                  const apiUrl = process.env.VITE_API_URL || 'http://localhost:8000/api';
+                  const envScript = `<script>
+            window.__ENV_CONFIG__ = {
+              VITE_API_URL: '${apiUrl}'
+            };
+          </script>`;
+                  const modified = chunk.replace(
+                    '<script>',
+                    envScript + '\n      <script>'
+                  );
+                  res.setHeader('Content-Length', Buffer.byteLength(modified));
+                  return originalEnd(modified, encoding as BufferEncoding, cb);
+                }
+                return originalEnd(chunk, encoding as BufferEncoding, cb);
+              };
+            }
+            next();
+          });
+        },
+      },
+    ],
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
       alias: {

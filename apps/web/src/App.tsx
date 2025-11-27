@@ -4,6 +4,7 @@ import { Footer } from './components/Footer';
 // import { Chatbot } from './components/Chatbot';
 import { CartProvider } from './context/CartContext';
 import { RecentlyViewedProvider } from './context/RecentlyViewedContext';
+import { SettingsProvider } from './context/SettingsContext';
 import { Toaster } from './components/ui/sonner';
 import { routes } from './routes';
 
@@ -11,16 +12,18 @@ export default function App() {
   const element = useRoutes(routes);
 
   return (
-    <CartProvider>
-      <RecentlyViewedProvider>
-        <div className="min-h-screen flex flex-col">
-          <Header />
-          <main className="flex-1">{element}</main>
-          <Footer />
-          {/* <Chatbot /> */}
-          <Toaster position="top-right" />
-        </div>
-      </RecentlyViewedProvider>
-    </CartProvider>
+    <SettingsProvider>
+      <CartProvider>
+        <RecentlyViewedProvider>
+          <div className="min-h-screen flex flex-col">
+            <Header />
+            <main className="flex-1">{element}</main>
+            <Footer />
+            {/* <Chatbot /> */}
+            <Toaster position="top-right" />
+          </div>
+        </RecentlyViewedProvider>
+      </CartProvider>
+    </SettingsProvider>
   );
 }

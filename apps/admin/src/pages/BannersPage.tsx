@@ -44,10 +44,12 @@ import { safeParse } from 'valibot';
 import { UploadHelper, type PendingFile } from '@/lib/upload-helper';
 import { Upload } from 'lucide-react';
 import type { Banner } from '@/services/banners.service';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 // Banner interface is now imported from service
 
 export function BannersPage() {
+  useDocumentTitle('Banner');
   const [searchTerm, setSearchTerm] = useState('');
   const [banners, setBanners] = useState<Banner[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);

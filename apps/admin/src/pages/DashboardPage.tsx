@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { dashboardService } from '@/services/dashboard.service';
 import type { DashboardStats, RecentOrder } from '@/services/dashboard.service';
 import axios from 'axios';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('vi-VN', {
@@ -32,6 +33,7 @@ const formatDate = (dateString: string) => {
 };
 
 export function DashboardPage() {
+  useDocumentTitle('Tổng quan');
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);

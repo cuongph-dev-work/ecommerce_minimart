@@ -48,8 +48,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { extractApiError, getFieldError, type ValidationError } from '@/lib/error-handler';
 import * as v from 'valibot';
 import { createOrderSchema } from '@/schemas/order.schema';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export function OrdersPage() {
+  useDocumentTitle('Đơn hàng');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [currentPage, setCurrentPage] = useState(1);

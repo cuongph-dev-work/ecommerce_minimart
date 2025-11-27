@@ -7,14 +7,14 @@ import { motion, AnimatePresence } from 'motion/react';
 import { MegaMenu } from './MegaMenu';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from './LanguageSwitcher';
-import { settingsService } from '../services/settings.service';
+import { useSettings } from '../context/SettingsContext';
 
 export function Header() {
   const { t } = useTranslation();
   const { getTotalItems } = useCart();
+  const { settings } = useSettings();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [settings, setSettings] = useState<Record<string, string>>({});
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -24,18 +24,6 @@ export function Header() {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const data = await settingsService.getAll();
-        setSettings(data);
-      } catch (error) {
-        console.error('Failed to load settings:', error);
-      }
-    };
-    loadSettings();
   }, []);
 
   const navItems = [

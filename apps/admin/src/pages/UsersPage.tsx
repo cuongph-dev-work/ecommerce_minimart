@@ -27,8 +27,10 @@ import {
 import { usersService } from '@/services/users.service';
 import axios from 'axios';
 import type { User } from '@/services/users.service';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export function UsersPage() {
+  useDocumentTitle('Người dùng');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');

@@ -37,6 +37,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import axios from 'axios';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export interface Review {
   id: string;
@@ -53,6 +54,7 @@ export interface Review {
 
 
 export function ReviewsPage() {
+  useDocumentTitle('Đánh giá');
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'hidden'>('all');

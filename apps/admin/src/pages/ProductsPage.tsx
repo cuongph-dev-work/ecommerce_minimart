@@ -47,8 +47,10 @@ import { extractApiError, getFieldError, type ValidationError } from '@/lib/erro
 import { productSchema } from '@/schemas/product.schema';
 import { safeParse } from 'valibot';
 import { UploadHelper, type PendingFile } from '@/lib/upload-helper';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export function ProductsPage() {
+  useDocumentTitle('Sản phẩm');
   const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);

@@ -53,6 +53,9 @@ export class Category {
   @Property({ onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 
+  @Property({ nullable: true })
+  deletedAt?: Date;
+
   @OneToMany(() => Product, (product) => product.category)
   products = new Collection<Product>(this);
 }

@@ -90,10 +90,11 @@ export class PublicProductsController {
   @Public()
   @Get()
   async findAll(@Query() query: QueryProductDto) {
-    // Only return active products for public
+    // Only return active and visible products for public
     const publicQuery = {
       ...query,
       status: ProductStatus.ACTIVE,
+      isHidden: false,
     };
     const result = await this.productsService.findAll(publicQuery);
     return {
@@ -111,6 +112,7 @@ export class PublicProductsController {
     const result = await this.productsService.findAll({
       featured: true,
       status: ProductStatus.ACTIVE,
+      isHidden: false,
       sortBy: 'sold',
       sortOrder: 'desc',
       limit: limit || 5,
@@ -130,8 +132,8 @@ export class PublicProductsController {
   @Get('slug/:slug')
   async findBySlug(@Param('slug') slug: string) {
     const data = await this.productsService.findBySlug(slug);
-    // Only return if product is active
-    if (data.status !== ProductStatus.ACTIVE) {
+    // Only return if product is active and not hidden
+    if (data.status !== ProductStatus.ACTIVE || data.isHidden) {
       throw new NotFoundException('Product not found');
     }
     return { success: true, data };
@@ -141,8 +143,8 @@ export class PublicProductsController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const data = await this.productsService.findOne(id);
-    // Only return if product is active
-    if (data.status !== ProductStatus.ACTIVE) {
+    // Only return if product is active and not hidden
+    if (data.status !== ProductStatus.ACTIVE || data.isHidden) {
       throw new NotFoundException('Product not found');
     }
     return { success: true, data };

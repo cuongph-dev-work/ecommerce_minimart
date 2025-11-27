@@ -100,7 +100,7 @@ export default function ProductDetailPage() {
         
         <link rel="canonical" href={canonicalUrl} />
       </Helmet>
-      <ProductDetailComponent productId={id!} />
+      <ProductDetailComponent productSlug={slug!} />
     </>
   );
 }

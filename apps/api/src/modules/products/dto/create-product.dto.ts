@@ -72,6 +72,10 @@ export class CreateProductDto {
   @IsOptional()
   isOfficial?: boolean;
 
+  @IsBoolean()
+  @IsOptional()
+  isHidden?: boolean;
+
   @IsString()
   @IsOptional()
   warrantyPeriod?: string;

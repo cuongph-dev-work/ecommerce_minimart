@@ -28,7 +28,7 @@ export interface CreateFlashSaleData {
   status?: string;
 }
 
-export interface UpdateFlashSaleData extends Partial<CreateFlashSaleData> {}
+export type UpdateFlashSaleData = Partial<CreateFlashSaleData>;
 
 export interface AddProductToFlashSaleData {
   productId: string;

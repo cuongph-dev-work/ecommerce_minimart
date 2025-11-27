@@ -18,7 +18,7 @@ export class OrdersService {
   ) {}
 
   async create(createDto: CreateOrderDto): Promise<Order> {
-    const store = await this.em.findOne(Store, { id: createDto.pickupStoreId });
+    const store = await this.em.findOne(Store, { id: createDto.pickupStoreId, deletedAt: null });
     if (!store) {
       throw new NotFoundException('Store not found');
     }
@@ -29,7 +29,7 @@ export class OrdersService {
     const productSkus: string[] = [];
 
     for (const item of createDto.items) {
-      const product = await this.em.findOne(Product, { id: item.productId });
+      const product = await this.em.findOne(Product, { id: item.productId, deletedAt: null });
       if (!product) {
         throw new NotFoundException(`Product ${item.productId} not found`);
       }
@@ -101,7 +101,7 @@ export class OrdersService {
 
     // Create order items
     for (const item of createDto.items) {
-      const product = await this.em.findOne(Product, { id: item.productId });
+      const product = await this.em.findOne(Product, { id: item.productId, deletedAt: null });
       if (!product) continue;
 
       // Calculate price with discount if any
@@ -112,9 +112,6 @@ export class OrdersService {
       const orderItem = this.em.create(OrderItem, {
         order,
         product,
-        productName: product.name, // Snapshot product name
-        productSku: product.sku, // Snapshot product SKU
-        productImage: product.images?.[0] || null, // Snapshot product image
         quantity: item.quantity,
         price: itemPrice, // Use snapshot price
         subtotal: itemPrice * item.quantity,
@@ -240,13 +237,13 @@ export class OrdersService {
         product: item.product ? {
           id: item.product.id,
           name: item.product.name,
-          price: Number(item.product.price),
+          price: Number(item.price), // Use snapshot price from orderItem
           image: item.product.images?.[0] || '',
         } : {
           id: null,
-          name: item.productName || 'Sản phẩm đã bị xóa',
+          name: 'Sản phẩm đã bị xóa',
           price: Number(item.price), // Use snapshot price
-          image: item.productImage || '',
+          image: '',
         },
         quantity: item.quantity,
         price: Number(item.price), // Always use snapshot price from orderItem

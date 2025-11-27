@@ -20,7 +20,7 @@ export class StoresService {
   async findAll(query: QueryStoreDto) {
     const { page = 1, limit = 20, search, status, allowPickup, sortBy = 'created_at', sortOrder = 'desc' } = query;
 
-    const where: any = {};
+    const where: any = { deletedAt: null };
 
     // Search
     if (search) {
@@ -58,7 +58,7 @@ export class StoresService {
   }
 
   async findOne(id: string): Promise<Store> {
-    const store = await this.em.findOne(Store, { id });
+    const store = await this.em.findOne(Store, { id, deletedAt: null });
 
     if (!store) {
       throw new NotFoundException('Store not found');
@@ -76,20 +76,8 @@ export class StoresService {
 
   async remove(id: string): Promise<void> {
     const store = await this.findOne(id);
-
-    // Check for pending orders
-    const pendingOrders = await this.em.count(Order, {
-      pickupStore: store,
-      status: {
-        $in: [OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.PREPARING, OrderStatus.READY],
-      },
-    });
-
-    if (pendingOrders > 0) {
-      throw new BadRequestException(`Cannot delete store with ${pendingOrders} pending orders`);
-    }
-
-    await this.em.removeAndFlush(store);
+    store.deletedAt = new Date();
+    await this.em.flush();
   }
 
   async getStoreOrders(storeId: string, status?: OrderStatus) {

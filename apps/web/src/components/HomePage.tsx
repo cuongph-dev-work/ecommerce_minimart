@@ -19,13 +19,9 @@ import { categoriesService, CategoryWithSales } from '../services/categories.ser
 import { useTranslation } from 'react-i18next';
 
 export function HomePage() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { addToCart } = useCart();
   const navigate = useNavigate();
-  
-  const formatNumber = (value: number) => {
-    return new Intl.NumberFormat(i18n.language === 'en' ? 'en-US' : 'vi-VN').format(value);
-  };
   
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [topCategories, setTopCategories] = useState<CategoryWithSales[]>([]);
@@ -89,7 +85,7 @@ export function HomePage() {
     }).format(price);
   };
 
-  const handleCategoryClick = (category: string) => {
+  const handleCategoryClick = (_category: string) => {
     navigate('/products');
   };
 
@@ -220,7 +216,7 @@ export function HomePage() {
                   {product.discount ? (
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-purple-600 font-semibold">
+                        <span className="text-red-600 font-semibold">
                           {formatPrice(product.price * (1 - product.discount / 100))}
                         </span>
                         <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
@@ -232,7 +228,7 @@ export function HomePage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-purple-600 font-semibold">{formatPrice(product.price)}</div>
+                    <div className="text-red-600 font-semibold">{formatPrice(product.price)}</div>
                   )}
                 </div>
 

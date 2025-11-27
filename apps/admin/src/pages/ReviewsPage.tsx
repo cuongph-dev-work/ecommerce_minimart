@@ -81,6 +81,7 @@ export function ReviewsPage() {
     const controller = new AbortController();
     fetchReviews(controller.signal);
     return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, ratingFilter, debouncedSearchTerm]);
 
   const fetchReviews = async (signal?: AbortSignal) => {

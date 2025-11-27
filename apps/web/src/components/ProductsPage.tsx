@@ -47,11 +47,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export function ProductsPage() {
-  const { t, i18n } = useTranslation();
-  
-  const formatNumber = (value: number) => {
-    return new Intl.NumberFormat(i18n.language === 'en' ? 'en-US' : 'vi-VN').format(value);
-  };
+  const { t } = useTranslation();
   const { addToCart } = useCart();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -641,7 +637,7 @@ export function ProductsPage() {
                           {product.discount ? (
                             <div>
                               <div className="flex items-center gap-2">
-                                <span className="text-lg font-semibold text-purple-600">
+                                <span className="text-lg font-semibold text-red-600">
                                   {formatPrice(product.price * (1 - product.discount / 100))}
                                 </span>
                                 <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
@@ -653,7 +649,7 @@ export function ProductsPage() {
                               </div>
                             </div>
                           ) : (
-                            <div className="text-lg font-semibold text-purple-600">{formatPrice(product.price)}</div>
+                            <div className="text-lg font-semibold text-red-600">{formatPrice(product.price)}</div>
                           )}
                         </div>
 

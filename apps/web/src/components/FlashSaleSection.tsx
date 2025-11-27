@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Zap, Clock, TrendingUp } from 'lucide-react';
+import { Zap, Clock } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';

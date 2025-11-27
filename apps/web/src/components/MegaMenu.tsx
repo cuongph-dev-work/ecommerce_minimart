@@ -22,11 +22,7 @@ const iconMap: Record<string, any> = {
 };
 
 export function MegaMenu() {
-  const { t, i18n } = useTranslation();
-  
-  const formatNumber = (value: number) => {
-    return new Intl.NumberFormat(i18n.language === 'en' ? 'en-US' : 'vi-VN').format(value);
-  };
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);

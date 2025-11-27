@@ -26,7 +26,7 @@ export interface CreateVoucherData {
   status?: string;
 }
 
-export interface UpdateVoucherData extends Partial<CreateVoucherData> {}
+export type UpdateVoucherData = Partial<CreateVoucherData>;
 
 class VouchersService {
   async getAll(signal?: AbortSignal) {

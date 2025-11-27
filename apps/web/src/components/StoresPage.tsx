@@ -331,7 +331,7 @@ export function StoresPage() {
                 {selectedStore.email && (
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center shrink-0">
-                      <Mail className="h-5 w-5 text-purple-600" />
+                      <Mail className="h-5 w-5 text-red-600" />
                     </div>
                     <div className="flex-1">
                       <div className="mb-1">{t('stores.email')}</div>

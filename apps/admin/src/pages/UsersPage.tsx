@@ -42,6 +42,7 @@ export function UsersPage() {
     const controller = new AbortController();
     fetchUsers(controller.signal);
     return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roleFilter, statusFilter]);
 
   const fetchUsers = async (signal?: AbortSignal) => {

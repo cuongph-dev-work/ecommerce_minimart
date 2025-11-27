@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Package, Truck, CheckCircle, Clock, MapPin, Phone, Calendar, XCircle, ChevronDown, History, Trash2, RefreshCw } from 'lucide-react';
+import { Search, Package, Truck, CheckCircle, Clock, MapPin, Phone, Calendar, ChevronDown, History, Trash2, RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
 import { motion, AnimatePresence } from 'motion/react';
 import * as v from 'valibot';
@@ -166,7 +166,7 @@ export function OrderTrackingPage() {
         return 'bg-blue-50 text-blue-600 border-blue-200';
       case 'processing':
       case 'preparing':
-        return 'bg-purple-100 text-purple-600 border-gray-200';
+        return 'bg-purple-100 text-red-600 border-gray-200';
       case 'ready':
         return 'bg-blue-50 text-blue-600 border-blue-200';
       case 'completed':
@@ -176,44 +176,6 @@ export function OrderTrackingPage() {
         return 'bg-red-50 text-red-600 border-red-100';
       default:
         return 'bg-gray-50 text-gray-600 border-gray-200';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="h-6 w-6" />;
-      case 'confirmed':
-        return <CheckCircle className="h-6 w-6" />;
-      case 'processing':
-        return <Package className="h-6 w-6 animate-pulse" />;
-      case 'ready':
-        return <Truck className="h-6 w-6" />;
-      case 'completed':
-        return <CheckCircle className="h-6 w-6" />;
-      case 'cancelled':
-        return <XCircle className="h-6 w-6" />;
-      default:
-        return <Clock className="h-6 w-6" />;
-    }
-  };
-
-  const getStatusBgGradient = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-gradient-to-r from-yellow-400 to-yellow-500';
-      case 'confirmed':
-        return 'bg-gradient-to-r from-blue-400 to-blue-500';
-      case 'processing':
-        return 'bg-gradient-to-r from-purple-400 to-purple-500';
-      case 'ready':
-        return 'bg-gradient-to-r from-orange-400 to-orange-500';
-      case 'completed':
-        return 'bg-gradient-to-r from-green-400 to-green-500';
-      case 'cancelled':
-        return 'bg-gradient-to-r from-red-400 to-red-500';
-      default:
-        return 'bg-gradient-to-r from-gray-400 to-gray-500';
     }
   };
 
@@ -306,7 +268,7 @@ export function OrderTrackingPage() {
                   className="overflow-hidden"
                 >
                   <div className="border-t divide-y">
-                    {history.map((item, index) => {
+                    {history.map((item, _index) => {
                       const historyId = `${item.orderNumber}-${item.phone}`;
                       const isExpanded = expandedHistoryId === historyId;
                       

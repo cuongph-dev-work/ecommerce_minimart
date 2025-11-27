@@ -12,14 +12,14 @@ export class ReviewsService {
   constructor(private readonly em: EntityManager) {}
 
   async create(createDto: CreateReviewDto): Promise<Review> {
-    const product = await this.em.findOne(Product, { id: createDto.productId });
+    const product = await this.em.findOne(Product, { id: createDto.productId, deletedAt: null });
     if (!product) {
       throw new NotFoundException('Product not found');
     }
 
     let user: User | undefined;
     if (createDto.userId) {
-      user = await this.em.findOne(User, { id: createDto.userId });
+      user = await this.em.findOne(User, { id: createDto.userId, deletedAt: null });
     }
 
     const review = this.em.create(Review, {
@@ -124,7 +124,7 @@ export class ReviewsService {
       status: ReviewStatus.APPROVED,
     });
 
-    const product = await this.em.findOne(Product, { id: productId });
+    const product = await this.em.findOne(Product, { id: productId, deletedAt: null });
     if (!product) return;
 
     if (reviews.length === 0) {

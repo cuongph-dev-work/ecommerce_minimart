@@ -83,6 +83,7 @@ export function BannersPage() {
     const controller = new AbortController();
     fetchBanners(controller.signal);
     return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
 

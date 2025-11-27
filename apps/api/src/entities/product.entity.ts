@@ -72,6 +72,9 @@ export class Product {
   @Property({ default: false })
   isOfficial: boolean = false;
 
+  @Property({ default: false })
+  isHidden: boolean = false;
+
   @Property({ nullable: true })
   warrantyPeriod?: string;
 
@@ -89,6 +92,9 @@ export class Product {
 
   @Property({ onUpdate: () => new Date() })
   updatedAt: Date = new Date();
+
+  @Property({ nullable: true })
+  deletedAt?: Date;
 
   @OneToMany(() => OrderItem, (item) => item.product)
   orderItems = new Collection<OrderItem>(this);

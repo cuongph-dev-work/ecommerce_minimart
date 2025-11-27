@@ -29,7 +29,7 @@ export interface CreateStoreData {
   status?: string;
 }
 
-export interface UpdateStoreData extends Partial<CreateStoreData> {}
+export type UpdateStoreData = Partial<CreateStoreData>;
 
 export interface QueryStoreParams {
   page?: number;

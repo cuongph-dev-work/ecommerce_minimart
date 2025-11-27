@@ -61,6 +61,9 @@ export class Store {
   @Property({ onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 
+  @Property({ nullable: true })
+  deletedAt?: Date;
+
   @OneToMany(() => Order, (order) => order.pickupStore)
   orders = new Collection<Order>(this);
 }

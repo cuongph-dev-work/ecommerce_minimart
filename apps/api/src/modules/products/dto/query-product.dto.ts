@@ -26,6 +26,11 @@ export class QueryProductDto extends PaginationDto {
   featured?: boolean;
 
   @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  isHidden?: boolean;
+
+  @IsOptional()
   @IsString()
   @IsEnum(['name', 'price', 'created_at', 'sold'])
   sortBy?: string;

@@ -60,7 +60,7 @@ export function getStatusColor(status: OrderStatus): string {
   const colors: Record<OrderStatus, string> = {
     pending: 'bg-amber-500/10 text-amber-600 border-amber-200',
     confirmed: 'bg-blue-500/10 text-blue-600 border-blue-200',
-    preparing: 'bg-purple-500/10 text-purple-600 border-purple-200',
+    preparing: 'bg-purple-500/10 text-red-600 border-purple-200',
     ready: 'bg-cyan-500/10 text-cyan-600 border-cyan-200',
     received: 'bg-emerald-500/10 text-emerald-600 border-emerald-200',
     cancelled: 'bg-rose-500/10 text-rose-600 border-rose-200',

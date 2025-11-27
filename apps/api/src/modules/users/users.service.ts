@@ -10,6 +10,7 @@ export class UsersService {
   async findAll(page: number = 1, limit: number = 20, search?: string, role?: UserRole, status?: UserStatus) {
     const where: any = {
       role: UserRole.CUSTOMER,
+      deletedAt: null,
     };
 
     if (search) {
@@ -36,7 +37,7 @@ export class UsersService {
   }
 
   async findOne(id: string): Promise<User> {
-    const user = await this.em.findOne(User, { id }, {
+    const user = await this.em.findOne(User, { id, deletedAt: null }, {
       populate: ['orders', 'reviews'],
     });
 
@@ -63,7 +64,8 @@ export class UsersService {
 
   async remove(id: string): Promise<void> {
     const user = await this.findOne(id);
-    await this.em.removeAndFlush(user);
+    user.deletedAt = new Date();
+    await this.em.flush();
   }
 }
 

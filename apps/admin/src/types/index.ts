@@ -21,6 +21,7 @@ export interface Product {
   sku?: string; // Mã kho
   warrantyPeriod?: string; // Thời gian bảo hành (ví dụ: "12 tháng")
   isOfficial?: boolean; // Hàng chính hãng
+  isHidden?: boolean; // Ẩn sản phẩm khỏi public
   status?: string; // Product status (active, inactive, out_of_stock)
   createdAt?: string;
   updatedAt?: string;

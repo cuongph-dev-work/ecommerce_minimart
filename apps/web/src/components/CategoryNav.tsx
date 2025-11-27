@@ -25,11 +25,7 @@ const iconMap: Record<string, any> = {
 };
 
 export function CategoryNav({ onCategoryClick }: CategoryNavProps) {
-  const { t, i18n } = useTranslation();
-  
-  const formatNumber = (value: number) => {
-    return new Intl.NumberFormat(i18n.language === 'en' ? 'en-US' : 'vi-VN').format(value);
-  };
+  const { t } = useTranslation();
   const [showAll, setShowAll] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);

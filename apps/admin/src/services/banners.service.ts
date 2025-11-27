@@ -35,7 +35,7 @@ export interface CreateBannerData {
   endDate?: string;
 }
 
-export interface UpdateBannerData extends Partial<CreateBannerData> {}
+export type UpdateBannerData = Partial<CreateBannerData>;
 
 
 

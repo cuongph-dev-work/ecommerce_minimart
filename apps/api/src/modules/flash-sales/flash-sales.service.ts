@@ -50,7 +50,7 @@ export class FlashSalesService {
 
   async addProduct(flashSaleId: string, addProductDto: AddFlashSaleProductDto) {
     const flashSale = await this.findOne(flashSaleId);
-    const product = await this.em.findOne(Product, { id: addProductDto.productId });
+    const product = await this.em.findOne(Product, { id: addProductDto.productId, deletedAt: null });
 
     if (!product) {
       throw new NotFoundException('Product not found');

@@ -14,40 +14,32 @@ import { generateSlug } from '../../common/utils/slug.util';
 export class CategoriesService {
   constructor(private readonly em: EntityManager) {}
 
-  /**
-   * Generate unique slug from name
-   */
-  private async generateUniqueSlug(baseSlug: string, excludeId?: string): Promise<string> {
-    let slug = baseSlug;
-    let counter = 1;
-    
-    while (true) {
-      const existing = await this.em.findOne(Category, { slug });
-      if (!existing || (excludeId && existing.id === excludeId)) {
-        return slug;
-      }
-      slug = `${baseSlug}-${counter}`;
-      counter++;
-    }
-  }
 
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
     // Generate slug from name if not provided
     let slug = createCategoryDto.slug;
     if (!slug) {
-      const baseSlug = generateSlug(createCategoryDto.name);
-      slug = await this.generateUniqueSlug(baseSlug);
+      // Generate slug from name with timestamp
+      slug = generateSlug(createCategoryDto.name);
+      if (!slug) {
+        throw new BadRequestException('Cannot generate slug from category name');
+      }
     } else {
-      // Check slug uniqueness if provided
-      const existingSlug = await this.em.findOne(Category, { slug });
+      // Use manually provided slug as-is, just validate format and check uniqueness
+      if (!slug.trim()) {
+        throw new BadRequestException('Slug cannot be empty');
+      }
+      // Check uniqueness
+      const existingSlug = await this.em.findOne(Category, { slug, deletedAt: null });
       if (existingSlug) {
         throw new ConflictException('Slug already exists');
       }
+      // Use slug as provided (no normalization, no timestamp)
     }
 
     let parent: Category | undefined;
     if (createCategoryDto.parentId) {
-      parent = await this.em.findOne(Category, { id: createCategoryDto.parentId });
+      parent = await this.em.findOne(Category, { id: createCategoryDto.parentId, deletedAt: null });
       if (!parent) {
         throw new NotFoundException('Parent category not found');
       }
@@ -67,7 +59,7 @@ export class CategoriesService {
     // Get all categories with tree structure
     const categories = await this.em.find(
       Category,
-      {},
+      { deletedAt: null },
       {
         populate: ['children', 'products'],
         orderBy: { sortOrder: 'ASC', name: 'ASC' },
@@ -81,7 +73,7 @@ export class CategoriesService {
   async findOne(id: string): Promise<Category> {
     const category = await this.em.findOne(
       Category,
-      { id },
+      { id, deletedAt: null },
       {
         populate: ['parent', 'children', 'products'],
       },
@@ -97,7 +89,7 @@ export class CategoriesService {
   async findBySlug(slug: string): Promise<Category> {
     const category = await this.em.findOne(
       Category,
-      { slug },
+      { slug, deletedAt: null },
       {
         populate: ['parent', 'children', 'products'],
       },
@@ -113,16 +105,35 @@ export class CategoriesService {
   async update(id: string, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
     const category = await this.findOne(id);
 
-    // Check slug uniqueness if updating
-    if (updateCategoryDto.slug && updateCategoryDto.slug !== category.slug) {
-      const existingSlug = await this.em.findOne(Category, { slug: updateCategoryDto.slug });
-      if (existingSlug) {
+    // Handle slug: generate from name if name changed, or validate if slug provided
+    if (updateCategoryDto.name && updateCategoryDto.name !== category.name) {
+      // Name changed, regenerate slug from new name with timestamp
+      const newSlug = generateSlug(updateCategoryDto.name);
+      if (!newSlug) {
+        throw new BadRequestException('Cannot generate slug from category name');
+      }
+      category.slug = newSlug;
+    } else if (updateCategoryDto.slug && updateCategoryDto.slug !== category.slug) {
+      // Slug provided manually, use as-is and check uniqueness
+      if (!updateCategoryDto.slug.trim()) {
+        throw new BadRequestException('Slug cannot be empty');
+      }
+      const existingSlug = await this.em.findOne(Category, { slug: updateCategoryDto.slug, deletedAt: null });
+      if (existingSlug && existingSlug.id !== category.id) {
         throw new ConflictException('Slug already exists');
       }
+      category.slug = updateCategoryDto.slug;
+    } else if (!category.slug && category.name) {
+      // Category has no slug, generate from existing name with timestamp
+      const newSlug = generateSlug(category.name);
+      if (!newSlug) {
+        throw new BadRequestException('Cannot generate slug from category name');
+      }
+      category.slug = newSlug;
     }
 
     // Handle parentId separately (it's not a direct field, it's a relation)
-    const { parentId, ...updateData } = updateCategoryDto;
+    const { parentId, slug, ...updateData } = updateCategoryDto;
     
     // Update parent if provided
     if (parentId !== undefined) {
@@ -134,7 +145,7 @@ export class CategoriesService {
         // Remove parent (make it root category)
         category.parent = undefined;
       } else {
-        const parent = await this.em.findOne(Category, { id: parentId });
+        const parent = await this.em.findOne(Category, { id: parentId, deletedAt: null });
         if (!parent) {
           throw new NotFoundException('Parent category not found');
         }
@@ -150,32 +161,14 @@ export class CategoriesService {
   }
 
   async remove(id: string): Promise<void> {
-    const category = await this.em.findOne(
-      Category,
-      { id },
-      { populate: ['children', 'products'] },
-    );
-
-    if (!category) {
-      throw new NotFoundException('Category not found');
-    }
-
-    // Check if has children
-    if (category.children.length > 0) {
-      throw new BadRequestException('Cannot delete category with subcategories');
-    }
-
-    // Check if has products
-    if (category.products.length > 0) {
-      throw new BadRequestException('Cannot delete category with products');
-    }
-
-    await this.em.removeAndFlush(category);
+    const category = await this.findOne(id);
+    category.deletedAt = new Date();
+    await this.em.flush();
   }
 
   async reorder(categories: Array<{ id: string; sortOrder: number }>): Promise<void> {
     for (const item of categories) {
-      const category = await this.em.findOne(Category, { id: item.id });
+      const category = await this.em.findOne(Category, { id: item.id, deletedAt: null });
       if (category) {
         category.sortOrder = item.sortOrder;
       }
@@ -190,7 +183,7 @@ export class CategoriesService {
   private async getAllSubcategoryIds(categoryId: string): Promise<string[]> {
     const category = await this.em.findOne(
       Category,
-      { id: categoryId },
+      { id: categoryId, deletedAt: null },
       { populate: ['children'] }
     );
     
@@ -215,7 +208,7 @@ export class CategoriesService {
     // Get all parent categories (no parent)
     const parentCategories = await this.em.find(
       Category,
-      { parent: null },
+      { parent: null, deletedAt: null },
       { populate: ['children', 'products'] }
     );
 
@@ -228,6 +221,7 @@ export class CategoriesService {
         // Get all products in these categories and sum soldCount
         const products = await this.em.find('Product', {
           category: { $in: allCategoryIds },
+          deletedAt: null,
         });
 
         const totalSold = products.reduce((sum, product: any) => {

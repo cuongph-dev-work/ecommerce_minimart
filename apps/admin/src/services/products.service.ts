@@ -17,10 +17,11 @@ export interface CreateProductData {
   status?: string;
   featured?: boolean;
   isOfficial?: boolean;
+  isHidden?: boolean;
   warrantyPeriod?: string;
 }
 
-export interface UpdateProductData extends Partial<CreateProductData> {}
+export type UpdateProductData = Partial<CreateProductData>;
 
 export interface ProductListResponse {
   products: Product[];

@@ -13,7 +13,7 @@ export interface CreateCategoryData {
   subcategories?: string[];
 }
 
-export interface UpdateCategoryData extends Partial<CreateCategoryData> {}
+export type UpdateCategoryData = Partial<CreateCategoryData>;
 
 export interface ReorderCategoriesData {
   categories: Array<{ id: string; sortOrder: number }>;

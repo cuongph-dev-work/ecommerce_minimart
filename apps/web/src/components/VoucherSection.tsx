@@ -2,7 +2,6 @@ import React from 'react';
 import { Ticket, Copy, Check } from 'lucide-react';
 import { motion } from 'motion/react';
 import { vouchers } from '../data/vouchers';
-import { Button } from './ui/button';
 import { toast } from 'sonner';
 
 export function VoucherSection() {

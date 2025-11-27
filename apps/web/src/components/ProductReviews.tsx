@@ -38,10 +38,6 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
   });
   const [validationErrors, setValidationErrors] = useState<{ field: string; message: string }[]>([]);
 
-  const formatNumber = (value: number) => {
-    return new Intl.NumberFormat(i18n.language === 'en' ? 'en-US' : 'vi-VN').format(value);
-  };
-
   // Load initial 5 reviews
   useEffect(() => {
     const abortController = new AbortController();

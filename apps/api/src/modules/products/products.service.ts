@@ -20,32 +20,15 @@ import { generateSlug } from '../../common/utils/slug.util';
 export class ProductsService {
   constructor(private readonly em: EntityManager) {}
 
-  /**
-   * Generate unique slug from name
-   */
-  private async generateUniqueSlug(baseSlug: string, excludeId?: string): Promise<string> {
-    let slug = baseSlug;
-    let counter = 1;
-    
-    while (true) {
-      const existing = await this.em.findOne(Product, { slug });
-      if (!existing || (excludeId && existing.id === excludeId)) {
-        return slug;
-      }
-      slug = `${baseSlug}-${counter}`;
-      counter++;
-    }
-  }
-
   async create(createProductDto: CreateProductDto): Promise<Product> {
     // Check SKU uniqueness
-    const existingSku = await this.em.findOne(Product, { sku: createProductDto.sku });
+    const existingSku = await this.em.findOne(Product, { sku: createProductDto.sku, deletedAt: null });
     if (existingSku) {
       throw new ConflictException('SKU already exists');
     }
 
     // Check category exists
-    const category = await this.em.findOne(Category, { id: createProductDto.categoryId });
+    const category = await this.em.findOne(Category, { id: createProductDto.categoryId, deletedAt: null });
     if (!category) {
       throw new NotFoundException('Category not found');
     }
@@ -53,7 +36,7 @@ export class ProductsService {
     // Check subcategory exists if provided
     let subcategory: Category | undefined;
     if (createProductDto.subcategoryId) {
-      subcategory = await this.em.findOne(Category, { id: createProductDto.subcategoryId });
+      subcategory = await this.em.findOne(Category, { id: createProductDto.subcategoryId, deletedAt: null });
       if (!subcategory) {
         throw new NotFoundException('Subcategory not found');
       }
@@ -65,9 +48,7 @@ export class ProductsService {
 
     const { categoryId, subcategoryId, ...productData } = createProductDto;
     
-    // Generate slug from name
-    const baseSlug = generateSlug(createProductDto.name);
-    const slug = await this.generateUniqueSlug(baseSlug);
+    const  slug = generateSlug(createProductDto.name);
     
     const product = this.em.create(Product, {
       ...productData,
@@ -81,9 +62,9 @@ export class ProductsService {
   }
 
   async findAll(query: QueryProductDto): Promise<PaginatedResponse<any>> {
-    const { page = 1, limit = 20, search, category, brand, status, featured, sortBy = 'created_at', sortOrder = 'desc' } = query;
+    const { page = 1, limit = 20, search, category, brand, status, featured, isHidden, sortBy = 'created_at', sortOrder = 'desc' } = query;
 
-    const where: any = {};
+    const where: any = { deletedAt: null };
 
     // Search
     if (search) {
@@ -105,11 +86,11 @@ export class ProductsService {
       let categoryEntity: Category | null = null;
       try {
         // Try by ID first (UUID format)
-        categoryEntity = await this.em.findOne(Category, { id: category });
+        categoryEntity = await this.em.findOne(Category, { id: category, deletedAt: null });
       } catch {
         // If not found by ID, try by slug
         try {
-          categoryEntity = await this.em.findOne(Category, { slug: category });
+          categoryEntity = await this.em.findOne(Category, { slug: category, deletedAt: null });
         } catch {
           // Category not found, skip filter
         }
@@ -139,6 +120,11 @@ export class ProductsService {
     // Filter by featured
     if (featured !== undefined) {
       where.featured = featured;
+    }
+
+    // Filter by isHidden
+    if (isHidden !== undefined) {
+      where.isHidden = isHidden;
     }
 
     // Sort
@@ -194,7 +180,7 @@ export class ProductsService {
   async findOne(id: string): Promise<Product> {
     const product = await this.em.findOne(
       Product,
-      { id },
+      { id, deletedAt: null },
       { populate: ['category', 'subcategory'] },
     );
 
@@ -208,7 +194,7 @@ export class ProductsService {
   async findBySlug(slug: string): Promise<Product> {
     const product = await this.em.findOne(
       Product,
-      { slug },
+      { slug, deletedAt: null },
       { populate: ['category', 'subcategory'] },
     );
 
@@ -224,7 +210,7 @@ export class ProductsService {
 
     // Check SKU uniqueness if updating
     if (updateProductDto.sku && updateProductDto.sku !== product.sku) {
-      const existingSku = await this.em.findOne(Product, { sku: updateProductDto.sku });
+      const existingSku = await this.em.findOne(Product, { sku: updateProductDto.sku, deletedAt: null });
       if (existingSku) {
         throw new ConflictException('SKU already exists');
       }
@@ -232,7 +218,7 @@ export class ProductsService {
 
     // Update category if provided
     if (updateProductDto.categoryId) {
-      const category = await this.em.findOne(Category, { id: updateProductDto.categoryId });
+      const category = await this.em.findOne(Category, { id: updateProductDto.categoryId, deletedAt: null });
       if (!category) {
         throw new NotFoundException('Category not found');
       }
@@ -244,7 +230,7 @@ export class ProductsService {
       if (updateProductDto.subcategoryId === null || updateProductDto.subcategoryId === '') {
         product.subcategory = undefined;
       } else {
-        const subcategory = await this.em.findOne(Category, { id: updateProductDto.subcategoryId });
+        const subcategory = await this.em.findOne(Category, { id: updateProductDto.subcategoryId, deletedAt: null });
         if (!subcategory) {
           throw new NotFoundException('Subcategory not found');
         }
@@ -256,10 +242,12 @@ export class ProductsService {
       }
     }
 
-    // Update slug if name changed
-    if (updateProductDto.name && updateProductDto.name !== product.name) {
-      const baseSlug = generateSlug(updateProductDto.name);
-      product.slug = await this.generateUniqueSlug(baseSlug, product.id);
+    if (updateProductDto.name) {
+      if (updateProductDto.name !== product.name || !product.slug) {
+        product.slug = generateSlug(updateProductDto.name);
+      }
+    } else if (!product.slug && product.name) {
+      product.slug = generateSlug(product.name);
     }
 
     const { categoryId, subcategoryId, ...updateData } = updateProductDto;
@@ -271,27 +259,22 @@ export class ProductsService {
 
   async remove(id: string): Promise<void> {
     const product = await this.findOne(id);
-    
-    // Check if product has orders
-    const orderItems = await this.em.find('OrderItem', { product: product.id });
-    
-    if (orderItems.length > 0) {
-      // Product has orders, we can still delete it because OrderItem has snapshot data
-      // The relationship is nullable and will be set to null on delete
-      // But we keep the snapshot fields (productName, productSku, productImage, price)
-    }
-    
-    await this.em.removeAndFlush(product);
+    product.deletedAt = new Date();
+    await this.em.flush();
   }
 
   async bulkDelete(ids: string[]): Promise<{ deleted: number }> {
-    const products = await this.em.find(Product, { id: { $in: ids } });
+    const products = await this.em.find(Product, { id: { $in: ids }, deletedAt: null });
 
     if (products.length === 0) {
       throw new BadRequestException('No products found with provided IDs');
     }
 
-    await this.em.removeAndFlush(products);
+    const now = new Date();
+    products.forEach(product => {
+      product.deletedAt = now;
+    });
+    await this.em.flush();
 
     return { deleted: products.length };
   }

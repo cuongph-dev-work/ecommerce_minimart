@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { vouchersService } from '@/services/vouchers.service';
 import axios from 'axios';
 import {
@@ -31,7 +31,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import { extractApiError, getFieldError, type ValidationError } from '@/lib/error-handler';
+import { extractApiError, type ValidationError } from '@/lib/error-handler';
 
 export interface Voucher {
   id: string;
@@ -48,36 +48,6 @@ export interface Voucher {
   status: 'active' | 'inactive' | 'expired';
 }
 
-const initialVouchers: Voucher[] = [
-  {
-    id: '1',
-    code: 'TECH50K',
-    title: 'Giảm 50K',
-    description: 'Cho đơn hàng từ 500K',
-    type: 'fixed',
-    discount: 50000,
-    minPurchase: 500000,
-    maxUses: 1000,
-    usedCount: 45,
-    expiryDate: '2025-12-31',
-    status: 'active',
-  },
-  {
-    id: '2',
-    code: 'SALE20',
-    title: 'Giảm 20%',
-    description: 'Tối đa 200K cho đơn từ 1 triệu',
-    type: 'percentage',
-    discount: 20,
-    maxDiscount: 200000,
-    minPurchase: 1000000,
-    maxUses: 500,
-    usedCount: 120,
-    expiryDate: '2025-12-31',
-    status: 'active',
-  },
-];
-
 export function VouchersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
@@ -86,17 +56,9 @@ export function VouchersPage() {
   const [voucherToDelete, setVoucherToDelete] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'expired'>('all');
+  const [statusFilter] = useState<'all' | 'active' | 'inactive' | 'expired'>('all');
 
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchVouchers(controller.signal);
-    return () => controller.abort();
-  }, [statusFilter]);
-
-  const fetchVouchers = async (signal?: AbortSignal) => {
+  const fetchVouchers = useCallback(async (signal?: AbortSignal) => {
     try {
       setIsLoading(true);
       const data = await vouchersService.getAll(signal);
@@ -122,7 +84,13 @@ export function VouchersPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [statusFilter]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchVouchers(controller.signal);
+    return () => controller.abort();
+  }, [fetchVouchers]);
 
   // Form state
   const [newVoucherCode, setNewVoucherCode] = useState('');
@@ -499,7 +467,7 @@ export function VouchersPage() {
                   {voucher.type === 'fixed' ? (
                     <span className="text-xs px-2 py-1 rounded bg-blue-500/10 text-blue-600">Cố định</span>
                   ) : (
-                    <span className="text-xs px-2 py-1 rounded bg-purple-500/10 text-purple-600">Phần trăm</span>
+                    <span className="text-xs px-2 py-1 rounded bg-purple-500/10 text-red-600">Phần trăm</span>
                   )}
                 </TableCell>
                 <TableCell>

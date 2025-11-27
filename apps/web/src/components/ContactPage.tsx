@@ -314,7 +314,7 @@ export function ContactPage() {
 
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center shrink-0">
-                    <Mail className="h-6 w-6 text-purple-600" />
+                    <Mail className="h-6 w-6 text-red-600" />
                   </div>
                   <div>
                     <h3 className="mb-1">{t('contact.info.email')}</h3>

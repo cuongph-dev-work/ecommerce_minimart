@@ -209,7 +209,7 @@ export function SearchSuggestions({
                       {product.brand || (typeof product.category === 'string' ? product.category : product.category?.name)}
                     </div>
                   </div>
-                  <div className="text-sm font-semibold text-purple-600 shrink-0">
+                  <div className="text-sm font-semibold text-red-600 shrink-0">
                     {product.discount ? (
                       <div className="text-right">
                         <div>{formatPrice(product.price * (1 - product.discount / 100))}</div>

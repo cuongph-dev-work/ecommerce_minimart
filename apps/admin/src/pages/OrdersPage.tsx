@@ -95,6 +95,7 @@ export function OrdersPage() {
     const controller = new AbortController();
     fetchOrders(controller.signal);
     return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, currentPage, searchTerm, startDate, endDate]);
 
   useEffect(() => {
@@ -115,6 +116,7 @@ export function OrdersPage() {
       setProductPage(1);
       setProductSearchTerm('');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isProductDialogOpen, productPage, productSearchTerm]);
 
   const fetchProductsForDialog = useCallback(async (signal?: AbortSignal) => {

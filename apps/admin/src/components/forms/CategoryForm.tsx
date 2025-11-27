@@ -1,6 +1,5 @@
 import { useForm } from '@tanstack/react-form';
 import { valibotValidator } from '@tanstack/valibot-form-adapter';
-import * as v from 'valibot';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

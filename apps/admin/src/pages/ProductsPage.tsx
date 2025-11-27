@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Table,
   TableBody,
@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -41,7 +40,6 @@ import { Label } from "@/components/ui/label";
 import type { Product, Category } from '@/types';
 import { productsService } from '@/services/products.service';
 import { categoriesService } from '@/services/categories.service';
-import { useEffect } from 'react';
 import axios from 'axios';
 import { extractApiError, getFieldError, type ValidationError } from '@/lib/error-handler';
 import { productSchema } from '@/schemas/product.schema';
@@ -98,12 +96,6 @@ export function ProductsPage() {
     return () => controller.abort();
   }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchProducts(controller.signal);
-    return () => controller.abort();
-  }, [currentPage, searchTerm]);
-
   const fetchCategories = async (signal?: AbortSignal) => {
     try {
       const data = await categoriesService.getAll(signal);
@@ -136,7 +128,7 @@ export function ProductsPage() {
     }
   };
 
-  const fetchProducts = async (signal?: AbortSignal) => {
+  const fetchProducts = useCallback(async (signal?: AbortSignal) => {
     try {
       setIsLoading(true);
       const response = await productsService.getAll({ 
@@ -181,7 +173,13 @@ export function ProductsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, itemsPerPage]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchProducts(controller.signal);
+    return () => controller.abort();
+  }, [fetchProducts]);
 
   const handleAddImage = () => {
     if (currentImageUrl) {
@@ -373,6 +371,9 @@ export function ProductsPage() {
     try {
       setIsLoadingProductDetail(true);
       
+      // Reload categories to ensure we have the latest data
+      await fetchCategories();
+      
       // Fetch full product details from API
       const fullProduct = await productsService.getById(product.id);
       
@@ -381,8 +382,15 @@ export function ProductsPage() {
       setNewProductPrice(fullProduct.price.toString());
       setNewProductDiscount(fullProduct.discount?.toString() || '');
       
-      // Find category by name - we'll need to fetch categories from API later
-      const categoryId = categories.find(c => c.name === fullProduct.category)?.id || '';
+      // Find category: can be object { id, name } or string (name)
+      let categoryId = '';
+      if (typeof fullProduct.category === 'object' && fullProduct.category !== null) {
+        // If category is object, use its ID directly
+        categoryId = (fullProduct.category as { id: string; name: string }).id || '';
+      } else {
+        // If category is string (name), find by name
+        categoryId = categories.find(c => c.name === fullProduct.category)?.id || '';
+      }
       setNewProductCategory(categoryId);
       
       // Handle subcategory: can be Category object (from API) or string (legacy)
@@ -432,6 +440,21 @@ export function ProductsPage() {
       await fetchProducts();
     } catch (err: unknown) {
       console.error('Failed to delete product:', err);
+    }
+  };
+
+  const handleToggleIsHidden = async (product: Product) => {
+    try {
+      const newIsHidden = !product.isHidden;
+      await productsService.update(product.id, { isHidden: newIsHidden });
+      // Update local state immediately for better UX
+      setProducts(products.map(p => 
+        p.id === product.id ? { ...p, isHidden: newIsHidden } : p
+      ));
+    } catch (err: unknown) {
+      console.error('Failed to toggle isHidden:', err);
+      const apiError = extractApiError(err);
+      alert(apiError.message || 'Không thể cập nhật trạng thái ẩn/hiện');
     }
   };
 
@@ -949,19 +972,20 @@ export function ProductsPage() {
               <TableHead>Giá</TableHead>
               <TableHead>Kho</TableHead>
               <TableHead>Trạng thái</TableHead>
+              <TableHead className="w-[100px]">Ẩn/Hiện</TableHead>
               <TableHead className="text-right">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   Đang tải sản phẩm...
                 </TableCell>
               </TableRow>
             ) : products.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   Không tìm thấy sản phẩm
                 </TableCell>
               </TableRow>
@@ -1017,6 +1041,24 @@ export function ProductsPage() {
                       Hết hàng
                     </span>
                   )}
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center justify-center">
+                    <button
+                      onClick={() => handleToggleIsHidden(product)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                        product.isHidden ? 'bg-muted' : 'bg-primary'
+                      }`}
+                      role="switch"
+                      aria-checked={!product.isHidden}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          product.isHidden ? 'translate-x-1' : 'translate-x-6'
+                        }`}
+                      />
+                    </button>
+                  </div>
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>

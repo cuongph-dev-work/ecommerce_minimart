@@ -26,6 +26,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = authService.getStoredToken();
 
     if (storedUser && token) {
+      // Set initial user state, then verify with API
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUser(storedUser);
       // Verify token is still valid by fetching profile
       authService
@@ -95,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

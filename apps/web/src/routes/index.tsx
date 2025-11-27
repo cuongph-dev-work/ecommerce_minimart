@@ -18,7 +18,7 @@ export const routes: RouteObject[] = [
     element: <ProductsPage />,
   },
   {
-    path: '/products/:id',
+    path: '/products/:slug',
     element: <ProductDetailPage />,
   },
   {

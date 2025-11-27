@@ -15,10 +15,10 @@ import type { Product } from '../types';
 import { useTranslation } from 'react-i18next';
 
 interface ProductDetailPageProps {
-  productId: string;
+  productSlug: string;
 }
 
-export function ProductDetailPage({ productId }: ProductDetailPageProps) {
+export function ProductDetailPage({ productSlug }: ProductDetailPageProps) {
   const { t } = useTranslation();
   const { addToCart } = useCart();
   const { addToRecentlyViewed } = useRecentlyViewed();
@@ -39,7 +39,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
         
         // Load settings and product in parallel
         const [data, settingsData] = await Promise.all([
-          productsService.getById(productId, abortController.signal),
+          productsService.getBySlug(productSlug, abortController.signal),
           settingsService.getAll(abortController.signal).catch(() => ({})),
         ]);
         
@@ -52,7 +52,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
           const categoryId = typeof data.category === 'string' ? data.category : data.category?.id;
           if (categoryId) {
             const related = await productsService.getByCategory(categoryId, 4, 'sold', 'desc', abortController.signal);
-            const filtered = related.filter(p => p.id !== productId).slice(0, 4);
+            const filtered = related.filter(p => p.slug !== productSlug).slice(0, 4);
             if (!abortController.signal.aborted) {
               setRelatedProducts(filtered);
             }
@@ -72,7 +72,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
     loadProduct();
 
     return () => abortController.abort();
-  }, [productId, addToRecentlyViewed]);
+  }, [productSlug, addToRecentlyViewed]);
 
   if (loading) {
     return (
@@ -356,7 +356,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
 
         {/* Product Reviews */}
         <section className="mt-12">
-          <ProductReviews productId={productId} />
+          <ProductReviews productId={product.id} />
         </section>
 
         {/* Related Products */}
@@ -372,7 +372,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ y: -8 }}
-                  onClick={() => navigate(`/products/${relatedProduct.id}`)}
+                  onClick={() => navigate(`/products/${relatedProduct.slug}`)}
                   className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all cursor-pointer group"
                 >
                   <div className="aspect-square overflow-hidden bg-gray-100">

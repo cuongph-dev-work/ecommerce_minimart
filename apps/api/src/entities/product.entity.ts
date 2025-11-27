@@ -57,6 +57,9 @@ export class Product {
   @Property({ unique: true })
   sku!: string;
 
+  @Property({ unique: true })
+  slug!: string;
+
   @Property({ type: 'array' })
   images: string[] = [];
 

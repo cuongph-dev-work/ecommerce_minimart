@@ -38,6 +38,16 @@ export default function HomePage() {
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
         
+        {/* Favicon from store logo */}
+        {settings.store_logo && (
+          <>
+            <link rel="icon" type="image/png" href={settings.store_logo} />
+            <link rel="apple-touch-icon" href={settings.store_logo} />
+            <meta property="og:image" content={settings.store_logo} />
+            <meta name="twitter:image" content={settings.store_logo} />
+          </>
+        )}
+        
         <link rel="canonical" href={`${SITE_URL}/`} />
       </Helmet>
       <HomePageComponent />

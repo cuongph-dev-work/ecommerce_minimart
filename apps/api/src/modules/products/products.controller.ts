@@ -127,6 +127,17 @@ export class PublicProductsController {
   }
 
   @Public()
+  @Get('slug/:slug')
+  async findBySlug(@Param('slug') slug: string) {
+    const data = await this.productsService.findBySlug(slug);
+    // Only return if product is active
+    if (data.status !== ProductStatus.ACTIVE) {
+      throw new NotFoundException('Product not found');
+    }
+    return { success: true, data };
+  }
+
+  @Public()
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const data = await this.productsService.findOne(id);

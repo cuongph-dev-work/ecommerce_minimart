@@ -80,7 +80,7 @@ export function CategoryProductSection({ categoryName, categorySlug, products, i
               viewport={{ once: true }}
               transition={{ delay: index * 0.05 }}
               whileHover={{ y: -8 }}
-              onClick={() => navigate(`/products/${product.id}`)}
+              onClick={() => navigate(`/products/${product.slug}`)}
               className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all cursor-pointer group relative"
             >
               {/* Flash Sale Badge - Hidden since flash sale feature is disabled */}

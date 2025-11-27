@@ -121,7 +121,7 @@ export function SearchSuggestions({
           e.preventDefault();
           if (selectedIndex >= 0) {
             if (query.length >= 2 && suggestions[selectedIndex]) {
-              navigate(`/products/${suggestions[selectedIndex].id}`);
+              navigate(`/products/${suggestions[selectedIndex].slug}`);
               onClose();
             } else if (query.length < 2) {
               const allItems = [...searchHistory, ...popularSearches];
@@ -187,7 +187,7 @@ export function SearchSuggestions({
                 <button
                   key={product.id}
                   onClick={() => {
-                    navigate(`/products/${product.id}`);
+                    navigate(`/products/${product.slug}`);
                     onClose();
                   }}
                   className={`w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors ${

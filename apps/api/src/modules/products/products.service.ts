@@ -14,10 +14,28 @@ import { QueryProductDto } from './dto/query-product.dto';
 import { createPaginatedResponse } from '../../common/utils/pagination.util';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
 import { getThumbnailUrl } from '../../common/utils/image.util';
+import { generateSlug } from '../../common/utils/slug.util';
 
 @Injectable()
 export class ProductsService {
   constructor(private readonly em: EntityManager) {}
+
+  /**
+   * Generate unique slug from name
+   */
+  private async generateUniqueSlug(baseSlug: string, excludeId?: string): Promise<string> {
+    let slug = baseSlug;
+    let counter = 1;
+    
+    while (true) {
+      const existing = await this.em.findOne(Product, { slug });
+      if (!existing || (excludeId && existing.id === excludeId)) {
+        return slug;
+      }
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+  }
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
     // Check SKU uniqueness
@@ -46,8 +64,14 @@ export class ProductsService {
     }
 
     const { categoryId, subcategoryId, ...productData } = createProductDto;
+    
+    // Generate slug from name
+    const baseSlug = generateSlug(createProductDto.name);
+    const slug = await this.generateUniqueSlug(baseSlug);
+    
     const product = this.em.create(Product, {
       ...productData,
+      slug,
       category,
       subcategory,
     });
@@ -149,6 +173,7 @@ export class ProductsService {
         subcategory: product.subcategory,
         brand: product.brand,
         sku: product.sku,
+        slug: product.slug,
         images: product.images, // Original images for detail view
         thumbnailUrls: product.images.map((img) => getThumbnailUrl(img)), // Thumbnail URLs for list view
         status: product.status,
@@ -170,6 +195,20 @@ export class ProductsService {
     const product = await this.em.findOne(
       Product,
       { id },
+      { populate: ['category', 'subcategory'] },
+    );
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return product;
+  }
+
+  async findBySlug(slug: string): Promise<Product> {
+    const product = await this.em.findOne(
+      Product,
+      { slug },
       { populate: ['category', 'subcategory'] },
     );
 
@@ -217,6 +256,12 @@ export class ProductsService {
       }
     }
 
+    // Update slug if name changed
+    if (updateProductDto.name && updateProductDto.name !== product.name) {
+      const baseSlug = generateSlug(updateProductDto.name);
+      product.slug = await this.generateUniqueSlug(baseSlug, product.id);
+    }
+
     const { categoryId, subcategoryId, ...updateData } = updateProductDto;
     this.em.assign(product, updateData);
     await this.em.flush();
@@ -226,6 +271,16 @@ export class ProductsService {
 
   async remove(id: string): Promise<void> {
     const product = await this.findOne(id);
+    
+    // Check if product has orders
+    const orderItems = await this.em.find('OrderItem', { product: product.id });
+    
+    if (orderItems.length > 0) {
+      // Product has orders, we can still delete it because OrderItem has snapshot data
+      // The relationship is nullable and will be set to null on delete
+      // But we keep the snapshot fields (productName, productSku, productImage, price)
+    }
+    
     await this.em.removeAndFlush(product);
   }
 

@@ -43,6 +43,14 @@ class ProductsService {
     return response.data.data;
   }
 
+  async getBySlug(slug: string, signal?: AbortSignal): Promise<Product> {
+    const response = await apiClient.get<{ success: boolean; data: Product }>(
+      `/products/slug/${slug}`,
+      { signal }
+    );
+    return response.data.data;
+  }
+
   async getAll(params?: {
     search?: string;
     category?: string;

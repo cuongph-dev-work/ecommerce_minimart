@@ -604,7 +604,7 @@ export function ProductsPage() {
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: index * 0.05 }}
                       whileHover={{ y: -8 }}
-                      onClick={() => navigate(`/products/${product.id}`)}
+                      onClick={() => navigate(`/products/${product.slug}`)}
                       className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all cursor-pointer group"
                     >
                       <div className="aspect-square overflow-hidden bg-gray-100 relative">

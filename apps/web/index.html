@@ -8,9 +8,31 @@
       <meta name="format-detection" content="telephone=no" />
       <title>Minimart - Technology for Life</title>
       <meta name="description" content="Minimart - Leading technology store. 100% genuine products, reputable warranty, fast delivery. Daily flash sales with the best prices on the market." />
+      <!-- Default favicon - will be replaced by store logo if available -->
+      <!-- <link rel="icon" type="image/svg+xml" href="/vite.svg" /> -->
       <script>
         // Preload settings for SEO - inject into window before React renders
         (function() {
+          // Helper function to update favicon
+          function updateFavicon(logoUrl) {
+            // Remove existing favicon links
+            const existingLinks = document.querySelectorAll('link[rel*="icon"]');
+            existingLinks.forEach(link => link.remove());
+            
+            // Create new favicon link
+            const link = document.createElement('link');
+            link.rel = 'icon';
+            link.type = 'image/png';
+            link.href = logoUrl;
+            document.head.appendChild(link);
+            
+            // Also add apple-touch-icon for better mobile support
+            const appleLink = document.createElement('link');
+            appleLink.rel = 'apple-touch-icon';
+            appleLink.href = logoUrl;
+            document.head.appendChild(appleLink);
+          }
+          
           // Get API URL from env config (injected by Vite plugin)
           const API_URL = (window.__ENV_CONFIG__ && window.__ENV_CONFIG__.VITE_API_URL) 
             || (window.location.origin.includes('localhost') ? 'http://localhost:8000/api' : '/api');
@@ -24,10 +46,13 @@
           if (cached && cachedTime && (Date.now() - parseInt(cachedTime)) < fiveMinutes) {
             try {
               window.__PRELOADED_SETTINGS__ = JSON.parse(cached);
-              // Update title immediately if cached
+              // Update title and favicon immediately if cached
               const settings = JSON.parse(cached);
               if (settings.store_name) {
                 document.title = settings.store_name + ' - Technology for Life';
+              }
+              if (settings.store_logo) {
+                updateFavicon(settings.store_logo);
               }
             } catch (e) {
               // Ignore parse errors
@@ -44,9 +69,12 @@
                 localStorage.setItem(settingsKey, JSON.stringify(data.data));
                 localStorage.setItem(settingsKey + '_timestamp', Date.now().toString());
                 
-                // Update title if available
+                // Update title and favicon if available
                 if (data.data.store_name) {
                   document.title = data.data.store_name + ' - Technology for Life';
+                }
+                if (data.data.store_logo) {
+                  updateFavicon(data.data.store_logo);
                 }
               }
             })

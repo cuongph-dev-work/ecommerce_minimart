@@ -10,16 +10,16 @@ const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://yourdomain.com';
 
 export default function ProductDetailPage() {
   const { t, i18n } = useTranslation();
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const siteName = t('meta.site_name');
 
   useEffect(() => {
-    if (!id) return;
+    if (!slug) return;
     
     const abortController = new AbortController();
     
-    productsService.getById(id, abortController.signal)
+    productsService.getBySlug(slug, abortController.signal)
       .then((data) => {
         if (!abortController.signal.aborted) {
           setProduct(data);
@@ -30,7 +30,7 @@ export default function ProductDetailPage() {
       });
 
     return () => abortController.abort();
-  }, [id]);
+  }, [slug]);
 
   if (!product) {
     return (
@@ -39,7 +39,7 @@ export default function ProductDetailPage() {
           <title>{t('products.title')} - {siteName}</title>
           <meta name="description" content={t('meta.product_detail.description_default', { name: '' })} />
         </Helmet>
-        <ProductDetailComponent productId={id!} />
+        <ProductDetailComponent productSlug={slug!} />
       </>
     );
   }
@@ -57,7 +57,7 @@ export default function ProductDetailPage() {
     currency: 'VND',
     minimumFractionDigits: 0,
   }).format(productPrice);
-  const canonicalUrl = `${SITE_URL}/products/${id}`;
+  const canonicalUrl = `${SITE_URL}/products/${slug}`;
   const categoryName = typeof product.category === 'string' 
     ? product.category 
     : product.category?.name || '';

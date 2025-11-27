@@ -38,7 +38,12 @@ export class OrdersService {
         throw new BadRequestException(`Insufficient stock for ${product.name}`);
       }
 
-      const itemSubtotal = product.price * item.quantity;
+      // Calculate price with discount if any
+      const itemPrice = product.discount 
+        ? Number(product.price) * (1 - Number(product.discount) / 100)
+        : Number(product.price);
+      
+      const itemSubtotal = itemPrice * item.quantity;
       subtotal += itemSubtotal;
       
       // Collect SKU for order number generation
@@ -99,12 +104,20 @@ export class OrdersService {
       const product = await this.em.findOne(Product, { id: item.productId });
       if (!product) continue;
 
+      // Calculate price with discount if any
+      const itemPrice = product.discount 
+        ? Number(product.price) * (1 - Number(product.discount) / 100)
+        : Number(product.price);
+
       const orderItem = this.em.create(OrderItem, {
         order,
         product,
+        productName: product.name, // Snapshot product name
+        productSku: product.sku, // Snapshot product SKU
+        productImage: product.images?.[0] || null, // Snapshot product image
         quantity: item.quantity,
-        price: product.price,
-        subtotal: product.price * item.quantity,
+        price: itemPrice, // Use snapshot price
+        subtotal: itemPrice * item.quantity,
       });
 
       // Update product stock
@@ -224,14 +237,19 @@ export class OrdersService {
         phone: order.pickupStore.phone,
       } : undefined,
       items: order.items.getItems().map(item => ({
-        product: {
+        product: item.product ? {
           id: item.product.id,
           name: item.product.name,
           price: Number(item.product.price),
           image: item.product.images?.[0] || '',
+        } : {
+          id: null,
+          name: item.productName || 'Sản phẩm đã bị xóa',
+          price: Number(item.price), // Use snapshot price
+          image: item.productImage || '',
         },
         quantity: item.quantity,
-        price: Number(item.price),
+        price: Number(item.price), // Always use snapshot price from orderItem
       })),
     };
   }

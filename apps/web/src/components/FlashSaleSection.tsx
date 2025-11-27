@@ -111,7 +111,7 @@ export function FlashSaleSection() {
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ y: -4 }}
-              onClick={() => navigate(`/products/${item.product.id}`)}
+              onClick={() => navigate(`/products/${item.product.slug}`)}
               className="bg-white rounded-xl overflow-hidden cursor-pointer group relative"
             >
               {/* Discount Badge */}

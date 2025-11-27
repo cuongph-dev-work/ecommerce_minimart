@@ -48,6 +48,28 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Update favicon when settings change
+  useEffect(() => {
+    if (settings.store_logo && typeof document !== 'undefined') {
+      // Remove existing favicon links
+      const existingLinks = document.querySelectorAll('link[rel*="icon"]');
+      existingLinks.forEach(link => link.remove());
+      
+      // Create new favicon link
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.type = 'image/png';
+      link.href = settings.store_logo;
+      document.head.appendChild(link);
+      
+      // Also add apple-touch-icon for better mobile support
+      const appleLink = document.createElement('link');
+      appleLink.rel = 'apple-touch-icon';
+      appleLink.href = settings.store_logo;
+      document.head.appendChild(appleLink);
+    }
+  }, [settings.store_logo]);
+
   return (
     <SettingsContext.Provider value={{ settings, isLoading }}>
       {children}

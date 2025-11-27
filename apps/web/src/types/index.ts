@@ -1,6 +1,7 @@
 export interface Product {
   id: string;
   name: string;
+  slug: string;
   price: number;
   description: string;
   specifications?: string; // HTML content for specifications tab

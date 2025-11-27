@@ -10,7 +10,7 @@ export class DatabaseSeeder extends Seeder {
     // Seed admin user
     const hashedPassword = await bcrypt.hash('admin123', 10);
     
-    const admin = em.create(User, {
+    em.create(User, {
       name: 'Admin',
       email: 'admin@store.vn',
       password: hashedPassword,
@@ -52,7 +52,7 @@ export class DatabaseSeeder extends Seeder {
 
     const categories: Category[] = [];
     for (const catData of categoryData) {
-      const { subcategories, ...categoryFields } = catData;
+      const { subcategories: _subcategories, ...categoryFields } = catData;
       const category = em.create(Category, categoryFields);
       categories.push(category);
     }

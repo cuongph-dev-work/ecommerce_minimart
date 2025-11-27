@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+// import { Cron, CronExpression } from '@nestjs/schedule';
 import { MikroORM } from '@mikro-orm/core';
-import { FlashSale, FlashSaleStatus } from '../../entities/flash-sale.entity';
+// import { FlashSale, FlashSaleStatus } from '../../entities/flash-sale.entity';
 
 @Injectable()
 export class FlashSalesScheduler {

@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
-import { Product, ProductStatus } from '../../entities/product.entity';
+import { Product } from '../../entities/product.entity';
 import { Category } from '../../entities/category.entity';
 import { SearchQuery } from '../../entities/search-query.entity';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -46,7 +46,7 @@ export class ProductsService {
       }
     }
 
-    const { categoryId, subcategoryId, ...productData } = createProductDto;
+    const { categoryId: _categoryId, subcategoryId: _subcategoryId, ...productData } = createProductDto;
     
     const  slug = generateSlug(createProductDto.name);
     
@@ -250,7 +250,7 @@ export class ProductsService {
       product.slug = generateSlug(product.name);
     }
 
-    const { categoryId, subcategoryId, ...updateData } = updateProductDto;
+    const { categoryId: _categoryId, subcategoryId: _subcategoryId, ...updateData } = updateProductDto;
     this.em.assign(product, updateData);
     await this.em.flush();
 
@@ -284,7 +284,7 @@ export class ProductsService {
     throw new BadRequestException('Export not implemented yet');
   }
 
-  async import(file: any): Promise<any> {
+  async import(_file: any): Promise<any> {
     // TODO: Implement import from Excel/CSV
     throw new BadRequestException('Import not implemented yet');
   }

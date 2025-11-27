@@ -56,7 +56,19 @@ export function VouchersPage() {
   const [voucherToDelete, setVoucherToDelete] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [statusFilter] = useState<'all' | 'active' | 'inactive' | 'expired'>('all');
+  
+  // Display error if exists
+  if (error) {
+    console.error('Voucher error:', error);
+  }
+  
+  // Display validation errors if exist
+  if (validationErrors.length > 0) {
+    console.warn('Validation errors:', validationErrors);
+  }
 
   const fetchVouchers = useCallback(async (signal?: AbortSignal) => {
     try {

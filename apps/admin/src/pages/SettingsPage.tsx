@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -27,13 +27,7 @@ export function SettingsPage() {
   const [currentLogoUrl, setCurrentLogoUrl] = useState('');
   const [uploadingLogo, setUploadingLogo] = useState<number | null>(null);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchSettings(controller.signal);
-    return () => controller.abort();
-  }, []);
-
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async (_signal?: AbortSignal) => {
     try {
       setIsLoading(true);
       const data = await settingsService.getAll();
@@ -67,12 +61,20 @@ export function SettingsPage() {
       setReturnPolicy(settingsMap.return_policy || '');
       setShoppingGuide(settingsMap.shopping_guide || '');
       setFaq(settingsMap.faq || '');
-    } catch (err: any) {
-      setError(err?.message || 'Failed to load settings');
+    } catch (err: unknown) {
+      const apiError = extractApiError(err);
+      setError(apiError.message || 'Failed to load settings');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchSettings(controller.signal);
+    return () => controller.abort();
+  }, [fetchSettings]);
+
   // Store Info
   const [storeName, setStoreName] = useState(settings.store_name || '');
   const [storeLogo, setStoreLogo] = useState('');

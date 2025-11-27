@@ -133,7 +133,7 @@ export class CategoriesService {
     }
 
     // Handle parentId separately (it's not a direct field, it's a relation)
-    const { parentId, slug, ...updateData } = updateCategoryDto;
+    const { parentId, slug: _slug, ...updateData } = updateCategoryDto;
     
     // Update parent if provided
     if (parentId !== undefined) {

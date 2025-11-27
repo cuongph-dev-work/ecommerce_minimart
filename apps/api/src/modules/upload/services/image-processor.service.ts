@@ -10,7 +10,7 @@ export class ImageProcessorService {
 
   async processImage(
     filePath: string,
-    type: 'product' | 'banner' | 'category' | 'store',
+    _type: 'product' | 'banner' | 'category' | 'store',
   ): Promise<void> {
     const enableOptimization = this.configService.get<boolean>('upload.enableOptimization');
     

@@ -46,7 +46,9 @@ export type OrderStatus =
   | 'confirmed'         // Đã xác nhận
   | 'preparing'         // Đang chuẩn bị hàng
   | 'ready'            // Sẵn sàng nhận hàng
+  | 'ready_for_pickup'  // Sẵn sàng nhận hàng (alias)
   | 'received'         // Đã hoàn thành (khách đã nhận)
+  | 'completed'         // Đã hoàn thành (alias)
   | 'cancelled'         // Đã hủy
   | 'returned';         // Hoàn trả
 

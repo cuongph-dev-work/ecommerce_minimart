@@ -265,7 +265,7 @@ export class MinioStorageService implements OnModuleInit {
             Key: deleteKey,
           });
           await this.s3Client.send(deleteCommand);
-        } catch (error) {
+        } catch {
           // Ignore errors if file doesn't exist
           this.logger.debug(`File ${deleteKey} not found, skipping deletion`);
         }

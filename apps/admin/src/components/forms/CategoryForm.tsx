@@ -1,5 +1,4 @@
 import { useForm } from '@tanstack/react-form';
-import { valibotValidator } from '@tanstack/valibot-form-adapter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -76,7 +75,6 @@ export function CategoryForm({
       
       await onSubmit(submitData);
     },
-    validatorAdapter: valibotValidator(),
   });
 
   const renderIcon = (iconName: string) => {

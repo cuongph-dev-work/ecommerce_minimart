@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
-  BadRequestException,
 } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import { Voucher, VoucherStatus } from '../../entities/voucher.entity';

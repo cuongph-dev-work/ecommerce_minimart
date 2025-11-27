@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
-import { Order, OrderStatus, PaymentStatus } from '../../entities/order.entity';
+import { Order, OrderStatus } from '../../entities/order.entity';
 import { OrderItem } from '../../entities/order-item.entity';
 import { ContactHistory } from '../../entities/contact-history.entity';
 import { Product } from '../../entities/product.entity';

@@ -39,7 +39,6 @@ export function getImageVariants(originalUrl: string): {
     };
   }
 
-  const baseUrl = originalUrl.replace('/original/', '/');
   const filename = originalUrl.split('/').pop() || '';
   const pathWithoutOriginal = originalUrl.substring(0, originalUrl.lastIndexOf('/original/'));
 

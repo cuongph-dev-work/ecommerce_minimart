@@ -16,6 +16,7 @@ export function RecentlyViewedProvider({ children }: { children: React.ReactNode
     const stored = localStorage.getItem('recentlyViewed');
     if (stored) {
       try {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setRecentlyViewed(JSON.parse(stored));
       } catch (e) {
         console.error('Error loading recently viewed:', e);

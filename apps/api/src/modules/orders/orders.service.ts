@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { EntityManager } from '@mikro-orm/core';
+import { EntityManager, LockMode } from '@mikro-orm/core';
 import { Order, OrderStatus } from '../../entities/order.entity';
 import { OrderItem } from '../../entities/order-item.entity';
 import { ContactHistory } from '../../entities/contact-history.entity';
@@ -18,120 +18,147 @@ export class OrdersService {
   ) {}
 
   async create(createDto: CreateOrderDto): Promise<Order> {
-    const store = await this.em.findOne(Store, { id: createDto.pickupStoreId, deletedAt: null });
-    if (!store) {
-      throw new NotFoundException('Store not found');
-    }
-
-    // Calculate totals and collect product SKUs
-    let subtotal = 0;
-    const orderItems: OrderItem[] = [];
-    const productSkus: string[] = [];
-
-    for (const item of createDto.items) {
-      const product = await this.em.findOne(Product, { id: item.productId, deletedAt: null });
-      if (!product) {
-        throw new NotFoundException(`Product ${item.productId} not found`);
+    // Use transaction to ensure atomicity and prevent race conditions
+    return await this.em.transactional(async (em) => {
+      const store = await em.findOne(Store, { id: createDto.pickupStoreId, deletedAt: null });
+      if (!store) {
+        throw new NotFoundException('Store not found');
       }
 
-      if (product.stock < item.quantity) {
-        throw new BadRequestException(`Insufficient stock for ${product.name}`);
+      // First pass: Validate products and calculate totals with pessimistic lock
+      let subtotal = 0;
+      const productSkus: string[] = [];
+      interface ProductItem {
+        product: Product;
+        item: { productId: string; quantity: number };
+        itemPrice: number;
+      }
+      const products: ProductItem[] = [];
+
+      for (const item of createDto.items) {
+        // Lock product row to prevent concurrent modifications
+        const product = await em.findOne(
+          Product,
+          { id: item.productId, deletedAt: null },
+          { lockMode: LockMode.PESSIMISTIC_WRITE }
+        );
+        
+        if (!product) {
+          throw new NotFoundException(`Product ${item.productId} not found`);
+        }
+
+        // Check stock again after lock (double-check)
+        if (product.stock < item.quantity) {
+          throw new BadRequestException(`Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`);
+        }
+
+        // Calculate price with discount if any
+        const itemPrice = product.discount 
+          ? Number(product.price) * (1 - Number(product.discount) / 100)
+          : Number(product.price);
+        
+        const itemSubtotal = itemPrice * item.quantity;
+        subtotal += itemSubtotal;
+        
+        // Collect SKU for order number generation
+        if (product.sku) {
+          productSkus.push(product.sku);
+        }
+
+        // Store product for later use
+        products.push({ product, item, itemPrice });
       }
 
-      // Calculate price with discount if any
-      const itemPrice = product.discount 
-        ? Number(product.price) * (1 - Number(product.discount) / 100)
-        : Number(product.price);
-      
-      const itemSubtotal = itemPrice * item.quantity;
-      subtotal += itemSubtotal;
-      
-      // Collect SKU for order number generation
-      if (product.sku) {
-        productSkus.push(product.sku);
-      }
-    }
+      // Apply voucher
+      let discount = 0;
+      if (createDto.voucherCode) {
+        const voucherValidation = await this.vouchersService.validate({
+          code: createDto.voucherCode,
+          total: subtotal,
+        });
 
-    // Apply voucher
-    let discount = 0;
-    if (createDto.voucherCode) {
-      const voucherValidation = await this.vouchersService.validate({
-        code: createDto.voucherCode,
-        total: subtotal,
+        if (!voucherValidation.valid) {
+          throw new BadRequestException(voucherValidation.message);
+        }
+
+        discount = voucherValidation.discount;
+      }
+
+      const total = subtotal - discount;
+
+      // Generate unique order number based on customer info and product SKUs
+      const orderNumber = await generateUniqueOrderNumber(
+        em,
+        createDto.customerPhone,
+        createDto.customerEmail,
+        productSkus,
+      );
+
+      // Create order
+      const order = em.create(Order, {
+        orderNumber,
+        customerName: createDto.customerName,
+        customerPhone: createDto.customerPhone,
+        customerEmail: createDto.customerEmail,
+        notes: createDto.notes,
+        pickupStore: store,
+        subtotal,
+        discount,
+        total,
+        voucherCode: createDto.voucherCode,
+        statusHistory: [{
+          status: OrderStatus.PENDING,
+          note: 'Đơn hàng mới',
+          createdAt: new Date(),
+          updatedBy: 'system',
+        }],
       });
 
-      if (!voucherValidation.valid) {
-        throw new BadRequestException(voucherValidation.message);
+      await em.persistAndFlush(order);
+
+      // Create order items and update stock atomically
+      const orderItems: OrderItem[] = [];
+      for (const { product, item, itemPrice } of products) {
+        // Re-lock product to ensure we have latest data
+        const lockedProduct = await em.findOne(
+          Product,
+          { id: product.id },
+          { lockMode: LockMode.PESSIMISTIC_WRITE }
+        );
+
+        if (!lockedProduct) {
+          throw new NotFoundException(`Product ${product.id} not found`);
+        }
+
+        // Final stock check before decrementing
+        if (lockedProduct.stock < item.quantity) {
+          throw new BadRequestException(`Insufficient stock for ${lockedProduct.name}. Available: ${lockedProduct.stock}, Requested: ${item.quantity}`);
+        }
+
+        const orderItem = em.create(OrderItem, {
+          order,
+          product: lockedProduct,
+          quantity: item.quantity,
+          price: itemPrice, // Use snapshot price
+          subtotal: itemPrice * item.quantity,
+        });
+
+        // Update product stock atomically
+        lockedProduct.stock -= item.quantity;
+        lockedProduct.soldCount += item.quantity;
+
+        orderItems.push(orderItem);
       }
 
-      discount = voucherValidation.discount;
-    }
+      await em.persistAndFlush(orderItems);
 
-    const total = subtotal - discount;
+      // Increment voucher usage
+      if (createDto.voucherCode) {
+        await this.vouchersService.incrementUsage(createDto.voucherCode);
+      }
 
-    // Generate unique order number based on customer info and product SKUs
-    const orderNumber = await generateUniqueOrderNumber(
-      this.em,
-      createDto.customerPhone,
-      createDto.customerEmail,
-      productSkus,
-    );
-
-    // Create order
-    const order = this.em.create(Order, {
-      orderNumber,
-      customerName: createDto.customerName,
-      customerPhone: createDto.customerPhone,
-      customerEmail: createDto.customerEmail,
-      notes: createDto.notes,
-      pickupStore: store,
-      subtotal,
-      discount,
-      total,
-      voucherCode: createDto.voucherCode,
-      statusHistory: [{
-        status: OrderStatus.PENDING,
-        note: 'Đơn hàng mới',
-        createdAt: new Date(),
-        updatedBy: 'system',
-      }],
+      return order;
     });
-
-    await this.em.persistAndFlush(order);
-
-    // Create order items
-    for (const item of createDto.items) {
-      const product = await this.em.findOne(Product, { id: item.productId, deletedAt: null });
-      if (!product) continue;
-
-      // Calculate price with discount if any
-      const itemPrice = product.discount 
-        ? Number(product.price) * (1 - Number(product.discount) / 100)
-        : Number(product.price);
-
-      const orderItem = this.em.create(OrderItem, {
-        order,
-        product,
-        quantity: item.quantity,
-        price: itemPrice, // Use snapshot price
-        subtotal: itemPrice * item.quantity,
-      });
-
-      // Update product stock
-      product.stock -= item.quantity;
-      product.soldCount += item.quantity;
-
-      orderItems.push(orderItem);
-    }
-
-    await this.em.persistAndFlush(orderItems);
-
-    // Increment voucher usage
-    if (createDto.voucherCode) {
-      await this.vouchersService.incrementUsage(createDto.voucherCode);
-    }
-
-    return order;
   }
 
   async findAll(

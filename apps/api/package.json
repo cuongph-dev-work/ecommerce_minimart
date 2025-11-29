@@ -2,7 +2,6 @@
     "name": "@ecommerce/api",
     "version": "0.1.0",
     "private": true,
-    "type": "module",
     "description": "E-commerce API built with NestJS",
     "scripts": {
         "build": "nest build",

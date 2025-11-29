@@ -32,8 +32,8 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
     ports:
-      - "${MINIO_PORT:-9000}:9000"  # API port
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"  # Console port
+      - "9000:9000"  # API port
+      - "9001:9001"  # Console port
     volumes:
       - minio_data:/data
     healthcheck:
@@ -51,29 +51,8 @@ services:
       dockerfile: apps/api/Dockerfile
     container_name: ecommerce-api
     restart: unless-stopped
-    environment:
-      NODE_ENV: production
-      PORT: 8000
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
-      DB_NAME: ${DB_NAME:-ecommerce_minimart}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
-      API_PREFIX: ${API_PREFIX:-api}
-      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
-      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-ecommerce}
-      STORAGE_TYPE: ${STORAGE_TYPE:-minio}
-      UPLOAD_DEST: ./uploads
-      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-5242880}
-      REDIS_HOST: ${REDIS_HOST:-}
-      REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    env_file:
+      - ./apps/api/.env.production
     ports:
       - "${API_PORT:-8000}:8000"
     volumes:
@@ -99,9 +78,8 @@ services:
       dockerfile: apps/web/Dockerfile
     container_name: ecommerce-web
     restart: unless-stopped
-    environment:
-      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000/api}
-      - VITE_SITE_URL=${VITE_SITE_URL:-http://localhost}
+    env_file:
+      - ./apps/web/.env.production
     networks:
       - ecommerce-network
     healthcheck:
@@ -117,8 +95,8 @@ services:
       dockerfile: apps/admin/Dockerfile
     container_name: ecommerce-admin
     restart: unless-stopped
-    environment:
-      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000/api}
+    env_file:
+      - ./apps/admin/.env.production
     networks:
       - ecommerce-network
     healthcheck:
@@ -141,6 +119,7 @@ services:
       - WEB_DOMAIN=${WEB_DOMAIN:-localhost}
       - ADMIN_DOMAIN=${ADMIN_DOMAIN:-admin.localhost}
       - API_DOMAIN=${API_DOMAIN:-api.localhost}
+      - ASSETS_DOMAIN=${ASSETS_DOMAIN:-assets.localhost}
     depends_on:
       - api
       - web

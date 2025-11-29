@@ -10,9 +10,10 @@ Mở file `.env` và cập nhật các domain:
 
 ```env
 # Domain Configuration
-WEB_DOMAIN=yourdomain.com
-ADMIN_DOMAIN=admin.yourdomain.com
-API_DOMAIN=api.yourdomain.com
+WEB_DOMAIN=littlebox.vn
+ADMIN_DOMAIN=admin.littlebox.vn
+API_DOMAIN=api.littlebox.vn
+ASSETS_DOMAIN=assets.littlebox.vn
 ```
 
 ### 2. Cập nhật Nginx Config
@@ -39,15 +40,16 @@ Nếu muốn tự chỉnh sửa, mở file `nginx/nginx.conf` và thay thế:
 
 ## DNS Configuration
 
-Sau khi cấu hình domain, cần setup DNS records:
+Sau khi cấu hình domain, cần setup DNS records (ví dụ với `littlebox.vn`):
 
 ### Option 1: Tất cả subdomain trỏ về cùng IP
 
 ```
-A     @              → YOUR_SERVER_IP
+A     @              → YOUR_SERVER_IP        # littlebox.vn (web)
 A     www            → YOUR_SERVER_IP
-A     admin          → YOUR_SERVER_IP
-A     api            → YOUR_SERVER_IP
+A     admin          → YOUR_SERVER_IP        # admin.littlebox.vn
+A     api            → YOUR_SERVER_IP        # api.littlebox.vn
+A     assets         → YOUR_SERVER_IP        # assets.littlebox.vn (MinIO)
 ```
 
 ### Option 2: Chỉ main domain và admin
@@ -109,7 +111,7 @@ server {
 Sau khi có domain, cập nhật CORS trong `.env`:
 
 ```env
-CORS_ORIGIN=https://yourdomain.com,https://admin.yourdomain.com,https://www.yourdomain.com
+CORS_ORIGIN=https://littlebox.vn,https://admin.littlebox.vn,https://www.littlebox.vn
 ```
 
 ## Frontend URLs
@@ -117,8 +119,8 @@ CORS_ORIGIN=https://yourdomain.com,https://admin.yourdomain.com,https://www.your
 Cập nhật frontend URLs trong `.env`:
 
 ```env
-VITE_API_URL=https://api.yourdomain.com/api
-VITE_SITE_URL=https://yourdomain.com
+VITE_API_URL=https://api.littlebox.vn/api
+VITE_SITE_URL=https://littlebox.vn
 ```
 
 Sau đó rebuild frontend containers:
@@ -131,10 +133,11 @@ docker-compose -f docker-compose.prod.yml up -d --build web admin
 
 Sau khi setup xong, kiểm tra:
 
-1. **Web**: https://yourdomain.com
-2. **Admin**: https://admin.yourdomain.com
-3. **API**: https://api.yourdomain.com/api
-4. **API Docs**: https://api.yourdomain.com/api/docs
+1. **Web**: https://littlebox.vn
+2. **Admin**: https://admin.littlebox.vn
+3. **API**: https://api.littlebox.vn/api
+4. **API Docs**: https://api.littlebox.vn/api/docs
+5. **Assets (MinIO)**: https://assets.littlebox.vn (nếu cấu hình SSL/nginx cho subdomain này)
 
 ## Troubleshooting
 

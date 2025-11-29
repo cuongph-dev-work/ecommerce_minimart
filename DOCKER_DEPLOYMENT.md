@@ -72,10 +72,11 @@ Cấu hình domain trong file `.env`:
 
 ```env
 # Domain Configuration
-DOMAIN=yourdomain.com
-WEB_DOMAIN=yourdomain.com
-ADMIN_DOMAIN=admin.yourdomain.com
-API_DOMAIN=api.yourdomain.com
+DOMAIN=littlebox.vn
+WEB_DOMAIN=littlebox.vn
+ADMIN_DOMAIN=admin.littlebox.vn
+API_DOMAIN=api.littlebox.vn
+ASSETS_DOMAIN=assets.littlebox.vn
 ```
 
 Sau khi cập nhật domain, chạy script để update nginx config:
@@ -102,25 +103,26 @@ Xem `.env.example` để biết tất cả các biến môi trường cần thi�
 
 3. **Domain Configuration**: Cập nhật trong `.env`:
    ```
-   WEB_DOMAIN=yourdomain.com
-   ADMIN_DOMAIN=admin.yourdomain.com
-   API_DOMAIN=api.yourdomain.com
+   WEB_DOMAIN=littlebox.vn
+   ADMIN_DOMAIN=admin.littlebox.vn
+   API_DOMAIN=api.littlebox.vn
+   ASSETS_DOMAIN=assets.littlebox.vn
    ```
    Sau đó chạy: `./scripts/update-domains.sh` để update nginx config
 
 4. **CORS_ORIGIN**: Danh sách domain được phép, ví dụ:
    ```
-   CORS_ORIGIN=https://yourdomain.com,https://admin.yourdomain.com
+   CORS_ORIGIN=https://littlebox.vn,https://admin.littlebox.vn
    ```
 
 5. **VITE_API_URL**: URL API public, ví dụ:
    ```
-   VITE_API_URL=https://api.yourdomain.com/api
+   VITE_API_URL=https://api.littlebox.vn/api
    ```
 
 6. **VITE_SITE_URL**: URL website public, ví dụ:
    ```
-   VITE_SITE_URL=https://yourdomain.com
+   VITE_SITE_URL=https://littlebox.vn
    ```
 
 ## Commands

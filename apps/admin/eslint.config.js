@@ -18,6 +18,10 @@ export default defineConfig([
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+      parserOptions: {
+        // Point TS-ESLint at this app's tsconfig root to disambiguate monorepo TS configs
+        tsconfigRootDir: new URL('./', import.meta.url).pathname,
+      },
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',

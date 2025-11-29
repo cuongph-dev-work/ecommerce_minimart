@@ -10,13 +10,14 @@ export default tseslint.config(
   },
   {
     files: ['**/*.{ts,tsx}'],
-    extends: [
-      js.configs.recommended,
-      ...tseslint.configs.recommended,
-    ],
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+      parserOptions: {
+        // Giúp TS-ESLint xác định đúng tsconfig cho app web trong monorepo
+        tsconfigRootDir: new URL('./', import.meta.url).pathname,
+      },
     },
     plugins: {
       'react-hooks': reactHooks,

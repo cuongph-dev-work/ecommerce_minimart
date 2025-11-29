@@ -117,6 +117,8 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot:ro
+    command: >
+      sh -c "rm -f /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
     environment:
       - WEB_DOMAIN=${WEB_DOMAIN:-localhost}
       - ADMIN_DOMAIN=${ADMIN_DOMAIN:-admin.localhost}

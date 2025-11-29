@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const price = product.discount 
       ? product.price * (1 - product.discount / 100)
       : product.price;
-    const description = product.description || `Buy ${product.name} at the best price. ${product.brand ? `Brand: ${product.brand}.` : ''} ${product.inStock ? 'In stock now!' : 'Check availability.'}`;
+    const description = product.description || `Buy ${product.name} at the best price. ${product.brand ? `Brand: ${product.brand}.` : ''} ${product.stock > 0 ? 'In stock now!' : 'Check availability.'}`;
     
     return {
       title: `${product.name} - Minimart`,
@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       other: {
         'product:price:amount': price.toString(),
         'product:price:currency': 'VND',
-        'product:availability': product.inStock ? 'in stock' : 'out of stock',
+        'product:availability': product.stock > 0 ? 'in stock' : 'out of stock',
         'product:condition': 'new',
       },
     };
@@ -92,7 +92,7 @@ export default async function ProductDetailPage({ params }: Props) {
       price: product.discount 
         ? (product.price * (1 - product.discount / 100)).toString()
         : product.price.toString(),
-      availability: product.inStock 
+      availability: product.stock > 0 
         ? 'https://schema.org/InStock'
         : 'https://schema.org/OutOfStock',
       itemCondition: 'https://schema.org/NewCondition',

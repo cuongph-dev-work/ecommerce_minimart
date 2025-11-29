@@ -28,17 +28,25 @@ echo "  - $DOMAIN_ASSETS"
 # Kiểm tra DNS trước
 echo ""
 echo "🔍 Kiểm tra DNS configuration..."
-SERVER_IP=$(curl -s ifconfig.me || curl -s ipinfo.io/ip || echo "unknown")
+SERVER_IP=$(curl -s ifconfig.me 2>/dev/null || curl -s ipinfo.io/ip 2>/dev/null || hostname -I | awk '{print $1}' || echo "unknown")
+
+if [ "$SERVER_IP" = "unknown" ]; then
+    echo "⚠️  Không thể xác định server IP. Vui lòng nhập server IP:"
+    read -p "Server IP: " SERVER_IP
+fi
+
+echo "📍 Server IP: $SERVER_IP"
+echo ""
 
 check_dns() {
     local domain=$1
-    local dns_ip=$(dig +short $domain | tail -1)
+    local dns_result=$(dig +short $domain 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
     
-    if [ -z "$dns_ip" ]; then
-        echo "  ❌ $domain: Không tìm thấy DNS record"
+    if [ -z "$dns_result" ]; then
+        echo "  ❌ $domain: Không tìm thấy A record"
         return 1
-    elif [ "$dns_ip" != "$SERVER_IP" ]; then
-        echo "  ⚠️  $domain: DNS trỏ về $dns_ip (khác với server IP: $SERVER_IP)"
+    elif [ "$dns_result" != "$SERVER_IP" ]; then
+        echo "  ⚠️  $domain: DNS trỏ về $dns_result (khác với server IP: $SERVER_IP)"
         return 1
     else
         echo "  ✅ $domain: DNS đã trỏ đúng về $SERVER_IP"
@@ -56,16 +64,25 @@ check_dns "$DOMAIN_ASSETS" || DNS_OK=false
 if [ "$DNS_OK" = false ]; then
     echo ""
     echo "❌ DNS chưa được cấu hình đúng!"
+    echo ""
     echo "📝 Cần cấu hình DNS records trỏ về server IP: $SERVER_IP"
     echo ""
-    echo "DNS records cần thiết:"
-    echo "  A     @              → $SERVER_IP"
-    echo "  A     www            → $SERVER_IP"
-    echo "  A     admin          → $SERVER_IP"
-    echo "  A     api            → $SERVER_IP"
-    echo "  A     assets         → $SERVER_IP"
+    echo "DNS records cần thiết (trong DNS provider của bạn):"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "Type  Name      Value"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "A     @         $SERVER_IP"
+    echo "A     www       $SERVER_IP"
+    echo "A     admin     $SERVER_IP"
+    echo "A     api       $SERVER_IP"
+    echo "A     assets    $SERVER_IP"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
-    echo "Sau khi cấu hình DNS, đợi vài phút để DNS propagate, rồi chạy lại script này."
+    echo "Sau khi cấu hình DNS:"
+    echo "  1. Đợi 5-30 phút để DNS propagate"
+    echo "  2. Kiểm tra: dig littlebox.vn"
+    echo "  3. Chạy lại script này: bash scripts/setup-ssl.sh"
+    echo ""
     exit 1
 fi
 

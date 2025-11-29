@@ -16,7 +16,7 @@ upstream minio {
 
 server {
     listen 80;
-    server_name api.localhost;
+    server_name ${API_DOMAIN};
 
     location / {
         proxy_pass http://api;
@@ -44,7 +44,7 @@ server {
 
 server {
     listen 80;
-    server_name admin.localhost;
+    server_name ${ADMIN_DOMAIN};
 
     location / {
         proxy_pass http://admin;
@@ -67,7 +67,7 @@ server {
 
 server {
     listen 80;
-    server_name localhost;
+    server_name ${WEB_DOMAIN};
 
     location / {
         proxy_pass http://web;
@@ -90,7 +90,7 @@ server {
 
 server {
     listen 80;
-    server_name assets.localhost;
+    server_name ${ASSETS_DOMAIN};
 
     location / {
         proxy_pass http://minio;

@@ -4,7 +4,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy package files from root (context is root)
-COPY package*.json ./
+COPY package.json package-lock.json ./
 COPY turbo.json ./
 COPY packages ./packages
 
@@ -26,7 +26,7 @@ FROM node:20-alpine AS production
 WORKDIR /app
 
 # Copy package files from root (context is root)
-COPY package*.json ./
+COPY package.json package-lock.json ./
 COPY turbo.json ./
 COPY packages ./packages
 

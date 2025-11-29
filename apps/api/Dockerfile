@@ -36,7 +36,7 @@ RUN npm ci --only=production && npm cache clean --force
 
 # Copy built application from builder
 COPY --from=builder /app/apps/api/dist ./dist
-COPY --from=builder /app/apps/api/mikro-orm.config.js ./mikro-orm.config.js
+COPY --from=builder /app/apps/api/dist/mikro-orm.config.js ./mikro-orm.config.js
 
 # Create uploads directory
 RUN mkdir -p uploads

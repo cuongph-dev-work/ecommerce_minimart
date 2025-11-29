@@ -28,8 +28,8 @@ RUN apk add --no-cache wget
 # Copy built files from builder
 COPY --from=builder /app/apps/web/build /usr/share/nginx/html
 
-# Copy nginx config
-COPY apps/web/nginx-default.conf /etc/nginx/conf.d/default.conf
+# Copy nginx config to temp location
+COPY apps/web/nginx-default.conf /tmp/default.conf
 
 # Expose port
 EXPOSE 80
@@ -38,7 +38,7 @@ EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start script: ensure config exists and start nginx
+CMD sh -c "cp /tmp/default.conf /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
 
 

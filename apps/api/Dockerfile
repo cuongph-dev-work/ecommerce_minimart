@@ -3,17 +3,19 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files from root (context is root)
 COPY package*.json ./
-COPY ../../package*.json ../../
-COPY ../../turbo.json ../../
-COPY ../../packages ../../packages
+COPY turbo.json ./
+COPY packages ./packages
+
+# Copy API package files
+COPY apps/api/package*.json ./
 
 # Install dependencies
 RUN npm ci
 
 # Copy source code
-COPY . .
+COPY apps/api/ .
 
 # Build application
 RUN npm run build
@@ -23,8 +25,13 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files from root (context is root)
 COPY package*.json ./
+COPY turbo.json ./
+COPY packages ./packages
+
+# Copy API package files
+COPY apps/api/package*.json ./
 
 # Install only production dependencies
 RUN npm ci --only=production && npm cache clean --force

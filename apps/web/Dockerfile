@@ -3,17 +3,19 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files from root (context is root)
 COPY package*.json ./
-COPY ../../package*.json ../../
-COPY ../../turbo.json ../../
-COPY ../../packages ../../packages
+COPY turbo.json ./
+COPY packages ./packages
+
+# Copy Web package files
+COPY apps/web/package*.json ./
 
 # Install dependencies
 RUN npm ci
 
 # Copy source code
-COPY . .
+COPY apps/web/ .
 
 # Build application
 ENV NODE_ENV=production

@@ -31,10 +31,13 @@ WORKDIR /app
 COPY --from=builder /app/apps/web_ssr/.next/standalone ./
 COPY --from=builder /app/apps/web_ssr/.next/static ./apps/web_ssr/.next/static
 
-# Create public directory and copy if it has content
-# Using RUN to create directory first, then COPY with wildcard
+# Create public directory (required by Next.js)
+# Copy public directory if it exists using mount from builder
 RUN mkdir -p ./apps/web_ssr/public
-COPY --from=builder --chown=node:node /app/apps/web_ssr/public ./apps/web_ssr/public
+RUN --mount=from=builder,source=/app/apps/web_ssr/public,target=/tmp/public \
+    if [ -d "/tmp/public" ] && [ "$(ls -A /tmp/public 2>/dev/null)" ]; then \
+      cp -r /tmp/public/* ./apps/web_ssr/public/ 2>/dev/null || true; \
+    fi || true
 
 WORKDIR /app/apps/web_ssr
 

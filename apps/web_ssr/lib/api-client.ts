@@ -4,7 +4,6 @@ import type { AxiosInstance } from 'axios';
 // Support both Vite (import.meta.env) and Next.js (process.env)
 const API_URL = 
   (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) ||
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) ||
   'http://localhost:8000/api';
 
 // Create axios instance for web (public API)

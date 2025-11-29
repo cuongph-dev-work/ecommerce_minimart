@@ -9,15 +9,13 @@ COPY turbo.json ./
 COPY packages ./packages
 
 # Copy API package files
-COPY apps/api/package*.json ./
+COPY apps/api ./apps/api
 
 # Install dependencies
 RUN npm ci
 
-# Copy source code
-COPY apps/api/ .
-
-# Build application
+# Build application from workspace
+WORKDIR /app/apps/api
 RUN npm run build
 
 # Production stage
@@ -31,14 +29,14 @@ COPY turbo.json ./
 COPY packages ./packages
 
 # Copy API package files
-COPY apps/api/package*.json ./
+COPY apps/api/package*.json ./apps/api/
 
 # Install only production dependencies
 RUN npm ci --only=production && npm cache clean --force
 
 # Copy built application from builder
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/mikro-orm.config.js ./mikro-orm.config.js
+COPY --from=builder /app/apps/api/dist ./dist
+COPY --from=builder /app/apps/api/mikro-orm.config.js ./mikro-orm.config.js
 
 # Create uploads directory
 RUN mkdir -p uploads

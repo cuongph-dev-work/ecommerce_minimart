@@ -9,15 +9,13 @@ COPY turbo.json ./
 COPY packages ./packages
 
 # Copy Web package files
-COPY apps/web/package*.json ./
+COPY apps/web ./apps/web
 
 # Install dependencies
 RUN npm ci
 
-# Copy source code
-COPY apps/web/ .
-
-# Build application
+# Build application from workspace
+WORKDIR /app/apps/web
 ENV NODE_ENV=production
 RUN npm run build
 
@@ -25,7 +23,7 @@ RUN npm run build
 FROM nginx:alpine AS production
 
 # Copy built files from builder
-COPY --from=builder /app/build /usr/share/nginx/html
+COPY --from=builder /app/apps/web/build /usr/share/nginx/html
 
 # Configure Nginx for SPA serving
 RUN rm /etc/nginx/conf.d/default.conf && \

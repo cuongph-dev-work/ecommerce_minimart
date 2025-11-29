@@ -125,9 +125,12 @@ services:
       - API_DOMAIN=${API_DOMAIN:-api.localhost}
       - ASSETS_DOMAIN=${ASSETS_DOMAIN:-assets.localhost}
     depends_on:
-      - api
-      - web
-      - admin
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+      admin:
+        condition: service_healthy
     networks:
       - ecommerce-network
     healthcheck:

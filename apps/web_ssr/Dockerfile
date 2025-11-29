@@ -30,7 +30,11 @@ WORKDIR /app
 # Copy built app from builder
 COPY --from=builder /app/apps/web_ssr/.next/standalone ./
 COPY --from=builder /app/apps/web_ssr/.next/static ./apps/web_ssr/.next/static
-COPY --from=builder /app/apps/web_ssr/public ./apps/web_ssr/public
+
+# Create public directory and copy if it has content
+# Using RUN to create directory first, then COPY with wildcard
+RUN mkdir -p ./apps/web_ssr/public
+COPY --from=builder --chown=node:node /app/apps/web_ssr/public ./apps/web_ssr/public
 
 WORKDIR /app/apps/web_ssr
 

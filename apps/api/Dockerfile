@@ -28,15 +28,16 @@ COPY package.json package-lock.json ./
 COPY turbo.json ./
 COPY packages ./packages
 
-# Copy API package files
+# Copy API package files and source for migrations
 COPY apps/api/package*.json ./apps/api/
+COPY apps/api/mikro-orm.config.ts ./apps/api/
 
 # Install only production dependencies
 RUN npm ci --only=production && npm cache clean --force
 
 # Copy built application from builder
-COPY --from=builder /app/apps/api/dist ./dist
-COPY --from=builder /app/apps/api/dist/mikro-orm.config.js ./mikro-orm.config.js
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/dist/mikro-orm.config.js ./apps/api/dist/mikro-orm.config.js
 
 # Create uploads directory
 RUN mkdir -p uploads
@@ -47,6 +48,9 @@ EXPOSE 8000
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:8000/api', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+# Set working directory to API workspace for migrations
+WORKDIR /app/apps/api
 
 # Start application
 CMD ["node", "dist/src/main.js"]

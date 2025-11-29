@@ -87,11 +87,6 @@ export function LoginPage() {
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
-
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>Default credentials:</p>
-            <p className="font-mono text-xs mt-1">admin@store.vn / admin123</p>
-          </div>
         </div>
       </motion.div>
     </div>

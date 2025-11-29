@@ -25,6 +25,53 @@ echo "  - $DOMAIN_ADMIN"
 echo "  - $DOMAIN_API"
 echo "  - $DOMAIN_ASSETS"
 
+# Kiểm tra DNS trước
+echo ""
+echo "🔍 Kiểm tra DNS configuration..."
+SERVER_IP=$(curl -s ifconfig.me || curl -s ipinfo.io/ip || echo "unknown")
+
+check_dns() {
+    local domain=$1
+    local dns_ip=$(dig +short $domain | tail -1)
+    
+    if [ -z "$dns_ip" ]; then
+        echo "  ❌ $domain: Không tìm thấy DNS record"
+        return 1
+    elif [ "$dns_ip" != "$SERVER_IP" ]; then
+        echo "  ⚠️  $domain: DNS trỏ về $dns_ip (khác với server IP: $SERVER_IP)"
+        return 1
+    else
+        echo "  ✅ $domain: DNS đã trỏ đúng về $SERVER_IP"
+        return 0
+    fi
+}
+
+DNS_OK=true
+check_dns "$DOMAIN_WEB" || DNS_OK=false
+check_dns "www.$DOMAIN_WEB" || DNS_OK=false
+check_dns "$DOMAIN_ADMIN" || DNS_OK=false
+check_dns "$DOMAIN_API" || DNS_OK=false
+check_dns "$DOMAIN_ASSETS" || DNS_OK=false
+
+if [ "$DNS_OK" = false ]; then
+    echo ""
+    echo "❌ DNS chưa được cấu hình đúng!"
+    echo "📝 Cần cấu hình DNS records trỏ về server IP: $SERVER_IP"
+    echo ""
+    echo "DNS records cần thiết:"
+    echo "  A     @              → $SERVER_IP"
+    echo "  A     www            → $SERVER_IP"
+    echo "  A     admin          → $SERVER_IP"
+    echo "  A     api            → $SERVER_IP"
+    echo "  A     assets         → $SERVER_IP"
+    echo ""
+    echo "Sau khi cấu hình DNS, đợi vài phút để DNS propagate, rồi chạy lại script này."
+    exit 1
+fi
+
+echo ""
+echo "✅ DNS đã được cấu hình đúng. Tiếp tục..."
+
 # Tạm thời stop nginx container để certbot có thể dùng port 80
 echo "⏸️  Tạm thời stop nginx container..."
 docker stop ecommerce-nginx 2>/dev/null || true

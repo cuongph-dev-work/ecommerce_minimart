@@ -1,16 +1,55 @@
 
-  import { defineConfig } from 'vite';
-  import react from '@vitejs/plugin-react-swc';
-  import path from 'path';
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react-swc';
+import path from 'path';
 
-  export default defineConfig({
+  export default defineConfig(({ mode }) => {
+    // Load env file from same directory as vite.config.ts (apps/web)
+    const env = loadEnv(mode, __dirname, '');
+    
+    return {
     plugins: [
       react(),
-      // Plugin to inject env variables into HTML (works in both dev and build)
+      // Plugin to fetch settings from API and inject into HTML during build
       {
-        name: 'html-env-inject',
-        transformIndexHtml(html: string) {
-          const apiUrl = process.env.VITE_API_URL || 'http://localhost:8000/api';
+        name: 'html-settings-inject',
+        async transformIndexHtml(html: string, context) {
+          const apiUrl = env.VITE_API_URL;
+          let settings: Record<string, string> = {};
+          
+          // Only fetch settings during build (not in dev mode)
+          // context.server is undefined during build
+          const isBuild = !context.server;
+          
+          if (isBuild && typeof fetch !== 'undefined' && apiUrl) {
+            try {
+              const response = await fetch(`${apiUrl}/settings`);
+              const data = await response.json() as { success: boolean; data?: Record<string, string> };
+              if (data.success && data.data) {
+                settings = data.data;
+                console.log('✓ Fetched settings from API during build');
+              }
+            } catch (error) {
+              console.warn('⚠ Could not fetch settings during build, using defaults:', error instanceof Error ? error.message : error);
+            }
+          }
+          
+          // Update title
+          const storeName = settings.store_name || 'Little Box';
+          html = html.replace(
+            /<title>.*?<\/title>/,
+            `<title>${storeName}</title>`
+          );
+          
+          // Update meta description
+          const description = settings.store_description || '';
+          if (description) {
+            html = html.replace(
+              /<meta name="description" content=".*?" \/>/,
+              `<meta name="description" content="${description.replace(/"/g, '&quot;')}" />`
+            );
+          }
+          
           // Inject env config as a script tag before the settings preload script
           const envScript = `<script>
             window.__ENV_CONFIG__ = {
@@ -27,9 +66,10 @@
           server.middlewares.use((req, res, next) => {
             if (req.url === '/' || req.url === '/index.html') {
               const originalEnd = res.end.bind(res);
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               res.end = function(chunk?: any, encoding?: BufferEncoding | (() => void), cb?: () => void) {
                 if (chunk && typeof chunk === 'string') {
-                  const apiUrl = process.env.VITE_API_URL || 'http://localhost:8000/api';
+                  const apiUrl = env.VITE_API_URL;
                   const envScript = `<script>
             window.__ENV_CONFIG__ = {
               VITE_API_URL: '${apiUrl}'
@@ -102,4 +142,5 @@
       port: 3000,
       open: true,
     },
-  });
+  };
+});

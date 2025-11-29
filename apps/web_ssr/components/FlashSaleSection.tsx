@@ -6,8 +6,9 @@ import { Zap, Clock } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
-import { flashSales } from '../data/flashSales';
-import { products } from '../data/products';
+// Flash sale data should come from API, not mock data
+// import { flashSales } from '../data/flashSales';
+// import { products } from '../data/products';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { toast } from 'sonner';
@@ -19,19 +20,10 @@ export function FlashSaleSection() {
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
+    // TODO: Get endTime from API flash sales data
+    // For now, disable countdown
     const timer = setInterval(() => {
-      if (flashSales.length > 0) {
-        const now = new Date().getTime();
-        const end = new Date(flashSales[0].endTime).getTime();
-        const distance = end - now;
-
-        if (distance > 0) {
-          const hours = Math.floor(distance / (1000 * 60 * 60));
-          const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-          setTimeLeft({ hours, minutes, seconds });
-        }
-      }
+      // Countdown logic will be implemented when API is ready
     }, 1000);
 
     return () => clearInterval(timer);
@@ -50,10 +42,9 @@ export function FlashSaleSection() {
     toast.success(`Đã thêm ${product.name} vào giỏ hàng`);
   };
 
-  const flashSaleProducts = flashSales.map((sale) => {
-    const product = products.find((p) => p.id === sale.productId);
-    return { ...sale, product };
-  }).filter((item) => item.product);
+  // TODO: Fetch flash sales from API
+  // For now, return null as we don't have mock data
+  const flashSaleProducts: any[] = [];
 
   if (flashSaleProducts.length === 0) return null;
 

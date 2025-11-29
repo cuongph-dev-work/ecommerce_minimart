@@ -3,7 +3,8 @@
 import React from 'react';
 import { Ticket, Copy, Check } from 'lucide-react';
 import { motion } from 'motion/react';
-import { vouchers } from '../data/vouchers';
+// Voucher data should come from API, not mock data
+// import { vouchers } from '../data/vouchers';
 import { toast } from 'sonner';
 
 export function VoucherSection() {
@@ -23,12 +24,18 @@ export function VoucherSection() {
     }).format(price);
   };
 
-  const formatDiscount = (voucher: typeof vouchers[0]) => {
+  // TODO: Fetch vouchers from API
+  // For now, return null as we don't have mock data
+  const vouchers: any[] = [];
+
+  const formatDiscount = (voucher: any) => {
     if (voucher.type === 'percentage') {
       return `-${voucher.discount}%`;
     }
     return `-${formatPrice(voucher.discount)}`;
   };
+
+  if (vouchers.length === 0) return null;
 
   return (
     <div className="bg-white rounded-2xl shadow-md p-6">

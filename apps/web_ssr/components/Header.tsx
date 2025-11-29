@@ -15,11 +15,17 @@ import { useSettings } from '../context/SettingsContext';
 export function Header() {
   const { t } = useTranslation();
   const { getTotalItems } = useCart();
-  const { settings } = useSettings();
+  const { settings, isLoading } = useSettings();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+
+  // Ensure client-side only rendering for logo to avoid hydration mismatch
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -53,9 +59,20 @@ export function Header() {
     >
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16 sm:h-20">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            {settings.store_logo ? (
+          {/* Logo - Use suppressHydrationWarning to avoid mismatch between server (fallback) and client (with settings) */}
+          <Link href="/" className="flex items-center gap-2 group" suppressHydrationWarning>
+            {(!isMounted || !settings.store_logo) ? (
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center"
+                suppressHydrationWarning
+              >
+                <span className="text-white">
+                  {isMounted && settings.store_name ? settings.store_name.charAt(0) : 'M'}
+                </span>
+              </motion.div>
+            ) : (
               <motion.img
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -63,17 +80,9 @@ export function Header() {
                 alt={settings.store_name || 'Logo'}
                 className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded-lg"
               />
-            ) : (
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center"
-              >
-                <span className="text-white">{settings.store_name?.charAt(0) || 'M'}</span>
-              </motion.div>
             )}
-            <span className="hidden sm:block transition-colors">
-              {settings.store_name || 'Mini Mart'}
+            <span className="hidden sm:block transition-colors" suppressHydrationWarning>
+              {isMounted && settings.store_name ? settings.store_name : 'Mini Mart'}
             </span>
           </Link>
 
@@ -103,7 +112,7 @@ export function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
-            <LanguageSwitcher />
+            {/* <LanguageSwitcher /> */}
             
             <Button
               variant="ghost"
@@ -129,9 +138,10 @@ export function Header() {
               size="icon"
               className="rounded-full relative"
               onClick={() => router.push('/cart')}
+              suppressHydrationWarning
             >
               <ShoppingCart className="h-5 w-5" />
-              {getTotalItems() > 0 && (
+              {isMounted && getTotalItems() > 0 && (
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}

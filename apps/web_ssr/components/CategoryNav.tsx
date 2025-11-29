@@ -8,7 +8,7 @@ import type { Category } from '../types';
 import { useTranslation } from 'react-i18next';
 
 interface CategoryNavProps {
-  onCategoryClick?: (categoryId: string, categoryName: string) => void;
+  onCategoryClick?: (categoryId: string, categoryName: string, categorySlug?: string) => void;
 }
 
 const iconMap: Record<string, any> = {
@@ -69,7 +69,11 @@ export function CategoryNav({ onCategoryClick }: CategoryNavProps) {
           <div className="col-span-6 text-center py-8 text-gray-500">{t('home.no_categories')}</div>
         ) : (
           displayCategories.map((category, index) => {
-            const Icon = category.icon ? iconMap[category.icon] : Package;
+            // Normalize icon name: capitalize first letter to match iconMap keys
+            const iconName = category.icon 
+              ? category.icon.charAt(0).toUpperCase() + category.icon.slice(1).toLowerCase()
+              : null;
+            const Icon = iconName && iconMap[iconName] ? iconMap[iconName] : Package;
             const subcategories = category.children || [];
             return (
               <motion.button
@@ -79,7 +83,7 @@ export function CategoryNav({ onCategoryClick }: CategoryNavProps) {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.05 }}
                 whileHover={{ y: -4 }}
-                onClick={() => onCategoryClick?.(category.id, category.name)}
+                onClick={() => onCategoryClick?.(category.id, category.name, category.slug)}
                 className="group bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-xl p-4 hover:border-orange-300 hover:shadow-lg transition-all text-center"
               >
                 <div className="w-12 h-12 mx-auto mb-3 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">

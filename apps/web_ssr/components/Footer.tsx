@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Mail, Phone, MapPin, Facebook, Instagram, Send } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
@@ -6,6 +9,11 @@ import { useTranslation } from 'react-i18next';
 export function Footer() {
   const { t } = useTranslation();
   const { settings } = useSettings();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
     <footer className="bg-gradient-to-br from-gray-50 to-gray-100 border-t mt-20">
@@ -13,8 +21,8 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              {settings.store_logo ? (
+            <div className="flex items-center gap-2 mb-4" suppressHydrationWarning>
+              {isMounted && settings.store_logo ? (
                 <img
                   src={settings.store_logo}
                   alt={settings.store_name || 'Logo'}
@@ -22,16 +30,20 @@ export function Footer() {
                 />
               ) : (
                 <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white">{settings.store_name?.charAt(0)}</span>
+                  <span className="text-white">
+                    {isMounted && settings.store_name ? settings.store_name.charAt(0) : 'M'}
+                  </span>
                 </div>
               )}
-              <span>{settings.store_name}</span>
+              <span suppressHydrationWarning>
+                {isMounted && settings.store_name ? settings.store_name : 'Mini Mart'}
+              </span>
             </div>
-            <p className="text-gray-600 mb-4">
-              {settings.store_description }
+            <p className="text-gray-600 mb-4" suppressHydrationWarning>
+              {isMounted && settings.store_description ? settings.store_description : ''}
             </p>
-            <div className="flex gap-3">
-              {settings.facebook_link && (
+            <div className="flex gap-3" suppressHydrationWarning>
+              {isMounted && settings.facebook_link && (
                 <a
                   href={settings.facebook_link}
                   target="_blank"
@@ -41,7 +53,7 @@ export function Footer() {
                   <Facebook className="h-4 w-4 text-blue-600" />
                 </a>
               )}
-              {settings.instagram_link && (
+              {isMounted && settings.instagram_link && (
                 <a
                   href={settings.instagram_link}
                   target="_blank"
@@ -51,7 +63,7 @@ export function Footer() {
                   <Instagram className="h-4 w-4 text-pink-600" />
                 </a>
               )}
-              {settings.telegram_link && (
+              {isMounted && settings.telegram_link && (
                 <a
                   href={settings.telegram_link}
                   target="_blank"
@@ -89,17 +101,19 @@ export function Footer() {
           {/* Contact */}
           <div>
             <h3 className="mb-4">{t('footer.contact')}</h3>
-            <ul className="space-y-3">
-              {settings.store_phone && (
+            <ul className="space-y-3" suppressHydrationWarning>
+              {isMounted && settings.store_phone && (
                 <li className="flex items-start gap-3 text-gray-600">
                   <Phone className="h-5 w-5 mt-0.5 shrink-0 text-blue-600" />
                   <div>
                     <div>{settings.store_phone}</div>
-                    <div className="text-sm">{settings.working_hours}</div>
+                    {settings.working_hours && (
+                      <div className="text-sm">{settings.working_hours}</div>
+                    )}
                   </div>
                 </li>
               )}
-              {settings.store_email && (
+              {isMounted && settings.store_email && (
                 <li className="flex items-start gap-3 text-gray-600">
                   <Mail className="h-5 w-5 mt-0.5 shrink-0 text-blue-600" />
                   <a href={`mailto:${settings.store_email}`} className="hover:text-blue-600 transition-colors">
@@ -107,7 +121,7 @@ export function Footer() {
                   </a>
                 </li>
               )}
-              {settings.store_address && (
+              {isMounted && settings.store_address && (
                 <li className="flex items-start gap-3 text-gray-600">
                   <MapPin className="h-5 w-5 mt-0.5 shrink-0 text-blue-600" />
                   <div>{settings.store_address}</div>
@@ -145,7 +159,9 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t text-center text-gray-600">
-          <p>&copy; 2025 {settings.store_name}. {t('footer.all_rights_reserved')}</p>
+          <p suppressHydrationWarning>
+            &copy; 2025 {isMounted && settings.store_name ? settings.store_name : 'Mini Mart'}. {t('footer.all_rights_reserved')}
+          </p>
         </div>
       </div>
     </footer>

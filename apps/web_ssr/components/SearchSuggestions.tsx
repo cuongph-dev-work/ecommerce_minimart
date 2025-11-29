@@ -142,7 +142,7 @@ export function SearchSuggestions({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, selectedIndex, suggestions, searchHistory, query, navigate, onSelect, onClose]);
+  }, [isOpen, selectedIndex, suggestions, searchHistory, query, router, onSelect, onClose]);
 
   // Click outside to close
   useEffect(() => {

@@ -27,7 +27,10 @@ class ReviewsService {
     const response = await apiClient.get<{ success: boolean; data: PaginatedReviewsResponse }>(
       `/reviews/product/${productId}`,
       { 
-        params: { page, limit },
+        params: { 
+          page, 
+          limit,
+        },
         signal 
       }
     );

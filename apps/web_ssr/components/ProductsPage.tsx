@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, SlidersHorizontal, X, ChevronDown, Star } from 'lucide-react';
 import { Button } from './ui/button';
@@ -53,17 +53,18 @@ export function ProductsPage() {
   const { t } = useTranslation();
   const { addToCart } = useCart();
   const router = useRouter();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParams = useSearchParams();
   
   // State
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [allCategories, setAllCategories] = useState<Category[]>([]); // All categories including subcategories
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  const categoryParam = searchParams.get('category') || '';
+  const [searchQuery, setSearchQuery] = useState(searchParams?.get('search') || '');
+  const categoryParam = searchParams?.get('category') || '';
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isInitialLoad, setIsInitialLoad] = useState(true); // Track initial load to prevent URL update loop
+  const isUpdatingFromUrlRef = useRef(false); // Track if category is being updated from URL (use ref to avoid re-renders)
   const [selectedBrand, setSelectedBrand] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('default');
   const [showFilterSheet, setShowFilterSheet] = useState(false);
@@ -130,7 +131,11 @@ export function ProductsPage() {
   useEffect(() => {
     if (!categoryParam) {
       if (selectedCategory !== 'all') {
+        isUpdatingFromUrlRef.current = true;
         setSelectedCategory('all');
+        setTimeout(() => {
+          isUpdatingFromUrlRef.current = false;
+        }, 0);
       }
       setIsInitialLoad(false);
       return;
@@ -138,6 +143,7 @@ export function ProductsPage() {
 
     const resolveCategory = async () => {
       try {
+        isUpdatingFromUrlRef.current = true;
         // Try to find by slug first
         let category: Category | null = null;
         try {
@@ -150,6 +156,7 @@ export function ProductsPage() {
             // Category not found
             setSelectedCategory('all');
             setIsInitialLoad(false);
+            isUpdatingFromUrlRef.current = false;
             return;
           }
         }
@@ -162,6 +169,11 @@ export function ProductsPage() {
         console.error('Failed to resolve category:', error);
         setSelectedCategory('all');
         setIsInitialLoad(false);
+      } finally {
+        // Delay reset to ensure URL update effect has checked the flag
+        setTimeout(() => {
+          isUpdatingFromUrlRef.current = false;
+        }, 100);
       }
     };
 
@@ -233,9 +245,28 @@ export function ProductsPage() {
   }, [debouncedSearch, selectedCategory, selectedBrand, sortBy, page]);
 
   // Update URL params when selectedCategory changes (from user click)
+  // Only update URL when user explicitly clicks, not when category is resolved from URL
   useEffect(() => {
-    // Skip during initial load or if categories not loaded yet
-    if (isInitialLoad || allCategories.length === 0) {
+    // Skip during initial load, if categories not loaded yet, or if updating from URL
+    if (isInitialLoad || allCategories.length === 0 || isUpdatingFromUrlRef.current) {
+      return;
+    }
+
+    // Check if current URL already matches the selected category
+    const currentCategoryParam = searchParams?.get('category') || '';
+    if (selectedCategory !== 'all') {
+      const category = allCategories.find(c => c.id === selectedCategory);
+      if (category && category.slug) {
+        // If URL already has the correct slug, don't update
+        if (currentCategoryParam === category.slug) {
+          return;
+        }
+      } else if (selectedCategory === currentCategoryParam) {
+        // If URL already has the category ID, don't update
+        return;
+      }
+    } else if (!currentCategoryParam) {
+      // If selectedCategory is 'all' and URL has no category, don't update
       return;
     }
 
@@ -251,16 +282,16 @@ export function ProductsPage() {
     }
     
     // Check if URL needs to be updated
-    const currentCategory = searchParams.get('category') || '';
-    const currentSearch = searchParams.get('search') || '';
+    const currentSearch = searchParams?.get('search') || '';
     const newCategory = params.get('category') || '';
     const newSearch = params.get('search') || '';
     
     // Only update if different to avoid unnecessary updates
-    if (currentCategory !== newCategory || currentSearch !== newSearch) {
-      setSearchParams(params, { replace: true });
+    if (currentCategoryParam !== newCategory || currentSearch !== newSearch) {
+      const queryString = params.toString();
+      router.push(queryString ? `?${queryString}` : window.location.pathname, { scroll: false });
     }
-  }, [searchQuery, selectedCategory, allCategories, setSearchParams, searchParams, isInitialLoad]);
+  }, [searchQuery, selectedCategory, allCategories, router, searchParams, isInitialLoad]);
 
   const handleAddToCart = (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();

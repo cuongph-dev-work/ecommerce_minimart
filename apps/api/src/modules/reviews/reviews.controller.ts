@@ -76,16 +76,20 @@ export class PublicReviewsController {
   @Public()
   @Get()
   async findAll(@Query() query: QueryReviewDto) {
-    // Only return approved reviews for public
+    // Show all reviews except HIDDEN ones - admin can delete/hide if needed
+    // Reviews are now auto-visible, no need for approval
     const publicQuery = {
       ...query,
-      status: ReviewStatus.APPROVED,
+      // Don't filter by status - show PENDING and APPROVED
+      status: undefined,
     };
     const result = await this.reviewsService.findAll(publicQuery);
+    // Filter out HIDDEN reviews (deleted by admin)
+    const visibleReviews = result.data.filter(review => review.status !== ReviewStatus.HIDDEN);
     return {
       success: true,
       data: {
-        reviews: result.data,
+        reviews: visibleReviews,
         pagination: result.pagination,
       },
     };
@@ -94,17 +98,22 @@ export class PublicReviewsController {
   @Public()
   @Get('product/:productId')
   async findByProduct(@Param('productId') productId: string, @Query('page') page?: number, @Query('limit') limit?: number) {
+    // Show all reviews except HIDDEN ones - admin can delete/hide if needed
+    // Reviews are now auto-visible, no need for approval
     const result = await this.reviewsService.findAll({
       productId,
-      status: ReviewStatus.APPROVED,
+      // Don't filter by status - show PENDING and APPROVED
+      // HIDDEN reviews are excluded in the service
       page: page || 1,
       limit: limit || 20,
     });
+    // Filter out HIDDEN reviews (deleted by admin)
+    const visibleReviews = result.data.filter(review => review.status !== ReviewStatus.HIDDEN);
     return {
       success: true,
       data: {
-        reviews: result.data,
-        pagination: result.pagination,
+        reviews: visibleReviews,
+        pagination: result.pagination, // Keep original pagination
       },
     };
   }

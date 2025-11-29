@@ -87,24 +87,35 @@ export function HomePage() {
     }).format(price);
   };
 
-  const handleCategoryClick = (_category: string) => {
-    router.push('/products');
+  const handleCategoryClick = (_categoryId: string, _categoryName: string, categorySlug?: string) => {
+    // Navigate to products page with category, similar to MegaMenu
+    const slug = categorySlug || _categoryId;
+    router.push(`/products?category=${encodeURIComponent(slug)}`);
   };
 
-  // Icon mapping for categories
-  const iconMap: Record<string, React.ReactNode> = {
-    'Âm thanh': <Headphones className="h-6 w-6" />,
-    'Đồng hồ': <Watch className="h-6 w-6" />,
-    'Phụ kiện': <Package className="h-6 w-6" />,
-    'Camera': <Camera className="h-6 w-6" />,
-    'Gaming': <Gamepad2 className="h-6 w-6" />,
-    'Smarthome': <Home className="h-6 w-6" />,
-    'Laptop & PC': <Monitor className="h-6 w-6" />,
-    'Điện thoại': <Smartphone className="h-6 w-6" />,
-    'Tablet': <Tablet className="h-6 w-6" />,
-    'Tivi': <Tv className="h-6 w-6" />,
-    'Gia dụng': <Refrigerator className="h-6 w-6" />,
-    'Sức khỏe': <Activity className="h-6 w-6" />,
+  // Icon mapping for categories - using icon name from API
+  const iconMap: Record<string, any> = {
+    Headphones,
+    Watch,
+    Package,
+    Camera,
+    Gamepad2,
+    Home,
+    Monitor,
+    Smartphone,
+    Tablet,
+    Tv,
+    Refrigerator,
+    Activity,
+  };
+
+  // Helper function to get icon component from category
+  const getCategoryIcon = (category: CategoryWithSales) => {
+    if (!category.icon) return null;
+    // Normalize icon name: capitalize first letter to match iconMap keys
+    const iconName = category.icon.charAt(0).toUpperCase() + category.icon.slice(1).toLowerCase();
+    const IconComponent = iconMap[iconName];
+    return IconComponent ? <IconComponent className="h-6 w-6" /> : null;
   };
 
   return (
@@ -276,7 +287,7 @@ export function HomePage() {
           categoryName={category.name}
           categorySlug={category.slug}
           products={categoryProducts[category.id] || []}
-          icon={iconMap[category.name]}
+          icon={getCategoryIcon(category)}
         />
       ))}
 

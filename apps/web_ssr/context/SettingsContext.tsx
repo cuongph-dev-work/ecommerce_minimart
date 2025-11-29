@@ -22,28 +22,43 @@ const getPreloadedSettings = (): Record<string, string> => {
 };
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<Record<string, string>>(getPreloadedSettings());
-  const [isLoading, setIsLoading] = useState(true);
+  // Get preloaded settings immediately (works on both server and client)
+  const preloadedSettings = getPreloadedSettings();
+  const [settings, setSettings] = useState<Record<string, string>>(preloadedSettings);
+  const [isLoading, setIsLoading] = useState(Object.keys(preloadedSettings).length === 0);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const data = await settingsService.getAll();
-        setSettings(data);
-        // Update window object for other scripts
-        if (typeof window !== 'undefined') {
-          (window as any).__PRELOADED_SETTINGS__ = data;
-        }
-      } catch (error) {
-        console.error('Failed to load settings:', error);
-        // Keep preloaded settings if API fails
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    setIsMounted(true);
     
-    // Only fetch if we don't have preloaded settings
+    // On client, always use preloaded settings from server (injected in layout.tsx)
+    // This ensures we don't make unnecessary API calls since settings are already fetched on server
+    if (typeof window !== 'undefined' && (window as any).__PRELOADED_SETTINGS__) {
+      const preloaded = (window as any).__PRELOADED_SETTINGS__;
+      if (Object.keys(preloaded).length > 0) {
+        setSettings(preloaded);
+        setIsLoading(false);
+        return;
+      }
+    }
+
+    // Fallback: Only fetch if preloaded settings are missing (shouldn't happen in normal flow)
+    // This is a safety net in case server-side preload failed
     if (Object.keys(settings).length === 0) {
+      const loadSettings = async () => {
+        try {
+          const data = await settingsService.getAll();
+          setSettings(data);
+          // Update window object for other scripts
+          if (typeof window !== 'undefined') {
+            (window as any).__PRELOADED_SETTINGS__ = data;
+          }
+        } catch (error) {
+          console.error('Failed to load settings:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
       loadSettings();
     } else {
       setIsLoading(false);

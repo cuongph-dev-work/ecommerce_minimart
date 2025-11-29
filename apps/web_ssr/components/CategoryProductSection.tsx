@@ -50,7 +50,11 @@ export function CategoryProductSection({ categoryName, categorySlug, products, i
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            {icon && <div className="text-blue-600">{icon}</div>}
+            {icon && (
+              <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center">
+                <div className="text-white">{icon}</div>
+              </div>
+            )}
             <div>
               <h2 className="mb-1">{categoryName}</h2>
               <p className="text-sm text-gray-600">

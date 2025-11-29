@@ -422,11 +422,6 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                     <p className="text-gray-700 mb-3 leading-relaxed">{review.comment}</p>
                   )}
 
-                  <button className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors">
-                    <ThumbsUp className="h-4 w-4" />
-                    {t('reviews.helpful')}
-                  </button>
-
                   {review.adminResponse && (
                     <div className="mt-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
                       <p className="text-sm font-semibold text-gray-900 mb-1">{t('reviews.admin_response')}</p>

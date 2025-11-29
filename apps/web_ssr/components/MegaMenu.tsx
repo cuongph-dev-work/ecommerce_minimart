@@ -80,7 +80,11 @@ export function MegaMenu() {
                 <div className="col-span-3 text-center py-8 text-gray-500">{t('home.no_categories')}</div>
               ) : (
                 categories.map((category) => {
-                  const Icon = category.icon ? iconMap[category.icon] : Package;
+                  // Normalize icon name: capitalize first letter to match iconMap keys
+                  const iconName = category.icon 
+                    ? category.icon.charAt(0).toUpperCase() + category.icon.slice(1).toLowerCase()
+                    : null;
+                  const Icon = iconName && iconMap[iconName] ? iconMap[iconName] : Package;
                   const subcategories = category.children || [];
                   return (
                     <div key={category.id} className="group">

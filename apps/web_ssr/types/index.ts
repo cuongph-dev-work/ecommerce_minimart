@@ -116,6 +116,7 @@ export interface Banner {
   description?: string;
   image: string;
   link?: string;
+  color?: string; // Gradient color classes for banner background
   status?: string;
   sortOrder?: number;
   createdAt?: string;

@@ -24,7 +24,9 @@
   ],
   "overrides": {
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "rimraf": "^5.0.0",
+    "multer": "^2.0.2"
   },
   "dependencies": {
     "i18next": "^25.6.3",

@@ -68,7 +68,6 @@
         "all_categories": "All",
         "subcategories": "Subcategories",
         "selected_category": "Selected",
-        "subcategories": "Subcategories",
         "price": "Price",
         "add_to_cart": "Add to Cart",
         "out_of_stock": "Out of Stock",
@@ -385,10 +384,8 @@
         }
     },
     "meta": {
-        "site_name": "Minimart",
-        "site_description": "Minimart - Leading technology store. 100% genuine products, reputable warranty, fast delivery. Daily flash sales with the best prices on the market.",
         "home": {
-            "title": "Home - Minimart | Technology for Life",
+            "title": "Home",
             "description": "Discover premium technology products at Minimart. Daily flash sales, free shipping, reputable warranty. Trusted by over 50,000 customers.",
             "keywords": "minimart, technology, electronics, flash sale, online shopping, genuine products"
         },

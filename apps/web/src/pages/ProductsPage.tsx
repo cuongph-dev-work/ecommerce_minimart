@@ -2,15 +2,17 @@ import { Helmet } from 'react-helmet-async';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ProductsPage as ProductsPageComponent } from '../components/ProductsPage';
+import { useSettings } from '../context/SettingsContext';
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://yourdomain.com';
 
 export default function ProductsPage() {
   const { t } = useTranslation();
+  const { settings } = useSettings();
   const [searchParams] = useSearchParams();
   const category = searchParams.get('category');
   const search = searchParams.get('search');
-  const siteName = t('meta.site_name');
+  const siteName = settings.store_name;
   
   const getTitle = () => {
     if (search) return t('meta.products.title_search', { query: search });

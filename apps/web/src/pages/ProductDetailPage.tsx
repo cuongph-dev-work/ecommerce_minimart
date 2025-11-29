@@ -4,15 +4,17 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ProductDetailPage as ProductDetailComponent } from '../components/ProductDetailPage';
 import { productsService } from '../services/products.service';
+import { useSettings } from '../context/SettingsContext';
 import type { Product } from '../types';
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://yourdomain.com';
 
 export default function ProductDetailPage() {
   const { t, i18n } = useTranslation();
+  const { settings } = useSettings();
   const { slug } = useParams<{ slug: string }>();
   const [product, setProduct] = useState<Product | null>(null);
-  const siteName = t('meta.site_name');
+  const siteName = settings.store_name;
 
   useEffect(() => {
     if (!slug) return;

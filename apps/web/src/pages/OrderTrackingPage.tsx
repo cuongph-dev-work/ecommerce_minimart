@@ -1,12 +1,14 @@
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { OrderTrackingPage as OrderTrackingPageComponent } from '../components/OrderTrackingPage';
+import { useSettings } from '../context/SettingsContext';
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://yourdomain.com';
 
 export default function OrderTrackingPage() {
   const { t } = useTranslation();
-  const siteName = t('meta.site_name');
+  const { settings } = useSettings();
+  const siteName = settings.store_name;
   const title = t('meta.order_tracking.title');
   const description = t('meta.order_tracking.description');
 

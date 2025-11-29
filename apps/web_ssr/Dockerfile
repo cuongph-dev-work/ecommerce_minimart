@@ -22,22 +22,20 @@ WORKDIR /app/apps/web_ssr
 ENV NODE_ENV=production
 RUN npm run build
 
+# Copy public and static folders to standalone output as per Next.js docs
+# https://nextjs.org/docs/pages/api-reference/config/next-config-js/output
+# Standalone structure: .next/standalone/apps/web_ssr/
+RUN cp -r public .next/standalone/apps/web_ssr/ 2>/dev/null || mkdir -p .next/standalone/apps/web_ssr/public
+RUN cp -r .next/static .next/standalone/apps/web_ssr/.next/ 2>/dev/null || true
+
 # Production stage
 FROM node:22-alpine AS production
 
 WORKDIR /app
 
-# Copy built app from builder
+# Copy built app from builder (standalone includes public and static already)
+# According to Next.js docs, standalone output should have public and .next/static copied
 COPY --from=builder /app/apps/web_ssr/.next/standalone ./
-COPY --from=builder /app/apps/web_ssr/.next/static ./apps/web_ssr/.next/static
-
-# Create public directory (required by Next.js)
-# Copy public directory if it exists using mount from builder
-RUN mkdir -p ./apps/web_ssr/public
-RUN --mount=from=builder,source=/app/apps/web_ssr/public,target=/tmp/public \
-    if [ -d "/tmp/public" ] && [ "$(ls -A /tmp/public 2>/dev/null)" ]; then \
-      cp -r /tmp/public/* ./apps/web_ssr/public/ 2>/dev/null || true; \
-    fi || true
 
 WORKDIR /app/apps/web_ssr
 

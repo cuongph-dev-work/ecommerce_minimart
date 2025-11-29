@@ -12,7 +12,6 @@
         "order_tracking": "Tra cứu đơn hàng"
     },
     "home": {
-        "hero_title": "Công nghệ cho cuộc sống",
         "hero_subtitle": "Khám phá các sản phẩm công nghệ cao cấp tại Minimart",
         "shop_now": "Mua ngay",
         "view_more": "Xem thêm",
@@ -385,40 +384,40 @@
     },
     "meta": {
         "home": {
-            "title": "Trang chủ - Minimart | Công nghệ cho cuộc sống",
+            "title": "Trang chủ | Công nghệ cho cuộc sống",
             "description": "Khám phá các sản phẩm công nghệ cao cấp tại Minimart. Flash sale hàng ngày, miễn phí vận chuyển, bảo hành uy tín. Hơn 50.000 khách hàng tin tưởng.",
             "keywords": "minimart, công nghệ, điện tử, flash sale, mua sắm online, hàng chính hãng"
         },
         "products": {
-            "title_default": "Sản phẩm - Minimart | Danh mục đầy đủ",
-            "title_search": "Tìm kiếm \"{{query}}\" - Minimart",
-            "title_category": "Sản phẩm {{category}} - Minimart",
+            "title_default": "Sản phẩm | Danh mục đầy đủ",
+            "title_search": "Tìm kiếm \"{{query}}\" ",
+            "title_category": "Sản phẩm {{category}} ",
             "description_default": "Khám phá toàn bộ sản phẩm công nghệ tại Minimart. Bộ lọc thông minh theo danh mục, thương hiệu, giá cả. Hàng chính hãng 100%, bảo hành uy tín.",
             "description_search": "Kết quả tìm kiếm cho \"{{query}}\" tại Minimart. Hàng chính hãng, giá tốt nhất thị trường.",
             "description_category": "Danh sách sản phẩm {{category}} tại Minimart. Hàng chính hãng, bảo hành uy tín, giao hàng nhanh.",
             "keywords": "minimart, sản phẩm, mua sắm online, hàng chính hãng"
         },
         "product_detail": {
-            "title": "{{name}} - Minimart | Giá {{price}}",
+            "title": "{{name}} | Giá {{price}}",
             "description_default": "{{name}} - Hàng chính hãng tại Minimart. Giá tốt nhất, bảo hành uy tín, giao hàng nhanh.",
             "keywords": "{{name}}, {{category}}, {{brand}}, minimart, hàng chính hãng"
         },
         "cart": {
-            "title": "Giỏ hàng - Minimart",
+            "title": "Giỏ hàng ",
             "description": "Xem giỏ hàng và thanh toán đơn hàng của bạn tại Minimart"
         },
         "contact": {
-            "title": "Liên hệ - Minimart | Hỗ trợ khách hàng 24/7",
+            "title": "Liên hệ | Hỗ trợ khách hàng 24/7",
             "description": "Liên hệ với Minimart qua email, điện thoại hoặc đến trực tiếp cửa hàng. Hỗ trợ khách hàng 24/7, tư vấn miễn phí, giải đáp mọi thắc mắc về sản phẩm và dịch vụ.",
             "keywords": "liên hệ minimart, hỗ trợ khách hàng, tư vấn sản phẩm, địa chỉ cửa hàng"
         },
         "stores": {
-            "title": "Cửa hàng - Minimart | Hệ thống cửa hàng trên toàn quốc",
+            "title": "Cửa hàng | Hệ thống cửa hàng trên toàn quốc",
             "description": "Tìm cửa hàng Minimart gần bạn. Hệ thống cửa hàng trên toàn quốc với địa chỉ, số điện thoại, giờ mở cửa và bản đồ chỉ đường chi tiết.",
             "keywords": "cửa hàng minimart, địa chỉ cửa hàng, hệ thống cửa hàng, mua hàng trực tiếp"
         },
         "order_tracking": {
-            "title": "Tra cứu đơn hàng - Minimart",
+            "title": "Tra cứu đơn hàng ",
             "description": "Tra cứu và theo dõi trạng thái đơn hàng của bạn tại Minimart. Nhập mã đơn hàng để xem chi tiết vận chuyển."
         },
         "not_found": {

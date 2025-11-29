@@ -12,8 +12,6 @@
         "order_tracking": "Track Order"
     },
     "home": {
-        "hero_title": "Technology for Life",
-        "hero_subtitle": "Discover premium technology products at Minimart",
         "shop_now": "Shop Now",
         "view_more": "View More",
         "featured_products": "Featured Products",
@@ -390,35 +388,35 @@
             "keywords": "minimart, technology, electronics, flash sale, online shopping, genuine products"
         },
         "products": {
-            "title_default": "Products - Minimart | Full Catalog",
-            "title_search": "Search \"{{query}}\" - Minimart",
-            "title_category": "{{category}} Products - Minimart",
+            "title_default": "Products | Full Catalog",
+            "title_search": "Search \"{{query}}\" ",
+            "title_category": "{{category}} Products ",
             "description_default": "Explore all technology products at Minimart. Smart filters by category, brand, price. 100% genuine products, reputable warranty.",
             "description_search": "Search results for \"{{query}}\" at Minimart. Genuine products, best prices on the market.",
             "description_category": "List of {{category}} products at Minimart. Genuine products, reputable warranty, fast delivery.",
             "keywords": "minimart, products, online shopping, genuine products"
         },
         "product_detail": {
-            "title": "{{name}} - Minimart | Price {{price}}",
+            "title": "{{name}} | Price {{price}}",
             "description_default": "{{name}} - Genuine product at Minimart. Best price, reputable warranty, fast delivery.",
             "keywords": "{{name}}, {{category}}, {{brand}}, minimart, genuine product"
         },
         "cart": {
-            "title": "Cart - Minimart",
+            "title": "Cart ",
             "description": "View your cart and checkout at Minimart"
         },
         "contact": {
-            "title": "Contact - Minimart | 24/7 Customer Support",
+            "title": "Contact | 24/7 Customer Support",
             "description": "Contact Minimart via email, phone or visit our store directly. 24/7 customer support, free consultation, answer all questions about products and services.",
             "keywords": "contact minimart, customer support, product consultation, store address"
         },
         "stores": {
-            "title": "Stores - Minimart | Store Network Nationwide",
+            "title": "Stores | Store Network Nationwide",
             "description": "Find the nearest Minimart store. Nationwide store network with address, phone number, opening hours and detailed directions.",
             "keywords": "minimart stores, store address, store network, shop in person"
         },
         "order_tracking": {
-            "title": "Track Order - Minimart",
+            "title": "Track Order ",
             "description": "Track and monitor your order status at Minimart. Enter order number to view shipping details."
         },
         "not_found": {

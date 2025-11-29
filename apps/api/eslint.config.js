@@ -1,6 +1,8 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import globals from 'globals';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 export default tseslint.config(
   {
@@ -17,7 +19,7 @@ export default tseslint.config(
       },
       parserOptions: {
         project: './tsconfig.json',
-        tsconfigRootDir: import.meta.dirname,
+        tsconfigRootDir: dirname(fileURLToPath(import.meta.url)),
       },
     },
     rules: {

@@ -187,12 +187,35 @@ docker exec -i ecommerce-postgres psql -U postgres ecommerce_minimart < backup.s
 
 ### Run migrations:
 ```bash
+# Nếu chưa có migration files, dùng schema:update để tạo tables từ entities
+docker exec -it ecommerce-api npm run schema:update
+
+# Hoặc nếu đã có migration files
 docker exec -it ecommerce-api npm run migration:up
+
+# Tạo migration mới từ entities
+docker exec -it ecommerce-api npm run migration:create
 ```
 
 ### Run seeders:
 ```bash
 docker exec -it ecommerce-api npm run seed
+```
+
+### Rebuild một service sau khi sửa code:
+```bash
+# Rebuild service (không cache)
+docker-compose -f docker-compose.prod.yml build --no-cache api
+
+# Rebuild và restart
+docker-compose -f docker-compose.prod.yml up -d --build api
+```
+
+### Down một service:
+```bash
+# Stop và remove một service
+docker-compose -f docker-compose.prod.yml stop api
+docker-compose -f docker-compose.prod.yml rm -sf api
 ```
 
 ## Troubleshooting

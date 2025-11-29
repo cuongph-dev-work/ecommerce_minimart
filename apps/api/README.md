@@ -76,6 +76,41 @@ npm run db:down
 npm run db:logs
 ```
 
+## 🐳 Docker Production Commands
+
+### Rebuild một service:
+```bash
+# Rebuild service (không cache)
+docker-compose -f docker-compose.prod.yml build --no-cache api
+
+# Rebuild và restart service
+docker-compose -f docker-compose.prod.yml up -d --build api
+```
+
+### Down một service:
+```bash
+# Stop và remove một service
+docker-compose -f docker-compose.prod.yml stop api
+docker-compose -f docker-compose.prod.yml rm -f api
+
+# Hoặc dùng lệnh kết hợp
+docker-compose -f docker-compose.prod.yml rm -sf api
+```
+
+### Restart một service:
+```bash
+# Restart service (giữ nguyên container)
+docker-compose -f docker-compose.prod.yml restart api
+
+# Recreate service (tạo lại container)
+docker-compose -f docker-compose.prod.yml up -d --force-recreate api
+```
+
+### Xem logs một service:
+```bash
+docker-compose -f docker-compose.prod.yml logs -f api
+```
+
 ## 📚 API Documentation
 
 - **Swagger UI**: http://localhost:8000/api/docs (when `SWAGGER_ENABLED=true`)
@@ -96,9 +131,10 @@ npm run build            # Build for production
 npm run start:prod       # Start production server
 
 # Database
-npm run schema:update    # Update schema from entities
+npm run schema:update    # Update schema from entities (tạo tables trực tiếp)
 npm run migration:create # Create new migration
 npm run migration:up     # Run migrations
+npm run migration:down   # Rollback migration
 npm run seed             # Seed database
 
 # Docker helpers

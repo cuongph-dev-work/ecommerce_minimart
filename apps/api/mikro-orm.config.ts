@@ -24,7 +24,7 @@ const config: Options = {
     disableForeignKeys: false,
   },
   seeder: {
-    path: 'dist/database/seeders',
+    path: 'dist/src/database/seeders',
     pathTs: 'src/database/seeders',
   },
 };

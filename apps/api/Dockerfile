@@ -39,9 +39,6 @@ RUN npm ci --only=production && npm cache clean --force
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/dist/mikro-orm.config.js ./apps/api/dist/mikro-orm.config.js
 
-# Copy seeders (if they exist)
-COPY --from=builder /app/apps/api/dist/database/seeders ./apps/api/dist/database/seeders 2>/dev/null || true
-
 # Create uploads directory
 RUN mkdir -p uploads
 

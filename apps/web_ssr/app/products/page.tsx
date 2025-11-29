@@ -7,14 +7,17 @@ export async function generateMetadata(): Promise<Metadata> {
     const settings = await settingsService.getAll();
     const siteName = settings.store_name || 'Minimart';
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const title = `Products - ${siteName}`;
-    const description = 'Browse our wide selection of quality products at the best prices';
+    const title = settings.seo_products_title || `Products - ${siteName}`;
+    const description = settings.seo_products_description || 'Browse our wide selection of quality products at the best prices';
+    const keywords = settings.seo_products_keywords 
+      ? settings.seo_products_keywords.split(',').map(k => k.trim()).filter(Boolean)
+      : ['products', 'shopping', 'ecommerce', 'online store'];
     const logo = settings.store_logo || '';
 
     return {
       title,
       description,
-      keywords: ['products', 'shopping', 'ecommerce', 'online store'],
+      keywords,
       alternates: {
         canonical: `${siteUrl}/products`,
       },

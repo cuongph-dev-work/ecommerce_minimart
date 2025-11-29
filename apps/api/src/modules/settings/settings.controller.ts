@@ -161,6 +161,63 @@ export class SettingsController {
           throw new BadRequestException(`${key} không được vượt quá 5000 ký tự`);
         }
         break;
+
+      // SEO Settings - Global
+      case 'seo_default_title':
+      case 'seo_title_template':
+        if (trimmedValue && trimmedValue.length > 200) {
+          throw new BadRequestException(`${key} không được vượt quá 200 ký tự`);
+        }
+        break;
+
+      case 'seo_default_description':
+      case 'seo_home_description':
+      case 'seo_products_description':
+      case 'seo_contact_description':
+      case 'seo_stores_description':
+        if (trimmedValue && trimmedValue.length > 500) {
+          throw new BadRequestException(`${key} không được vượt quá 500 ký tự`);
+        }
+        break;
+
+      case 'seo_keywords':
+      case 'seo_home_keywords':
+      case 'seo_products_keywords':
+      case 'seo_contact_keywords':
+      case 'seo_stores_keywords':
+        if (trimmedValue && trimmedValue.length > 500) {
+          throw new BadRequestException(`${key} không được vượt quá 500 ký tự`);
+        }
+        break;
+
+      case 'seo_author':
+      case 'seo_creator':
+      case 'seo_publisher':
+        if (trimmedValue && trimmedValue.length > 200) {
+          throw new BadRequestException(`${key} không được vượt quá 200 ký tự`);
+        }
+        break;
+
+      case 'seo_twitter_handle':
+        if (trimmedValue && !/^@?[a-zA-Z0-9_]{1,15}$/.test(trimmedValue.replace('@', ''))) {
+          throw new BadRequestException('Twitter handle không hợp lệ (tối đa 15 ký tự, chỉ chữ, số và dấu gạch dưới)');
+        }
+        break;
+
+      case 'seo_google_verification':
+        if (trimmedValue && trimmedValue.length > 100) {
+          throw new BadRequestException('Google verification code không được vượt quá 100 ký tự');
+        }
+        break;
+
+      case 'seo_home_title':
+      case 'seo_products_title':
+      case 'seo_contact_title':
+      case 'seo_stores_title':
+        if (trimmedValue && trimmedValue.length > 200) {
+          throw new BadRequestException(`${key} không được vượt quá 200 ký tự`);
+        }
+        break;
     }
   }
 

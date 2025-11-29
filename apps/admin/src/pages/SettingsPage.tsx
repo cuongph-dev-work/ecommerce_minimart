@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'motion/react';
-import { Save, Store, CreditCard, FileText, Upload, X } from 'lucide-react';
+import { Save, Store, CreditCard, FileText, Upload, X, Search } from 'lucide-react';
 import { settingsService } from '@/services/settings.service';
 import { extractApiError, getFieldError, type ValidationError } from '@/lib/error-handler';
 import { storeSettingsSchema, paymentSettingsSchema, policySettingsSchema } from '@/schemas/settings.schema';
@@ -61,6 +61,25 @@ export function SettingsPage() {
       setReturnPolicy(settingsMap.return_policy || '');
       setShoppingGuide(settingsMap.shopping_guide || '');
       setFaq(settingsMap.faq || '');
+      // SEO Settings
+      setSeoKeywords(settingsMap.seo_keywords || '');
+      setSeoAuthor(settingsMap.seo_author || '');
+      setSeoCreator(settingsMap.seo_creator || '');
+      setSeoPublisher(settingsMap.seo_publisher || '');
+      setSeoTwitterHandle(settingsMap.seo_twitter_handle || '');
+      setSeoGoogleVerification(settingsMap.seo_google_verification || '');
+      setSeoHomeTitle(settingsMap.seo_home_title || '');
+      setSeoHomeDescription(settingsMap.seo_home_description || '');
+      setSeoHomeKeywords(settingsMap.seo_home_keywords || '');
+      setSeoProductsTitle(settingsMap.seo_products_title || '');
+      setSeoProductsDescription(settingsMap.seo_products_description || '');
+      setSeoProductsKeywords(settingsMap.seo_products_keywords || '');
+      setSeoContactTitle(settingsMap.seo_contact_title || '');
+      setSeoContactDescription(settingsMap.seo_contact_description || '');
+      setSeoContactKeywords(settingsMap.seo_contact_keywords || '');
+      setSeoStoresTitle(settingsMap.seo_stores_title || '');
+      setSeoStoresDescription(settingsMap.seo_stores_description || '');
+      setSeoStoresKeywords(settingsMap.seo_stores_keywords || '');
     } catch (err: unknown) {
       const apiError = extractApiError(err);
       setError(apiError.message || 'Failed to load settings');
@@ -101,6 +120,28 @@ export function SettingsPage() {
   const [returnPolicy, setReturnPolicy] = useState('');
   const [shoppingGuide, setShoppingGuide] = useState('');
   const [faq, setFaq] = useState('');
+
+  // SEO Settings - Global
+  const [seoKeywords, setSeoKeywords] = useState('');
+  const [seoAuthor, setSeoAuthor] = useState('');
+  const [seoCreator, setSeoCreator] = useState('');
+  const [seoPublisher, setSeoPublisher] = useState('');
+  const [seoTwitterHandle, setSeoTwitterHandle] = useState('');
+  const [seoGoogleVerification, setSeoGoogleVerification] = useState('');
+
+  // SEO Settings - Per Page
+  const [seoHomeTitle, setSeoHomeTitle] = useState('');
+  const [seoHomeDescription, setSeoHomeDescription] = useState('');
+  const [seoHomeKeywords, setSeoHomeKeywords] = useState('');
+  const [seoProductsTitle, setSeoProductsTitle] = useState('');
+  const [seoProductsDescription, setSeoProductsDescription] = useState('');
+  const [seoProductsKeywords, setSeoProductsKeywords] = useState('');
+  const [seoContactTitle, setSeoContactTitle] = useState('');
+  const [seoContactDescription, setSeoContactDescription] = useState('');
+  const [seoContactKeywords, setSeoContactKeywords] = useState('');
+  const [seoStoresTitle, setSeoStoresTitle] = useState('');
+  const [seoStoresDescription, setSeoStoresDescription] = useState('');
+  const [seoStoresKeywords, setSeoStoresKeywords] = useState('');
 
   const handleAddLogoUrl = () => {
     if (currentLogoUrl) {
@@ -159,7 +200,7 @@ export function SettingsPage() {
     setValidationErrors(validationErrors.filter(err => err.field !== 'store_logo'));
   };
 
-  const handleSave = async (tab: 'store' | 'payment' | 'policies' = 'store') => {
+  const handleSave = async (tab: 'store' | 'seo' | 'payment' | 'policies' = 'store') => {
     try {
       setIsSaving(true);
       setError(null);
@@ -238,6 +279,27 @@ export function SettingsPage() {
           { key: 'telegram_link', value: telegramLink?.trim() || '' },
           { key: 'youtube_link', value: youtubeLink?.trim() || '' },
           { key: 'working_hours', value: workingHours?.trim() || '' },
+        ];
+      } else if (tab === 'seo') {
+        settingsToUpdate = [
+          { key: 'seo_keywords', value: seoKeywords?.trim() || '' },
+          { key: 'seo_author', value: seoAuthor?.trim() || '' },
+          { key: 'seo_creator', value: seoCreator?.trim() || '' },
+          { key: 'seo_publisher', value: seoPublisher?.trim() || '' },
+          { key: 'seo_twitter_handle', value: seoTwitterHandle?.trim() || '' },
+          { key: 'seo_google_verification', value: seoGoogleVerification?.trim() || '' },
+          { key: 'seo_home_title', value: seoHomeTitle?.trim() || '' },
+          { key: 'seo_home_description', value: seoHomeDescription?.trim() || '' },
+          { key: 'seo_home_keywords', value: seoHomeKeywords?.trim() || '' },
+          { key: 'seo_products_title', value: seoProductsTitle?.trim() || '' },
+          { key: 'seo_products_description', value: seoProductsDescription?.trim() || '' },
+          { key: 'seo_products_keywords', value: seoProductsKeywords?.trim() || '' },
+          { key: 'seo_contact_title', value: seoContactTitle?.trim() || '' },
+          { key: 'seo_contact_description', value: seoContactDescription?.trim() || '' },
+          { key: 'seo_contact_keywords', value: seoContactKeywords?.trim() || '' },
+          { key: 'seo_stores_title', value: seoStoresTitle?.trim() || '' },
+          { key: 'seo_stores_description', value: seoStoresDescription?.trim() || '' },
+          { key: 'seo_stores_keywords', value: seoStoresKeywords?.trim() || '' },
         ];
       } else if (tab === 'payment') {
         formData = {
@@ -342,6 +404,10 @@ export function SettingsPage() {
           <TabsTrigger value="store">
             <Store className="w-4 h-4 mr-2" />
             Thông tin cửa hàng
+          </TabsTrigger>
+          <TabsTrigger value="seo">
+            <Search className="w-4 h-4 mr-2" />
+            SEO
           </TabsTrigger>
           <TabsTrigger value="payment">
             <CreditCard className="w-4 h-4 mr-2" />
@@ -616,6 +682,247 @@ export function SettingsPage() {
             </div>
 
             <Button onClick={() => handleSave('store')} className="w-full sm:w-auto" disabled={isSaving}>
+              <Save className="mr-2 h-4 w-4" />
+              {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+            </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="seo" className="space-y-6">
+          <div className="bg-card p-6 rounded-xl shadow-sm border border-border space-y-6">
+            <h3 className="text-xl font-semibold">Cấu hình SEO</h3>
+            
+            <div className="space-y-6">
+              <div>
+                <h4 className="font-medium mb-4">Cài đặt SEO chung</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Tiêu đề mặc định</Label>
+                    <Input
+                      value={storeName || ''}
+                      readOnly
+                      className="bg-muted cursor-not-allowed"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Tự động lấy từ <strong>Tên cửa hàng</strong> trong tab "Thông tin cửa hàng"
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Template tiêu đề</Label>
+                    <Input
+                      value={storeName ? `%s | ${storeName}` : '%s | Minimart'}
+                      readOnly
+                      className="bg-muted cursor-not-allowed"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      %s sẽ được thay thế bằng tiêu đề trang. Tự động tạo từ <strong>Tên cửa hàng</strong>
+                    </p>
+                  </div>
+
+                  <div className="space-y-2 col-span-2">
+                    <Label>Mô tả mặc định</Label>
+                    <Textarea
+                      value={storeDescription || ''}
+                      readOnly
+                      className="min-h-[80px] bg-muted cursor-not-allowed"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Tự động lấy từ <strong>Mô tả ngắn</strong> trong tab "Thông tin cửa hàng"
+                    </p>
+                  </div>
+
+                  <div className="space-y-2 col-span-2">
+                    <Label>Từ khóa (phân cách bằng dấu phẩy)</Label>
+                    <Input
+                      value={seoKeywords}
+                      onChange={(e) => setSeoKeywords(e.target.value)}
+                      placeholder="minimart, ecommerce, online shopping"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Tác giả</Label>
+                    <Input
+                      value={seoAuthor}
+                      onChange={(e) => setSeoAuthor(e.target.value)}
+                      placeholder="Tên tác giả"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Người tạo</Label>
+                    <Input
+                      value={seoCreator}
+                      onChange={(e) => setSeoCreator(e.target.value)}
+                      placeholder="Tên người tạo"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Nhà xuất bản</Label>
+                    <Input
+                      value={seoPublisher}
+                      onChange={(e) => setSeoPublisher(e.target.value)}
+                      placeholder="Tên nhà xuất bản"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Twitter Handle</Label>
+                    <Input
+                      value={seoTwitterHandle}
+                      onChange={(e) => setSeoTwitterHandle(e.target.value)}
+                      placeholder="@minimart"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Google Verification Code</Label>
+                    <Input
+                      value={seoGoogleVerification}
+                      onChange={(e) => setSeoGoogleVerification(e.target.value)}
+                      placeholder="Verification code từ Google Search Console"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
+                <h4 className="font-medium mb-4">SEO theo trang</h4>
+                <div className="space-y-6">
+                  {/* Home Page */}
+                  <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+                    <h5 className="font-medium">Trang chủ</h5>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Tiêu đề</Label>
+                        <Input
+                          value={seoHomeTitle}
+                          onChange={(e) => setSeoHomeTitle(e.target.value)}
+                          placeholder="Để trống sẽ dùng mặc định"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Từ khóa</Label>
+                        <Input
+                          value={seoHomeKeywords}
+                          onChange={(e) => setSeoHomeKeywords(e.target.value)}
+                          placeholder="keyword1, keyword2"
+                        />
+                      </div>
+                      <div className="space-y-2 col-span-2">
+                        <Label>Mô tả</Label>
+                        <Textarea
+                          value={seoHomeDescription}
+                          onChange={(e) => setSeoHomeDescription(e.target.value)}
+                          className="min-h-[60px]"
+                          placeholder="Để trống sẽ dùng mặc định"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Products Page */}
+                  <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+                    <h5 className="font-medium">Trang sản phẩm</h5>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Tiêu đề</Label>
+                        <Input
+                          value={seoProductsTitle}
+                          onChange={(e) => setSeoProductsTitle(e.target.value)}
+                          placeholder="Để trống sẽ dùng mặc định"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Từ khóa</Label>
+                        <Input
+                          value={seoProductsKeywords}
+                          onChange={(e) => setSeoProductsKeywords(e.target.value)}
+                          placeholder="products, shopping, ecommerce"
+                        />
+                      </div>
+                      <div className="space-y-2 col-span-2">
+                        <Label>Mô tả</Label>
+                        <Textarea
+                          value={seoProductsDescription}
+                          onChange={(e) => setSeoProductsDescription(e.target.value)}
+                          className="min-h-[60px]"
+                          placeholder="Để trống sẽ dùng mặc định"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contact Page */}
+                  <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+                    <h5 className="font-medium">Trang liên hệ</h5>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Tiêu đề</Label>
+                        <Input
+                          value={seoContactTitle}
+                          onChange={(e) => setSeoContactTitle(e.target.value)}
+                          placeholder="Để trống sẽ dùng mặc định"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Từ khóa</Label>
+                        <Input
+                          value={seoContactKeywords}
+                          onChange={(e) => setSeoContactKeywords(e.target.value)}
+                          placeholder="contact, support, help"
+                        />
+                      </div>
+                      <div className="space-y-2 col-span-2">
+                        <Label>Mô tả</Label>
+                        <Textarea
+                          value={seoContactDescription}
+                          onChange={(e) => setSeoContactDescription(e.target.value)}
+                          className="min-h-[60px]"
+                          placeholder="Để trống sẽ dùng mặc định"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stores Page */}
+                  <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+                    <h5 className="font-medium">Trang cửa hàng</h5>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Tiêu đề</Label>
+                        <Input
+                          value={seoStoresTitle}
+                          onChange={(e) => setSeoStoresTitle(e.target.value)}
+                          placeholder="Để trống sẽ dùng mặc định"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Từ khóa</Label>
+                        <Input
+                          value={seoStoresKeywords}
+                          onChange={(e) => setSeoStoresKeywords(e.target.value)}
+                          placeholder="stores, locations, find store"
+                        />
+                      </div>
+                      <div className="space-y-2 col-span-2">
+                        <Label>Mô tả</Label>
+                        <Textarea
+                          value={seoStoresDescription}
+                          onChange={(e) => setSeoStoresDescription(e.target.value)}
+                          className="min-h-[60px]"
+                          placeholder="Để trống sẽ dùng mặc định"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Button onClick={() => handleSave('seo')} className="w-full sm:w-auto" disabled={isSaving}>
               <Save className="mr-2 h-4 w-4" />
               {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
             </Button>

@@ -10,47 +10,87 @@ import { Toaster } from '../components/ui/sonner';
 import { settingsService } from '../services/settings.service';
 import '../index.css';
 
-export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
-  title: {
-    default: 'Minimart',
-    template: '%s | Minimart',
-  },
-  description: 'Your trusted minimart for quality products',
-  keywords: ['minimart', 'ecommerce', 'online shopping', 'products'],
-  authors: [{ name: 'Minimart' }],
-  creator: 'Minimart',
-  publisher: 'Minimart',
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+// Helper function to get SEO settings with defaults
+async function getSEOSettings() {
+  try {
+    const settings = await settingsService.getAll();
+    const storeName = settings.store_name;
+    const storeDescription = settings.store_description;
+    
+    return {
+      defaultTitle: settings.seo_default_title || storeName,
+      titleTemplate: settings.seo_title_template || `%s | ${storeName}`,
+      defaultDescription: settings.seo_default_description || storeDescription,
+      keywords: settings.seo_keywords 
+        ? settings.seo_keywords.split(',').map(k => k.trim()).filter(Boolean)
+        : ['minimart', 'ecommerce', 'online shopping', 'products'],
+      author: settings.seo_author || storeName,
+      creator: settings.seo_creator || storeName,
+      publisher: settings.seo_publisher || storeName,
+      twitterHandle: settings.seo_twitter_handle || '@minimart',
+      googleVerification: settings.seo_google_verification || undefined,
+    };
+  } catch (error) {
+    console.error('Failed to load SEO settings:', error);
+    return {
+      defaultTitle: 'Minimart',
+      titleTemplate: '%s | Minimart',
+      defaultDescription: 'Your trusted minimart for quality products',
+      keywords: ['minimart', 'ecommerce', 'online shopping', 'products'],
+      author: 'Minimart',
+      creator: 'Minimart',
+      publisher: 'Minimart',
+      twitterHandle: '@minimart',
+      googleVerification: undefined,
+    };
+  }
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const seoSettings = await getSEOSettings();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  
+  return {
+    metadataBase: new URL(siteUrl),
+    title: {
+      default: seoSettings.defaultTitle,
+      template: seoSettings.titleTemplate,
+    },
+    description: seoSettings.defaultDescription,
+    keywords: seoSettings.keywords,
+    authors: [{ name: seoSettings.author }],
+    creator: seoSettings.creator,
+    publisher: seoSettings.publisher,
+    formatDetection: {
+      email: false,
+      address: false,
+      telephone: false,
+    },
+    robots: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
     },
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    siteName: 'Minimart',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    creator: '@minimart',
-  },
-  verification: {
-    // Add Google Search Console verification if needed
-    // google: 'verification-code',
-  },
-};
+    openGraph: {
+      type: 'website',
+      locale: 'en_US',
+      siteName: seoSettings.defaultTitle,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      creator: seoSettings.twitterHandle,
+    },
+    verification: seoSettings.googleVerification ? {
+      google: seoSettings.googleVerification,
+    } : undefined,
+  };
+}
 
 export default async function RootLayout({
   children,
@@ -58,7 +98,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   // Preload settings on server
-  let preloadedSettings = {};
+  let preloadedSettings: Record<string, string> = {};
   try {
     preloadedSettings = await settingsService.getAll();
   } catch (error) {

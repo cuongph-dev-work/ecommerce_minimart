@@ -7,14 +7,17 @@ export async function generateMetadata(): Promise<Metadata> {
     const settings = await settingsService.getAll();
     const siteName = settings.store_name || 'Minimart';
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const title = `Contact Us - ${siteName}`;
-    const description = settings.store_description || 'Get in touch with us for any questions or concerns. We are here to help!';
+    const title = settings.seo_contact_title || `Contact Us - ${siteName}`;
+    const description = settings.seo_contact_description || settings.store_description || 'Get in touch with us for any questions or concerns. We are here to help!';
+    const keywords = settings.seo_contact_keywords 
+      ? settings.seo_contact_keywords.split(',').map(k => k.trim()).filter(Boolean)
+      : ['contact', 'support', 'customer service', 'help'];
     const logo = settings.store_logo || '';
 
     return {
       title,
       description,
-      keywords: ['contact', 'support', 'customer service', 'help'],
+      keywords,
       alternates: {
         canonical: `${siteUrl}/contact`,
       },

@@ -75,7 +75,7 @@ sudo apt-get install certbot python3-certbot-nginx
 # Get certificates
 sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
 sudo certbot --nginx -d admin.yourdomain.com
-sudo certbot --nginx -d api.yourdomain.com
+sudo certbot --nginx -d admin.littlebox.vn
 ```
 
 ### Update nginx config cho HTTPS

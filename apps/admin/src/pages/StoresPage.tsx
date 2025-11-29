@@ -515,7 +515,7 @@ export function StoresPage() {
                   <Checkbox
                     id="allowPickup"
                     checked={newStoreAllowPickup}
-                    onCheckedChange={(checked) => setNewStoreAllowPickup(checked as boolean)}
+                    onCheckedChange={(checked: boolean) => setNewStoreAllowPickup(checked)}
                   />
                   <Label htmlFor="allowPickup" className="font-normal cursor-pointer">
                     Cho phép làm địa điểm nhận hàng

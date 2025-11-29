@@ -862,7 +862,7 @@ export function ProductsPage() {
                     <Checkbox 
                       id="official" 
                       checked={newProductIsOfficial}
-                      onCheckedChange={(checked) => setNewProductIsOfficial(checked as boolean)}
+                      onCheckedChange={(checked: boolean) => setNewProductIsOfficial(checked)}
                     />
                     <Label htmlFor="official" className="font-normal cursor-pointer">
                       Sản phẩm chính hãng (100% Authentic)

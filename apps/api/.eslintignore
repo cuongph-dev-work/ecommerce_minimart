@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+dist/
+build/
+coverage/
+
+# Config files
+*.config.js
+*.config.ts
+mikro-orm.config.js
+mikro-orm.config.d.ts
+
+# Generated files
+*.d.ts
+temp/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+

@@ -35,14 +35,34 @@ echo "🔐 Đang yêu cầu chứng chỉ SSL..."
 # Tạo webroot directory
 sudo mkdir -p /var/www/certbot
 
-# Chạy certbot với standalone mode (không cần nginx)
+# Chạy certbot với standalone mode cho từng domain
+# Request certificate cho web domain (bao gồm www)
 sudo certbot certonly --standalone \
   -m "$EMAIL" --agree-tos --no-eff-email \
   -d "$DOMAIN_WEB" -d "www.$DOMAIN_WEB" \
+  --preferred-challenges http \
+  --cert-name "$DOMAIN_WEB"
+
+# Request certificate cho admin domain
+sudo certbot certonly --standalone \
+  -m "$EMAIL" --agree-tos --no-eff-email \
   -d "$DOMAIN_ADMIN" \
+  --preferred-challenges http \
+  --cert-name "$DOMAIN_ADMIN"
+
+# Request certificate cho API domain
+sudo certbot certonly --standalone \
+  -m "$EMAIL" --agree-tos --no-eff-email \
   -d "$DOMAIN_API" \
+  --preferred-challenges http \
+  --cert-name "$DOMAIN_API"
+
+# Request certificate cho assets domain
+sudo certbot certonly --standalone \
+  -m "$EMAIL" --agree-tos --no-eff-email \
   -d "$DOMAIN_ASSETS" \
-  --preferred-challenges http
+  --preferred-challenges http \
+  --cert-name "$DOMAIN_ASSETS"
 
 # Start lại nginx container
 echo "▶️  Start lại nginx container..."

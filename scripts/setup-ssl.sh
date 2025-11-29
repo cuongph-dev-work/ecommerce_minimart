@@ -25,13 +25,31 @@ echo "  - $DOMAIN_ADMIN"
 echo "  - $DOMAIN_API"
 echo "  - $DOMAIN_ASSETS"
 
-sudo certbot --nginx \
+# Tạm thời stop nginx container để certbot có thể dùng port 80
+echo "⏸️  Tạm thời stop nginx container..."
+docker stop ecommerce-nginx 2>/dev/null || true
+
+# Chạy certbot với webroot plugin (không cần nginx trên host)
+echo "🔐 Đang yêu cầu chứng chỉ SSL..."
+
+# Tạo webroot directory
+sudo mkdir -p /var/www/certbot
+
+# Chạy certbot với standalone mode (không cần nginx)
+sudo certbot certonly --standalone \
   -m "$EMAIL" --agree-tos --no-eff-email \
   -d "$DOMAIN_WEB" -d "www.$DOMAIN_WEB" \
   -d "$DOMAIN_ADMIN" \
   -d "$DOMAIN_API" \
-  -d "$DOMAIN_ASSETS"
+  -d "$DOMAIN_ASSETS" \
+  --preferred-challenges http
 
-echo "✅ Hoàn tất. Kiểm tra lại cấu hình Nginx và HTTPS trên các domain trên."
+# Start lại nginx container
+echo "▶️  Start lại nginx container..."
+docker start ecommerce-nginx 2>/dev/null || docker-compose -f docker-compose.prod.yml up -d nginx
+
+echo "✅ Hoàn tất. Certificates đã được tạo tại /etc/letsencrypt/live/"
+echo "📝 Cần cấu hình nginx để sử dụng certificates này."
+echo "   Xem hướng dẫn trong DOMAIN_SETUP.md"
 
 

@@ -115,6 +115,8 @@ services:
       - "${HTTPS_PORT:-443}:443"
     volumes:
       - ./nginx/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
     environment:
       - WEB_DOMAIN=${WEB_DOMAIN:-localhost}
       - ADMIN_DOMAIN=${ADMIN_DOMAIN:-admin.localhost}

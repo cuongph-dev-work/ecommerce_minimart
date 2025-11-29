@@ -7,6 +7,7 @@ import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { storesService } from '../services/stores.service';
 import { StoreLocation } from '../types';
+import { sanitizeEmail, sanitizeUrl } from '../lib/security';
 
 export function StoresPage() {
   const { t } = useTranslation();
@@ -33,26 +34,39 @@ export function StoresPage() {
 
   const getMapEmbedUrl = (store: StoreLocation) => {
     if (store.lat && store.lng) {
+      // Validate coordinates are numbers
+      const lat = parseFloat(String(store.lat));
+      const lng = parseFloat(String(store.lng));
+      if (isNaN(lat) || isNaN(lng)) return null;
       // Use Google Maps Embed with coordinates (no API key needed)
-      return `https://www.google.com/maps?q=${store.lat},${store.lng}&z=15&output=embed`;
+      return `https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
     } else if (store.address) {
+      // Sanitize address
+      const sanitizedAddress = encodeURIComponent(String(store.address).slice(0, 500));
       // Use address-based embed (no API key needed)
-      return `https://www.google.com/maps?q=${encodeURIComponent(store.address)}&output=embed`;
+      return `https://www.google.com/maps?q=${sanitizedAddress}&output=embed`;
     }
-    return '';
+    return null;
   };
 
   const openInGoogleMaps = (store: StoreLocation) => {
     if (store.lat && store.lng) {
-      window.open(
-        `https://www.google.com/maps/search/?api=1&query=${store.lat},${store.lng}`,
-        '_blank'
-      );
+      const lat = parseFloat(String(store.lat));
+      const lng = parseFloat(String(store.lng));
+      if (!isNaN(lat) && !isNaN(lng)) {
+        const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+        const safeUrl = sanitizeUrl(url);
+        if (safeUrl) {
+          window.open(safeUrl, '_blank', 'noopener,noreferrer');
+        }
+      }
     } else if (store.address) {
-      window.open(
-        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address)}`,
-        '_blank'
-      );
+      const sanitizedAddress = encodeURIComponent(String(store.address).slice(0, 500));
+      const url = `https://www.google.com/maps/search/?api=1&query=${sanitizedAddress}`;
+      const safeUrl = sanitizeUrl(url);
+      if (safeUrl) {
+        window.open(safeUrl, '_blank', 'noopener,noreferrer');
+      }
     }
   };
 
@@ -219,7 +233,10 @@ export function StoresPage() {
                   <Button
                     onClick={(e) => {
                       e.stopPropagation();
-                      window.open(`tel:${store.phone}`, '_blank');
+                      const phone = String(store.phone || '').replace(/[^0-9+\-() ]/g, '');
+                      if (phone) {
+                        window.open(`tel:${phone}`, '_blank');
+                      }
                     }}
                     size="sm"
                     className="flex-1 bg-white text-red-600 hover:bg-gray-100 border-0"
@@ -245,31 +262,35 @@ export function StoresPage() {
             <div className="bg-white rounded-3xl overflow-hidden shadow-lg">
               {/* Interactive Map */}
               <div className="aspect-video bg-gray-100 relative">
-                {getMapEmbedUrl(selectedStore) ? (
-                  <iframe
-                    src={getMapEmbedUrl(selectedStore)}
-                    className="w-full h-full border-0"
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title={`${t('stores.map_title')} ${selectedStore.name}`}
-                    allowFullScreen
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center p-8">
-                      <MapPin className="h-16 w-16 mx-auto mb-4 text-red-600" />
-                      <h3 className="mb-2">{selectedStore.name}</h3>
-                      <p className="text-gray-600 mb-4">{selectedStore.address}</p>
-                      <Button
-                        onClick={() => openInGoogleMaps(selectedStore)}
-                        className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white"
-                      >
-                        <Navigation className="mr-2 h-4 w-4" />
-                        {t('stores.open_in_maps')}
-                      </Button>
+                {(() => {
+                  const mapUrl = getMapEmbedUrl(selectedStore);
+                  const safeUrl = mapUrl ? sanitizeUrl(mapUrl) : null;
+                  return safeUrl ? (
+                    <iframe
+                      src={safeUrl}
+                      className="w-full h-full border-0"
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title={`${t('stores.map_title')} ${selectedStore.name}`}
+                      allowFullScreen
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center p-8">
+                        <MapPin className="h-16 w-16 mx-auto mb-4 text-red-600" />
+                        <h3 className="mb-2">{selectedStore.name}</h3>
+                        <p className="text-gray-600 mb-4">{selectedStore.address}</p>
+                        <Button
+                          onClick={() => openInGoogleMaps(selectedStore)}
+                          className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white"
+                        >
+                          <Navigation className="mr-2 h-4 w-4" />
+                          {t('stores.open_in_maps')}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
 
               <div className="p-6 border-t">
@@ -282,7 +303,12 @@ export function StoresPage() {
                     {t('stores.get_directions')}
                   </Button>
                   <Button
-                    onClick={() => window.open(`tel:${selectedStore.phone}`, '_blank')}
+                    onClick={() => {
+                      const phone = String(selectedStore.phone || '').replace(/[^0-9+\-() ]/g, '');
+                      if (phone) {
+                        window.open(`tel:${phone}`, '_blank');
+                      }
+                    }}
                     variant="outline"
                     className="flex-1 min-w-[200px]"
                   >
@@ -321,12 +347,19 @@ export function StoresPage() {
                   </div>
                   <div className="flex-1">
                     <div className="mb-1">{t('stores.phone')}</div>
-                    <a
-                      href={`tel:${selectedStore.phone}`}
-                      className="text-gray-600 hover:text-blue-600 transition-colors"
-                    >
-                      {selectedStore.phone}
-                    </a>
+                    {(() => {
+                      const phone = String(selectedStore.phone || '').replace(/[^0-9+\-() ]/g, '');
+                      return phone ? (
+                        <a
+                          href={`tel:${phone}`}
+                          className="text-gray-600 hover:text-blue-600 transition-colors"
+                        >
+                          {phone}
+                        </a>
+                      ) : (
+                        <span className="text-gray-600">{selectedStore.phone}</span>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -337,12 +370,19 @@ export function StoresPage() {
                     </div>
                     <div className="flex-1">
                       <div className="mb-1">{t('stores.email')}</div>
-                      <a
-                        href={`mailto:${selectedStore.email}`}
-                        className="text-gray-600 hover:text-blue-600 transition-colors"
-                      >
-                        {selectedStore.email}
-                      </a>
+                      {(() => {
+                        const email = sanitizeEmail(selectedStore.email);
+                        return email ? (
+                          <a
+                            href={`mailto:${email}`}
+                            className="text-gray-600 hover:text-blue-600 transition-colors"
+                          >
+                            {email}
+                          </a>
+                        ) : (
+                          <span className="text-gray-600">{selectedStore.email}</span>
+                        );
+                      })()}
                     </div>
                   </div>
                 )}

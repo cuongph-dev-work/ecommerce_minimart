@@ -390,11 +390,11 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
               className="border-b last:border-b-0 pb-6 last:pb-0"
             >
               <div className="flex items-start gap-4">
-                <Avatar className="w-10 h-10 shrink-0">
+                {/* <Avatar className="w-10 h-10 shrink-0">
                   <AvatarFallback className={`${getAvatarColor(review.userName)} text-white font-semibold`}>
                     {review.userName.charAt(0).toUpperCase()}
                   </AvatarFallback>
-                </Avatar>
+                </Avatar> */}
 
                 <div className="flex-1">
                   <div className="flex items-start justify-between mb-2">

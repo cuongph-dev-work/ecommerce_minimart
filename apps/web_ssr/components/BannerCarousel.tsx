@@ -9,6 +9,7 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import { bannersService } from '../services/banners.service';
 import type { Banner } from '../types';
 import { useTranslation } from 'react-i18next';
+import { sanitizeUrl, sanitizeImageUrl } from '../lib/security';
 
 export function BannerCarousel() {
   const { t } = useTranslation();
@@ -60,7 +61,18 @@ export function BannerCarousel() {
   const handleBannerClick = () => {
     const currentBanner = banners[currentIndex];
     if (currentBanner?.link) {
-      router.push(currentBanner.link);
+      const safeUrl = sanitizeUrl(currentBanner.link);
+      if (safeUrl) {
+        // Check if it's an internal link (starts with /)
+        if (safeUrl.startsWith('/')) {
+          router.push(safeUrl);
+        } else {
+          // External link - open in new tab
+          window.open(safeUrl, '_blank', 'noopener,noreferrer');
+        }
+      } else {
+        router.push('/products');
+      }
     } else {
       router.push('/products');
     }
@@ -91,8 +103,8 @@ export function BannerCarousel() {
           {/* Background Image */}
           <div className="absolute inset-0">
             <ImageWithFallback
-              src={banners[currentIndex].image}
-              alt={banners[currentIndex].title}
+              src={sanitizeImageUrl(banners[currentIndex].image) || ''}
+              alt={banners[currentIndex].title || 'Banner'}
               className="w-full h-full object-cover"
             />
           </div>

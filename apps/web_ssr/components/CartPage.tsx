@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import * as v from 'valibot';
+import { sanitizeUrl } from '../lib/security';
 import { checkoutSchema } from '../schemas/checkout.schema';
 import { getFieldError, extractApiError, type ValidationError } from '../lib/error-handler';
 import {
@@ -502,15 +503,27 @@ export function CartPage() {
               <div className="hidden md:block">
                 <div className="sticky top-4">
                   <div className="bg-gray-100 rounded-xl overflow-hidden h-[500px]">
-                    <iframe
-                      width="100%"
-                      height="100%"
-                      frameBorder="0"
-                      style={{ border: 0 }}
-                      src={`https://www.google.com/maps?q=${selectedStore.lat},${selectedStore.lng}&z=15&output=embed`}
-                      allowFullScreen
-                      title={t('cart.map_title', { storeName: selectedStore.name })}
-                    />
+                    {(() => {
+                      const lat = parseFloat(String(selectedStore.lat));
+                      const lng = parseFloat(String(selectedStore.lng));
+                      if (!isNaN(lat) && !isNaN(lng)) {
+                        const mapUrl = `https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
+                        const safeUrl = sanitizeUrl(mapUrl);
+                        return safeUrl ? (
+                          <iframe
+                            width="100%"
+                            height="100%"
+                            frameBorder="0"
+                            style={{ border: 0 }}
+                            src={safeUrl}
+                            allowFullScreen
+                            title={t('cart.map_title', { storeName: selectedStore.name })}
+                            referrerPolicy="no-referrer-when-downgrade"
+                          />
+                        ) : null;
+                      }
+                      return null;
+                    })()}
                   </div>
                   <div className="mt-3 p-4 bg-white rounded-xl border">
                     <h4 className="mb-2 flex items-center gap-2">

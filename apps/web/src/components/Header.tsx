@@ -173,7 +173,7 @@ export function Header() {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`text-left px-4 py-3 rounded-lg transition-colors ${
                     isActive(item.path)
-                      ? 'bg-blue-50 text-blue-600'
+                      ? 'bg-red-50 text-red-600'
                       : 'hover:bg-gray-50'
                   }`}
                 >

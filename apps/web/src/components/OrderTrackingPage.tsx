@@ -163,12 +163,12 @@ export function OrderTrackingPage() {
       case 'pending':
         return 'bg-orange-100 text-orange-600 border-orange-300';
       case 'confirmed':
-        return 'bg-blue-50 text-blue-600 border-blue-200';
+        return 'bg-red-50 text-red-600 border-blue-200';
       case 'processing':
       case 'preparing':
         return 'bg-purple-100 text-red-600 border-gray-200';
       case 'ready':
-        return 'bg-blue-50 text-blue-600 border-blue-200';
+        return 'bg-red-50 text-red-600 border-blue-200';
       case 'completed':
       case 'received':
         return 'bg-green-100 text-green-600 border-gray-200';

@@ -453,7 +453,7 @@ export function ProductsPage() {
                   {selectedSubcategory && (
                     <>
                       <span className="text-gray-400">›</span>
-                      <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+                      <span className="px-3 py-1 rounded-full bg-red-50 text-red-600 border border-blue-100">
                         {selectedSubcategory.name}
                       </span>
                     </>
@@ -665,6 +665,17 @@ export function ProductsPage() {
                           product.name
                         )}
                       </h3>
+
+                        {/* Rating */}
+                        {product.rating != null && product.rating > 0 && product.reviewCount != null && product.reviewCount > 0 && (
+                          <div className="flex items-center gap-1 mb-2">
+                            <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                            <span className="text-xs font-medium">{product.rating.toFixed(1)}</span>
+                            <span className="text-xs text-gray-500">
+                              ({product.reviewCount})
+                            </span>
+                          </div>
+                        )}
                         
                         {/* Price with Discount */}
                         <div className="mb-3">

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Mail, Phone, MapPin, Facebook, Instagram, Send } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
 import { useTranslation } from 'react-i18next';
+import { sanitizeUrl, sanitizeEmail, sanitizeImageUrl } from '../lib/security';
 
 export function Footer() {
   const { t } = useTranslation();
@@ -22,13 +23,16 @@ export function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4" suppressHydrationWarning>
-              {isMounted && settings.store_logo ? (
-                <img
-                  src={settings.store_logo}
-                  alt={settings.store_name || 'Logo'}
-                  className="w-10 h-10 object-contain rounded-lg"
-                />
-              ) : (
+              {isMounted && settings.store_logo ? (() => {
+                const logoUrl = sanitizeImageUrl(settings.store_logo);
+                return logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt={settings.store_name || 'Logo'}
+                    className="w-10 h-10 object-contain rounded-lg"
+                  />
+                ) : null;
+              })() : (
                 <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center">
                   <span className="text-white">
                     {isMounted && settings.store_name ? settings.store_name.charAt(0) : 'M'}
@@ -43,36 +47,45 @@ export function Footer() {
               {isMounted && settings.store_description ? settings.store_description : ''}
             </p>
             <div className="flex gap-3" suppressHydrationWarning>
-              {isMounted && settings.facebook_link && (
-                <a
-                  href={settings.facebook_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full bg-white hover:bg-blue-50 flex items-center justify-center transition-colors"
-                >
-                  <Facebook className="h-4 w-4 text-blue-600" />
-                </a>
-              )}
-              {isMounted && settings.instagram_link && (
-                <a
-                  href={settings.instagram_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full bg-white hover:bg-pink-50 flex items-center justify-center transition-colors"
-                >
-                  <Instagram className="h-4 w-4 text-pink-600" />
-                </a>
-              )}
-              {isMounted && settings.telegram_link && (
-                <a
-                  href={settings.telegram_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full bg-white hover:bg-blue-50 flex items-center justify-center transition-colors"
-                >
-                  <Send className="h-4 w-4 text-blue-600" />
-                </a>
-              )}
+              {isMounted && (() => {
+                const facebookUrl = sanitizeUrl(settings.facebook_link);
+                return facebookUrl ? (
+                  <a
+                    href={facebookUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-full bg-white hover:bg-blue-50 flex items-center justify-center transition-colors"
+                  >
+                    <Facebook className="h-4 w-4 text-blue-600" />
+                  </a>
+                ) : null;
+              })()}
+              {isMounted && (() => {
+                const instagramUrl = sanitizeUrl(settings.instagram_link);
+                return instagramUrl ? (
+                  <a
+                    href={instagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-full bg-white hover:bg-pink-50 flex items-center justify-center transition-colors"
+                  >
+                    <Instagram className="h-4 w-4 text-pink-600" />
+                  </a>
+                ) : null;
+              })()}
+              {isMounted && (() => {
+                const telegramUrl = sanitizeUrl(settings.telegram_link);
+                return telegramUrl ? (
+                  <a
+                    href={telegramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-full bg-white hover:bg-blue-50 flex items-center justify-center transition-colors"
+                  >
+                    <Send className="h-4 w-4 text-blue-600" />
+                  </a>
+                ) : null;
+              })()}
             </div>
           </div>
 
@@ -113,14 +126,17 @@ export function Footer() {
                   </div>
                 </li>
               )}
-              {isMounted && settings.store_email && (
-                <li className="flex items-start gap-3 text-gray-600">
-                  <Mail className="h-5 w-5 mt-0.5 shrink-0 text-blue-600" />
-                  <a href={`mailto:${settings.store_email}`} className="hover:text-blue-600 transition-colors">
-                    {settings.store_email}
-                  </a>
-                </li>
-              )}
+              {isMounted && (() => {
+                const email = sanitizeEmail(settings.store_email);
+                return email ? (
+                  <li className="flex items-start gap-3 text-gray-600">
+                    <Mail className="h-5 w-5 mt-0.5 shrink-0 text-blue-600" />
+                    <a href={`mailto:${email}`} className="hover:text-blue-600 transition-colors">
+                      {email}
+                    </a>
+                  </li>
+                ) : null;
+              })()}
               {isMounted && settings.store_address && (
                 <li className="flex items-start gap-3 text-gray-600">
                   <MapPin className="h-5 w-5 mt-0.5 shrink-0 text-blue-600" />

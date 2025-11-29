@@ -325,11 +325,10 @@ export function ProductDetailPage({ productSlug }: ProductDetailPageProps) {
             <div className="flex flex-col sm:flex-row gap-4">
               <Button
                 onClick={handleAddToCart}
-                size="lg"
-                className="flex-1 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
+                className="flex-1 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 h-14 sm:h-12 px-6 text-base sm:text-sm font-semibold"
                 disabled={product.stock === 0}
               >
-                <ShoppingCart className="mr-2 h-5 w-5" />
+                <ShoppingCart className="mr-2 h-5 w-5 sm:h-4 sm:w-4" />
                 {t('product_detail.add_to_cart')}
               </Button>
               <Button
@@ -338,7 +337,7 @@ export function ProductDetailPage({ productSlug }: ProductDetailPageProps) {
                   router.push('/cart');
                 }}
                 variant="outline"
-                size="lg"
+                className="h-14 sm:h-12 px-6 text-base sm:text-sm font-semibold border-2"
                 disabled={product.stock === 0}
               >
                 {t('product_detail.buy_now')}

@@ -135,7 +135,7 @@
 //                   <button
 //                     key={reply}
 //                     onClick={() => handleSend(reply)}
-//                     className="text-sm px-3 py-1.5 bg-white hover:bg-blue-50 text-blue-600 rounded-full transition-colors border border-blue-200"
+//                     className="text-sm px-3 py-1.5 bg-white hover:bg-red-50 text-red-600 rounded-full transition-colors border border-blue-200"
 //                   >
 //                     {reply}
 //                   </button>

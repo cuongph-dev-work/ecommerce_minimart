@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Star } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from './ui/button';
 // import { Badge } from './ui/badge'; // Unused - flash sale feature disabled
@@ -111,18 +111,16 @@ export function CategoryProductSection({ categoryName, categorySlug, products, i
                 {/* Product Name */}
                 <h3 className="text-sm mb-2 line-clamp-2">{product.name}</h3>
 
-                {/* Rating - Hidden until review feature is implemented */}
-                {/* {product.rating && (
+                {/* Rating */}
+                {product.rating != null && product.rating > 0 && product.reviewCount != null && product.reviewCount > 0 && (
                   <div className="flex items-center gap-1 mb-2">
                     <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                    <span className="text-xs">{product.rating}</span>
-                    {product.reviewCount && (
-                      <span className="text-xs text-gray-500">
-                        ({product.reviewCount})
-                      </span>
-                    )}
+                    <span className="text-xs font-medium">{product.rating.toFixed(1)}</span>
+                    <span className="text-xs text-gray-500">
+                      ({product.reviewCount})
+                    </span>
                   </div>
-                )} */}
+                )}
 
                 {/* Price with Discount */}
                 <div className="mb-2">

@@ -11,6 +11,7 @@ import { MegaMenu } from './MegaMenu';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useSettings } from '../context/SettingsContext';
+import { sanitizeImageUrl } from '../lib/security';
 
 export function Header() {
   const { t } = useTranslation();
@@ -72,15 +73,18 @@ export function Header() {
                   {isMounted && settings.store_name ? settings.store_name.charAt(0) : 'M'}
                 </span>
               </motion.div>
-            ) : (
-              <motion.img
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                src={settings.store_logo}
-                alt={settings.store_name || 'Logo'}
-                className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded-lg"
-              />
-            )}
+            ) : (() => {
+              const logoUrl = sanitizeImageUrl(settings.store_logo);
+              return logoUrl ? (
+                <motion.img
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  src={logoUrl}
+                  alt={settings.store_name || 'Logo'}
+                  className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded-lg"
+                />
+              ) : null;
+            })()}
             <span className="hidden sm:block transition-colors" suppressHydrationWarning>
               {isMounted && settings.store_name ? settings.store_name : 'Mini Mart'}
             </span>
@@ -186,7 +190,7 @@ export function Header() {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`text-left px-4 py-3 rounded-lg transition-colors ${
                     isActive(item.path)
-                      ? 'bg-blue-50 text-blue-600'
+                      ? 'bg-red-50 text-red-600'
                       : 'hover:bg-gray-50'
                   }`}
                 >

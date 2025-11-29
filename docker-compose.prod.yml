@@ -69,19 +69,21 @@ services:
       retries: 3
       start_period: 40s
 
-  # Web Frontend
-  web:
+  # Web Frontend (SSR)
+  web_ssr:
     build:
       context: .
-      dockerfile: apps/web/Dockerfile
-    container_name: ecommerce-web
+      dockerfile: apps/web_ssr/Dockerfile
+    container_name: ecommerce-web-ssr
     restart: unless-stopped
     env_file:
-      - ./apps/web/.env.production
+      - ./apps/web_ssr/.env.production
+    ports:
+      - "${WEB_SSR_PORT:-3000}:3000"
     networks:
       - ecommerce-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -128,7 +130,7 @@ services:
       - ASSETS_DOMAIN=${ASSETS_DOMAIN:-assets.localhost}
     depends_on:
       - api
-      - web
+      - web_ssr
       - admin
     networks:
       - ecommerce-network

@@ -7,7 +7,8 @@ A modern e-commerce platform built with Turborepo, featuring a React frontend an
 ```
 ecommerce_minimart/
 ├── apps/
-│   ├── web/          # React + Vite frontend (Tailwind CSS v4)
+│   ├── web_ssr/      # Next.js SSR frontend (Tailwind CSS v4)
+│   ├── admin/        # React Admin Panel
 │   └── api/          # NestJS backend API
 ├── packages/         # Shared packages (if any)
 └── turbo.json        # Turborepo configuration
@@ -35,17 +36,21 @@ npm run dev
 ```
 
 This will start:
-- **Web App**: http://localhost:3000 (Vite dev server)
+- **Web App (SSR)**: http://localhost:3000 (Next.js dev server)
 - **API**: http://localhost:8000 (NestJS server)
+- **Admin**: http://localhost:5174 (Vite dev server)
 
 Run individual apps:
 
 ```bash
-# Web app only
-npm run dev --filter=@ecommerce/web
+# Web app (SSR) only
+npm run dev --filter=@ecommerce/web-ssr
 
 # API only
 npm run dev --filter=@ecommerce/api
+
+# Admin only
+npm run dev --filter=@ecommerce/admin
 ```
 
 ### Build
@@ -59,11 +64,14 @@ npm run build
 Build individual apps:
 
 ```bash
-# Web app only
-npm run build --filter=@ecommerce/web
+# Web app (SSR) only
+npm run build --filter=@ecommerce/web-ssr
 
 # API only
 npm run build --filter=@ecommerce/api
+
+# Admin only
+npm run build --filter=@ecommerce/admin
 ```
 
 ### Other Commands
@@ -81,14 +89,22 @@ npm run format
 
 ## 📦 Applications
 
-### Web App (`apps/web`)
+### Web App (`apps/web_ssr`)
+
+- **Framework**: Next.js 15 (App Router)
+- **Rendering**: Server-Side Rendering (SSR)
+- **Styling**: Tailwind CSS v4
+- **UI Components**: Radix UI
+- **Icons**: Lucide React
+- **i18n**: react-i18next
+
+### Admin Panel (`apps/admin`)
 
 - **Framework**: React 19
 - **Build Tool**: Vite 6
 - **Styling**: Tailwind CSS v4
 - **UI Components**: Radix UI
 - **Icons**: Lucide React
-- **Routing**: React Router v6
 
 ### API (`apps/api`)
 
@@ -110,8 +126,9 @@ npm run format
 
 ## 📝 Development Notes
 
-- CORS is enabled on the API for `localhost:5173` and `localhost:3000`
+- CORS is enabled on the API for `localhost:3000`, `localhost:5173`, and `localhost:5174`
 - Turborepo caching is configured for optimal build performance
+- Web app uses Next.js SSR for better SEO and performance
 
 ## 🤝 Contributing
 

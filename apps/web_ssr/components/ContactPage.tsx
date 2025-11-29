@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { settingsService } from '../services/settings.service';
 import * as v from 'valibot';
+import { sanitizeEmail, sanitizeUrl } from '../lib/security';
 
 export function ContactPage() {
   const { t } = useTranslation();
@@ -88,23 +89,29 @@ export function ContactPage() {
     }
     
     // Check email setting
-    if (!settings.store_email) {
+    const sanitizedEmail = sanitizeEmail(settings.store_email);
+    if (!sanitizedEmail) {
       toast.error(t('contact.errors.no_email_config'));
       return;
     }
     
+    // Sanitize form data to prevent injection
+    const sanitizedName = formData.name.replace(/[<>]/g, '');
+    const sanitizedPhone = formData.phone ? formData.phone.replace(/[<>]/g, '') : '';
+    const sanitizedMessage = formData.message.replace(/[<>]/g, '');
+    
     // Create mailto URL with i18n labels
-    const subject = encodeURIComponent(`${t('contact.title')} - ${formData.name}`);
+    const subject = encodeURIComponent(`${t('contact.title')} - ${sanitizedName}`);
     const nameLabel = t('contact.name');
     const phoneLabel = t('contact.phone');
     const messageLabel = t('contact.message');
     const body = encodeURIComponent(
-      `${nameLabel}: ${formData.name}\n` +
-      (formData.phone ? `${phoneLabel}: ${formData.phone}\n\n` : '\n') +
-      `${messageLabel}:\n${formData.message}`
+      `${nameLabel}: ${sanitizedName}\n` +
+      (sanitizedPhone ? `${phoneLabel}: ${sanitizedPhone}\n\n` : '\n') +
+      `${messageLabel}:\n${sanitizedMessage}`
     );
     
-    const mailtoUrl = `mailto:${settings.store_email}?subject=${subject}&body=${body}`;
+    const mailtoUrl = `mailto:${sanitizedEmail}?subject=${subject}&body=${body}`;
     window.location.href = mailtoUrl;
     
     toast.success(t('contact.success.opening_email'));
@@ -125,7 +132,10 @@ export function ContactPage() {
       icon: Mail,
       title: t('contact_methods.email'),
       content: settings.store_email || '',
-      action: settings.store_email ? `mailto:${settings.store_email}` : '#',
+      action: (() => {
+        const email = sanitizeEmail(settings.store_email);
+        return email ? `mailto:${email}` : '#';
+      })(),
       actionText: t('contact_methods.email_send'),
       color: 'from-purple-500 to-purple-600',
     },
@@ -180,8 +190,13 @@ export function ContactPage() {
               <p className="text-gray-600 mb-4">{method.content}</p>
               <Button
                 onClick={() => {
-                  if (method.action.startsWith('http') || method.action.startsWith('mailto') || method.action.startsWith('tel')) {
-                    window.open(method.action, '_blank');
+                  const safeUrl = sanitizeUrl(method.action);
+                  if (safeUrl && safeUrl !== '#') {
+                    if (safeUrl.startsWith('mailto:') || safeUrl.startsWith('tel:')) {
+                      window.location.href = safeUrl;
+                    } else {
+                      window.open(safeUrl, '_blank', 'noopener,noreferrer');
+                    }
                   }
                 }}
                 variant="outline"

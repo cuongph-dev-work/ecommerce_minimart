@@ -67,6 +67,16 @@ export class ReviewsController {
     await this.reviewsService.remove(id);
     return { success: true, message: 'Review deleted successfully' };
   }
+
+  @Post('recalculate-ratings')
+  async recalculateRatings() {
+    const result = await this.reviewsService.recalculateAllProductRatings();
+    return {
+      success: true,
+      message: `Successfully recalculated ratings for ${result.updated}/${result.total} products`,
+      data: result,
+    };
+  }
 }
 
 @Controller('reviews')

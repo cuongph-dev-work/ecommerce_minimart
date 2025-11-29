@@ -5,7 +5,11 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
+COPY turbo.json ./
 COPY apps/web_ssr/package*.json ./apps/web_ssr/
+
+# Copy packages (for shared dependencies if any)
+COPY packages ./packages
 
 # Install dependencies
 RUN npm ci --workspace=@ecommerce/web-ssr

@@ -90,15 +90,25 @@ export class ReviewsService {
 
   async approve(id: string): Promise<Review> {
     const review = await this.findOne(id);
+    const productId = review.product.id;
     review.status = ReviewStatus.APPROVED;
     await this.em.flush();
+    
+    // Update product rating after status change
+    await this.updateProductRating(productId);
+    
     return review;
   }
 
   async hide(id: string): Promise<Review> {
     const review = await this.findOne(id);
+    const productId = review.product.id;
     review.status = ReviewStatus.HIDDEN;
     await this.em.flush();
+    
+    // Update product rating after hiding review
+    await this.updateProductRating(productId);
+    
     return review;
   }
 
@@ -118,10 +128,36 @@ export class ReviewsService {
     await this.updateProductRating(productId);
   }
 
+  async recalculateAllProductRatings(): Promise<{ updated: number; total: number }> {
+    const products = await this.em.find(Product, { deletedAt: null });
+    let updated = 0;
+
+    for (const product of products) {
+      const reviews = await this.em.find(Review, {
+        product: product.id,
+        status: { $ne: ReviewStatus.HIDDEN }, // Exclude only HIDDEN reviews
+      });
+
+      if (reviews.length === 0) {
+        product.rating = 0;
+        product.reviewCount = 0;
+      } else {
+        const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
+        product.rating = totalRating / reviews.length;
+        product.reviewCount = reviews.length;
+      }
+      updated++;
+    }
+
+    await this.em.flush();
+    return { updated, total: products.length };
+  }
+
   private async updateProductRating(productId: string): Promise<void> {
+    // Calculate rating from all visible reviews (PENDING and APPROVED, excluding HIDDEN)
     const reviews = await this.em.find(Review, {
       product: productId,
-      status: ReviewStatus.APPROVED,
+      status: { $ne: ReviewStatus.HIDDEN }, // Exclude only HIDDEN reviews
     });
 
     const product = await this.em.findOne(Product, { id: productId, deletedAt: null });

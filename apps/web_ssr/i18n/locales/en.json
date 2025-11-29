@@ -1,0 +1,427 @@
+{
+    "common": {
+        "home": "Home",
+        "products": "Products",
+        "stores": "Stores",
+        "contact": "Contact",
+        "cart": "Cart",
+        "login": "Login",
+        "search": "Search products...",
+        "footer_text": "© 2024 Minimart. All rights reserved.",
+        "language": "Language",
+        "order_tracking": "Track Order"
+    },
+    "home": {
+        "shop_now": "Shop Now",
+        "view_more": "View More",
+        "featured_products": "Featured Products",
+        "featured_products_subtitle": "Discover the most loved products",
+        "view_all": "View All",
+        "view_all_products": "View All Products",
+        "sold_count": "Sold {{count, number}}",
+        "add_to_cart_success": "Added {{name}} to cart",
+        "not_found": "Product not found",
+        "related_products": "Related Products",
+        "products_count": "{{count, number}} products",
+        "view_all_category": "View All {{category}}",
+        "product_categories": "Product Categories",
+        "collapse": "Collapse",
+        "view_all_count": "View All ({{count, number}})",
+        "loading": "Loading...",
+        "no_categories": "No categories",
+        "types_count": "{{count, number}} types",
+        "trust_badges": {
+            "genuine_title": "100% Genuine",
+            "genuine_desc": "Genuine product guarantee",
+            "warranty_title": "Reputable Warranty",
+            "warranty_desc": "Home warranty service",
+            "satisfaction_title": "98% Satisfied",
+            "satisfaction_desc": "Trusted by customers",
+            "customers_title": "50,000+ Customers",
+            "customers_desc": "Dedicated service"
+        },
+        "flash_sale": "Flash Sale",
+        "categories": "Categories"
+    },
+    "products": {
+        "title": "Products",
+        "subtitle": "Browse all our products",
+        "search_placeholder": "Search products...",
+        "filter": "Filter",
+        "filter_title": "Product Filters",
+        "filter_description": "Apply filters to find products that match your needs.",
+        "sort": "Sort",
+        "sort_by": "Sort by:",
+        "sort_by_title": "Sort by",
+        "select_sort": "Select sort",
+        "default": "Default",
+        "price_asc": "Price: Low to High",
+        "price_desc": "Price: High to Low",
+        "name_asc": "Name A-Z",
+        "popular": "Most Popular",
+        "brand": "Brand",
+        "brand_label": "Brand:",
+        "select_brand": "Select brand",
+        "all": "All",
+        "all_categories": "All",
+        "subcategories": "Subcategories",
+        "selected_category": "Selected",
+        "price": "Price",
+        "add_to_cart": "Add to Cart",
+        "out_of_stock": "Out of Stock",
+        "almost_out": "Almost Out",
+        "loading": "Loading...",
+        "found_products": "Found {{count, number}} products",
+        "no_products": "No products found",
+        "no_products_desc": "Try searching with different keywords or select a different category",
+        "clear_filters": "Clear Filters",
+        "apply": "Apply",
+        "search_badge": "Search: {{query}}",
+        "category_badge": "Category: {{name}}",
+        "brand_badge": "Brand: {{brand}}",
+        "sold_count": "Sold {{count, number}}",
+        "stock_remaining": "Stock: {{stock, number}}",
+        "previous": "Previous",
+        "next": "Next",
+        "load_error": "Cannot load products",
+        "add_to_cart_success": "Added {{name}} to cart",
+        "back": "Back",
+        "back_to_list": "Back to list",
+        "not_found": "Not found",
+        "related_products": "Related Products"
+    },
+    "admin": {
+        "dashboard": "Dashboard",
+        "products": "Products",
+        "categories": "Categories",
+        "orders": "Orders",
+        "users": "Users",
+        "settings": "Settings",
+        "logout": "Logout"
+    },
+    "contact": {
+        "title": "Contact Us",
+        "subtitle": "We are always ready to help you. Please contact us through the channels below",
+        "send_message": "Send us a message",
+        "name": "Full Name",
+        "phone": "Phone Number",
+        "message": "Message",
+        "name_placeholder": "Enter your name",
+        "phone_placeholder": "0912345678",
+        "message_placeholder": "Enter your message...",
+        "send_button": "Send Message",
+        "validation": {
+            "name_required": "Full name is required",
+            "name_empty": "Full name cannot be empty",
+            "name_max_length": "Full name cannot exceed 100 characters",
+            "phone_invalid": "Invalid phone number",
+            "phone_max_length": "Phone number cannot exceed 20 characters",
+            "message_required": "Message is required",
+            "message_empty": "Message cannot be empty",
+            "message_max_length": "Message cannot exceed 2000 characters"
+        },
+        "errors": {
+            "check_info": "Please check the information you entered",
+            "no_email_config": "Email contact is not configured. Please contact via phone number."
+        },
+        "success": {
+            "opening_email": "Opening email application..."
+        },
+        "info": {
+            "title": "Contact Information",
+            "hotline": "Hotline",
+            "hotline_hours": "8:00 - 21:00",
+            "hotline_support": "24/7 Customer Support",
+            "email": "Email",
+            "email_response": "Response within 24 hours",
+            "address": "Store Address",
+            "not_updated": "Not updated"
+        },
+        "faq": {
+            "title": "Frequently Asked Questions",
+            "delivery_time_q": "How long is the delivery time?",
+            "delivery_time_a": "1-3 days in city, 3-7 days outside city",
+            "return_policy_q": "What is the return policy?",
+            "return_policy_a": "Return within 7 days with original tags",
+            "installment_q": "Do you support installment payments?",
+            "installment_a": "0% installment support via credit card"
+        }
+    },
+    "stores": {
+        "title": "Store Locations",
+        "subtitle": "Find the nearest store to experience products in person",
+        "loading": "Loading stores...",
+        "no_stores": "No stores available",
+        "get_directions": "Get Directions",
+        "call": "Call",
+        "call_phone": "Call",
+        "open_in_maps": "Open in Google Maps",
+        "map_title": "Map",
+        "contact_info": "Contact Information",
+        "address": "Address",
+        "phone": "Phone",
+        "email": "Email",
+        "working_hours": "Working Hours",
+        "services": "Store Services",
+        "weekdays": "Mon-Fri",
+        "weekends": "Sat-Sun",
+        "default_weekdays": "8:00 - 21:00",
+            "default_weekends": "9:00 - 20:00"
+    },
+    "contact_methods": {
+        "phone": "Phone",
+        "phone_call_now": "Call Now",
+        "email": "Email",
+        "email_send": "Send Email",
+        "zalo": "Zalo",
+        "zalo_chat": "Chat Zalo",
+        "zalo_content": "Chat with us",
+        "address": "Address",
+        "address_view_map": "View Map"
+    },
+    "footer": {
+        "quick_links": "Quick Links",
+        "contact": "Contact",
+        "support": "Support",
+        "warranty_policy": "Warranty Policy",
+        "return_policy": "Return Policy",
+        "shopping_guide": "Shopping Guide",
+        "faq": "FAQ",
+        "all_rights_reserved": "All rights reserved"
+    },
+    "mega_menu": {
+        "categories": "Categories",
+        "categories_count": "{{count}} categories",
+        "more_items": "+{{count}} more"
+    },
+    "search": {
+        "popular_searches": "Popular Searches"
+    },
+    "reviews": {
+        "title": "Product Reviews",
+        "no_reviews": "No reviews yet",
+        "be_first": "Be the first to review this product",
+        "review_count": "{{count, number}} reviews",
+        "helpful": "Helpful",
+        "write_review": "Write a Review",
+        "form": {
+            "name": "Your Name",
+            "name_placeholder": "Enter your name",
+            "rating": "Rating",
+            "rating_label": "Your Rating",
+            "stars": "stars",
+            "comment": "Comment",
+            "comment_label": "Review Content",
+            "comment_placeholder": "Share your experience with this product...",
+            "rating_labels": {
+                "5": "Excellent",
+                "4": "Good",
+                "3": "Average",
+                "2": "Poor",
+                "1": "Very Poor"
+            }
+        },
+        "validation": {
+            "name_required": "Name is required",
+            "name_empty": "Name cannot be empty",
+            "name_max_length": "Name cannot exceed 100 characters",
+            "rating_required": "Rating is required",
+            "rating_min": "Rating must be at least 1 star",
+            "rating_max": "Rating cannot exceed 5 stars",
+            "comment_max_length": "Comment cannot exceed 2000 characters",
+            "error": "Please check the information you entered"
+        },
+        "submit": "Submit Review",
+        "submitting": "Submitting...",
+        "submit_success": "Your review has been submitted successfully!",
+        "submit_error": "Failed to submit review. Please try again later.",
+        "cancel": "Cancel",
+        "admin_response": "Response from store",
+        "load_more": "Load More",
+        "loading_more": "Loading..."
+    },
+    "product_detail": {
+        "features": {
+            "authentic": {
+                "title": "100% Authentic",
+                "description": "Genuine product with seal"
+            },
+            "delivery": {
+                "title": "Fast Delivery",
+                "default": "1-3 days within city"
+            },
+            "warranty": {
+                "title": "Official Warranty",
+                "default": "12-24 months"
+            },
+            "stock": {
+                "title": "In Stock",
+                "description": "{{count, number}} products"
+            }
+        },
+        "quantity": "Quantity",
+        "add_to_cart": "Add to Cart",
+        "buy_now": "Buy Now",
+        "stock_available": "{{count, number}} products available",
+        "brand": "Brand"
+    },
+    "product_description": {
+        "tabs": {
+            "description": "Product Description",
+            "specifications": "Specifications",
+            "guide": "User Guide"
+        },
+        "no_content": "No information available"
+    },
+    "order_tracking": {
+        "title": "Track Your Order",
+        "subtitle": "Enter your order number and phone number to track your order status",
+        "order_number": "Order Number",
+        "order_number_placeholder": "e.g., ORD-001",
+        "phone_number": "Phone Number",
+        "phone_number_placeholder": "Enter phone number",
+        "search_button": "Track Order",
+        "searching": "Searching...",
+        "required": "required",
+        "hint_title": "Note:",
+        "hint_message": "Order number is sent via email or SMS after successful order placement",
+        "not_found_title": "Order Not Found",
+        "not_found_message": "Please check your order number and phone number",
+        "order_details": "Order #{{orderNumber}}",
+        "order_date": "Order Date:",
+        "date_format": {
+            "at": "at",
+            "month": "month",
+            "year": "year"
+        },
+        "customer_info": "Customer Information",
+        "pickup_location": "Pickup Location",
+        "products": "Products ({{count}})",
+        "quantity": "Quantity:",
+        "subtotal": "Subtotal",
+        "discount": "Discount",
+        "total": "Total",
+        "notes_label": "Notes:",
+        "status_title": "Order Status",
+        "status": {
+            "pending": "Pending",
+            "confirmed": "Confirmed",
+            "processing": "Processing",
+            "ready": "Ready for Pickup",
+            "completed": "Completed",
+            "cancelled": "Cancelled"
+        },
+        "tracking_steps": {
+            "placed": {
+                "title": "Order Placed",
+                "description": "Your order has been received"
+            },
+            "confirmed": {
+                "title": "Confirmed",
+                "description": "We have confirmed your order"
+            },
+            "processing": {
+                "title": "Processing",
+                "description": "Your order is being prepared"
+            },
+            "ready": {
+                "title": "Ready for Pickup",
+                "description": "Your order is ready to be picked up"
+            },
+            "completed": {
+                "title": "Completed",
+                "description": "Order has been completed"
+            }
+        },
+        "validation": {
+            "order_number_required": "Order number is required",
+            "order_number_empty": "Order number cannot be empty",
+            "phone_required": "Phone number is required",
+            "phone_invalid": "Phone number must be 10-11 digits"
+        },
+        "not_found": "Order not found",
+        "updated": "Order information updated",
+        "removed_from_history": "Removed from history",
+        "delivery_address": "Delivery Address"
+    },
+    "cart": {
+        "title": "Cart",
+        "empty_title": "Empty Cart",
+        "empty_message": "You don't have any products in your cart",
+        "explore_products": "Explore Products",
+        "items_count": "You have {{count, number}} products in your cart",
+        "order_summary": "Order Summary",
+        "subtotal": "Subtotal",
+        "shipping_fee": "Shipping Fee",
+        "free": "Free",
+        "total": "Total",
+        "place_order": "Place Order",
+        "continue_shopping": "Continue Shopping",
+        "checkout_title": "Order Information",
+        "checkout_description": "Please fill in your information and select pickup location",
+        "full_name": "Full Name",
+        "phone_number": "Phone Number",
+        "email": "Email",
+        "pickup_location": "Pickup Location",
+        "pickup_location_label": "Pickup Location",
+        "order_notes": "Order Notes",
+        "order_notes_placeholder": "Notes about your order...",
+        "order_summary_title": "Order Summary",
+        "name_placeholder": "John Doe",
+        "cancel": "Cancel",
+        "map_title": "Map {{storeName}}",
+        "order_created": "Order created successfully! Order number: {{orderNumber}}",
+        "product_removed": "Product removed from cart",
+        "loading_stores": "Loading...",
+        "select_store": "Select branch",
+        "processing": "Processing...",
+        "confirm_order": "Confirm Order",
+        "errors": {
+            "load_stores_failed": "Failed to load store list",
+            "create_order_failed": "Failed to create order. Please try again."
+        }
+    },
+    "meta": {
+        "home": {
+            "title": "Home",
+            "description": "Discover premium technology products at Minimart. Daily flash sales, free shipping, reputable warranty. Trusted by over 50,000 customers.",
+            "keywords": "minimart, technology, electronics, flash sale, online shopping, genuine products"
+        },
+        "products": {
+            "title_default": "Products | Full Catalog",
+            "title_search": "Search \"{{query}}\" ",
+            "title_category": "{{category}} Products ",
+            "description_default": "Explore all technology products at Minimart. Smart filters by category, brand, price. 100% genuine products, reputable warranty.",
+            "description_search": "Search results for \"{{query}}\" at Minimart. Genuine products, best prices on the market.",
+            "description_category": "List of {{category}} products at Minimart. Genuine products, reputable warranty, fast delivery.",
+            "keywords": "minimart, products, online shopping, genuine products"
+        },
+        "product_detail": {
+            "title": "{{name}} | Price {{price}}",
+            "description_default": "{{name}} - Genuine product at Minimart. Best price, reputable warranty, fast delivery.",
+            "keywords": "{{name}}, {{category}}, {{brand}}, minimart, genuine product"
+        },
+        "cart": {
+            "title": "Cart ",
+            "description": "View your cart and checkout at Minimart"
+        },
+        "contact": {
+            "title": "Contact | 24/7 Customer Support",
+            "description": "Contact Minimart via email, phone or visit our store directly. 24/7 customer support, free consultation, answer all questions about products and services.",
+            "keywords": "contact minimart, customer support, product consultation, store address"
+        },
+        "stores": {
+            "title": "Stores | Store Network Nationwide",
+            "description": "Find the nearest Minimart store. Nationwide store network with address, phone number, opening hours and detailed directions.",
+            "keywords": "minimart stores, store address, store network, shop in person"
+        },
+        "order_tracking": {
+            "title": "Track Order ",
+            "description": "Track and monitor your order status at Minimart. Enter order number to view shipping details."
+        },
+        "not_found": {
+            "title": "404 - Page Not Found | Minimart",
+            "description": "The page you are looking for does not exist. Please return to the homepage or use the navigation menu."
+        }
+    }
+}

@@ -1,10 +1,66 @@
 #!/bin/bash
 
 # Script để rebuild web_ssr service
+# Đảm bảo API đã chạy trước khi build và start web_ssr
 # Usage: ./scripts/rebuild-web.sh
 
 set -e
 
+echo "🔍 Checking required services status..."
+services_ok=true
+
+# Check postgres
+if ! docker-compose -f docker-compose.prod.yml ps postgres | grep -q "Up"; then
+    echo "⚠️  PostgreSQL is not running."
+    services_ok=false
+elif ! docker-compose -f docker-compose.prod.yml ps postgres | grep -q "healthy"; then
+    echo "⚠️  PostgreSQL is running but not healthy."
+    services_ok=false
+fi
+
+# Check minio
+if ! docker-compose -f docker-compose.prod.yml ps minio | grep -q "Up"; then
+    echo "⚠️  MinIO is not running."
+    services_ok=false
+elif ! docker-compose -f docker-compose.prod.yml ps minio | grep -q "healthy"; then
+    echo "⚠️  MinIO is running but not healthy."
+    services_ok=false
+fi
+
+# Check API
+if ! docker-compose -f docker-compose.prod.yml ps api | grep -q "Up"; then
+    echo "⚠️  API service is not running."
+    services_ok=false
+elif ! docker-compose -f docker-compose.prod.yml ps api | grep -q "healthy"; then
+    echo "⚠️  API service is running but not healthy yet."
+    echo "⏳ Waiting for API to become healthy..."
+    timeout=60
+    elapsed=0
+    while [ $elapsed -lt $timeout ]; do
+        if docker-compose -f docker-compose.prod.yml ps api | grep -q "healthy"; then
+            echo "✅ API is healthy!"
+            break
+        fi
+        sleep 2
+        elapsed=$((elapsed + 2))
+        echo "   Waiting... (${elapsed}s/${timeout}s)"
+    done
+    
+    if [ $elapsed -ge $timeout ]; then
+        echo "❌ API did not become healthy within ${timeout}s"
+        exit 1
+    fi
+fi
+
+if [ "$services_ok" = false ]; then
+    echo ""
+    echo "💡 Please run './scripts/start-api.sh' first to start all required services (postgres, minio, api)."
+    exit 1
+else
+    echo "✅ All required services (postgres, minio, api) are running and healthy"
+fi
+
+echo ""
 echo "🛑 Stopping web_ssr container..."
 docker-compose -f docker-compose.prod.yml stop web_ssr || true
 

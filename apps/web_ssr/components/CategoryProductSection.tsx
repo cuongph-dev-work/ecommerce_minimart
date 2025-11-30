@@ -15,10 +15,9 @@ interface CategoryProductSectionProps {
   categoryName: string;
   categorySlug?: string;
   products: Product[];
-  icon?: React.ReactNode;
 }
 
-export function CategoryProductSection({ categoryName, categorySlug, products, icon }: CategoryProductSectionProps) {
+export function CategoryProductSection({ categoryName, categorySlug, products }: CategoryProductSectionProps) {
   const { t } = useTranslation();
   const { addToCart } = useCart();
   const router = useRouter();
@@ -48,19 +47,12 @@ export function CategoryProductSection({ categoryName, categorySlug, products, i
     <section className="container mx-auto px-4 sm:px-6 mb-8">
       <div className="bg-white rounded-2xl shadow-md p-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            {icon && (
-              <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center">
-                <div className="text-white">{icon}</div>
-              </div>
-            )}
-            <div>
-              <h2 className="mb-1">{categoryName}</h2>
-              <p className="text-sm text-gray-600">
-                {t('home.products_count', { count: products.length })}
-              </p>
-            </div>
+        <div className="flex items-center justify-between mb-6 p-3 bg-gradient-to-r from-red-50 to-orange-50 rounded-xl">
+          <div>
+            <h2 className="text-xl font-medium text-gray-900 mb-1">{categoryName}</h2>
+            <p className="text-xs text-gray-500">
+              {t('home.products_count', { count: products.length })}
+            </p>
           </div>
           <Button
             onClick={handleViewAll}
@@ -112,12 +104,12 @@ export function CategoryProductSection({ categoryName, categorySlug, products, i
                 <h3 className="text-sm mb-2 line-clamp-2">{product.name}</h3>
 
                 {/* Rating */}
-                {product.rating != null && product.rating > 0 && product.reviewCount != null && product.reviewCount > 0 && (
+                {(product.rating != null || product.reviewCount != null) && (
                   <div className="flex items-center gap-1 mb-2">
                     <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                    <span className="text-xs font-medium">{product.rating.toFixed(1)}</span>
+                    <span className="text-xs font-medium">{(product.rating || 0).toFixed(1)}</span>
                     <span className="text-xs text-gray-500">
-                      ({product.reviewCount})
+                      ({(product.reviewCount || 0)})
                     </span>
                   </div>
                 )}
@@ -144,9 +136,9 @@ export function CategoryProductSection({ categoryName, categorySlug, products, i
                 </div>
 
                 {/* Sold Count */}
-                {product.soldCount != null && product.soldCount > 0 && (
+                {product.soldCount != null && (
                   <div className="text-xs text-gray-500 mb-2">
-                    {t('home.sold_count', { count: product.soldCount })}
+                    {t('home.sold_count', { count: product.soldCount || 0 })}
                   </div>
                 )}
 

@@ -667,12 +667,12 @@ export function ProductsPage() {
                       </h3>
 
                         {/* Rating */}
-                        {product.rating != null && product.rating > 0 && product.reviewCount != null && product.reviewCount > 0 && (
+                        {(product.rating != null || product.reviewCount != null) && (
                           <div className="flex items-center gap-1 mb-2">
                             <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                            <span className="text-xs font-medium">{product.rating.toFixed(1)}</span>
+                            <span className="text-xs font-medium">{(product.rating || 0).toFixed(1)}</span>
                             <span className="text-xs text-gray-500">
-                              ({product.reviewCount})
+                              ({(product.reviewCount || 0)})
                             </span>
                           </div>
                         )}
@@ -699,9 +699,9 @@ export function ProductsPage() {
                         </div>
 
                         <div className="flex items-center justify-between mb-4">
-                          {product.soldCount != null && product.soldCount > 0 && (
+                          {product.soldCount != null && (
                             <div className="text-sm text-gray-500">
-                              {t('products.sold_count', { count: product.soldCount })}
+                              {t('products.sold_count', { count: product.soldCount || 0 })}
                             </div>
                           )}
                           <div className="text-sm text-gray-500">

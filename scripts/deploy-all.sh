@@ -74,7 +74,7 @@ docker-compose -f docker-compose.prod.yml rm -f api web_ssr admin nginx || true
 # Step 4: Start API
 echo ""
 echo "🚀 Step 4: Starting API service..."
-docker-compose -f docker-compose.prod.yml up -d api
+docker-compose -f docker-compose.prod.yml up -d --remove-orphans api
 
 echo "⏳ Waiting for API to be healthy..."
 timeout=120
@@ -100,7 +100,7 @@ echo "🔨 Step 5: Rebuilding nginx service..."
 docker-compose -f docker-compose.prod.yml build --no-cache nginx
 
 echo "🚀 Starting nginx service (reverse proxy) - needed for web_ssr build to call API..."
-docker-compose -f docker-compose.prod.yml up -d nginx
+docker-compose -f docker-compose.prod.yml up -d --remove-orphans nginx
 
 # Đợi nginx sẵn sàng
 echo "⏳ Waiting for nginx to be ready..."
@@ -108,14 +108,20 @@ sleep 5
 
 # Step 6: Build and start web_ssr (sau nginx, có thể gọi API qua nginx trong quá trình build)
 echo ""
-echo "🔨 Step 6: Rebuilding web_ssr service..."
+echo "🛑 Step 6: Stopping web_ssr container..."
+docker-compose -f docker-compose.prod.yml stop web_ssr || true
+
+echo "🗑️  Removing web_ssr container..."
+docker-compose -f docker-compose.prod.yml rm -f web_ssr || true
+
+echo "🔨 Rebuilding web_ssr service..."
 echo "🧹 Cleaning up old web_ssr images..."
 docker images | grep -E "ecommerce.*web-ssr|.*web-ssr.*latest" | awk '{print $3}' | xargs -r docker rmi -f 2>/dev/null || true
 
 docker-compose -f docker-compose.prod.yml build --no-cache web_ssr
 
 echo "🚀 Starting web_ssr service..."
-docker-compose -f docker-compose.prod.yml up -d web_ssr
+docker-compose -f docker-compose.prod.yml up -d --remove-orphans web_ssr
 
 # Step 7: Build and start admin
 echo ""
@@ -123,7 +129,7 @@ echo "🔨 Step 7: Rebuilding admin service..."
 docker-compose -f docker-compose.prod.yml build --no-cache admin
 
 echo "🚀 Starting admin service..."
-docker-compose -f docker-compose.prod.yml up -d admin
+docker-compose -f docker-compose.prod.yml up -d --remove-orphans admin
 
 # Step 8: Restart nginx để cập nhật với web_ssr và admin đã start
 echo ""

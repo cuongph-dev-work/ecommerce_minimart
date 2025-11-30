@@ -27,7 +27,7 @@ export class Product {
   @Property()
   name!: string;
 
-  @Property({ nullable: true })
+  @Property({ type: 'text', nullable: true })
   description?: string;
 
   @Property({ type: 'text', nullable: true })

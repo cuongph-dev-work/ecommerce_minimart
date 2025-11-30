@@ -244,7 +244,7 @@ export function HomePage() {
                 </div>
 
                   {/* Sold Count */}
-                  {product.soldCount && (
+                  {product.soldCount != null && product.soldCount > 0 && (
                     <div className="text-xs text-gray-500 mb-2">
                       {t('home.sold_count', { count: product.soldCount })}
                     </div>

@@ -699,9 +699,11 @@ export function ProductsPage() {
                         </div>
 
                         <div className="flex items-center justify-between mb-4">
-                          <div className="text-sm text-gray-500">
-                            {product.soldCount && t('products.sold_count', { count: product.soldCount })}
-                          </div>
+                          {product.soldCount != null && product.soldCount > 0 && (
+                            <div className="text-sm text-gray-500">
+                              {t('products.sold_count', { count: product.soldCount })}
+                            </div>
+                          )}
                           <div className="text-sm text-gray-500">
                             {t('products.stock_remaining', { stock: product.stock })}
                           </div>

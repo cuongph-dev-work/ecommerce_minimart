@@ -52,7 +52,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
 # Set working directory to API workspace for migrations
 WORKDIR /app/apps/api
 
-# Start application
-CMD ["node", "dist/src/main.js"]
+# Start application with schema update
+CMD ["sh", "-c", "npm run schema:update && node dist/src/main.js"]
 
 

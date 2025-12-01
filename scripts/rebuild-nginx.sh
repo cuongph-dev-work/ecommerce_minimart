@@ -5,6 +5,10 @@
 
 set -e
 
+echo "🧹 Cleaning Docker cache..."
+docker builder prune -f || true
+docker container prune -f || true
+
 echo "🛑 Stopping nginx container..."
 docker-compose -f docker-compose.prod.yml stop nginx || true
 

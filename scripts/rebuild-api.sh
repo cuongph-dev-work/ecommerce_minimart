@@ -65,6 +65,10 @@ else
 fi
 
 echo ""
+echo "🧹 Cleaning Docker cache..."
+docker builder prune -f || true
+docker container prune -f || true
+
 echo "🛑 Stopping API container..."
 docker-compose -f docker-compose.prod.yml stop api || true
 

@@ -12,6 +12,11 @@ echo "🚀 Deploying all services..."
 echo "=========================================="
 echo ""
 
+echo "🧹 Cleaning Docker cache..."
+docker builder prune -f || true
+docker container prune -f || true
+echo ""
+
 # Step 1: Start PostgreSQL
 echo "📦 Step 1: Starting PostgreSQL database..."
 if ! docker-compose -f docker-compose.prod.yml ps postgres | grep -q "Up"; then

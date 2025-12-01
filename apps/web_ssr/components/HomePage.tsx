@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
-// import { Badge } from './ui/badge'; // Unused - flash sale feature disabled
+import { Badge } from "./ui/badge";
 import { motion } from "motion/react";
 import { Product } from "../types";
 import { useCart } from "../context/CartContext";
@@ -137,17 +137,6 @@ export function HomePage() {
     Activity,
   };
 
-  // Helper function to get icon component from category
-  const getCategoryIcon = (category: CategoryWithSales) => {
-    if (!category.icon) return null;
-    // Normalize icon name: capitalize first letter to match iconMap keys
-    const iconName =
-      category.icon.charAt(0).toUpperCase() +
-      category.icon.slice(1).toLowerCase();
-    const IconComponent = iconMap[iconName];
-    return IconComponent ? <IconComponent className="h-6 w-6" /> : null;
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Banner Carousel */}
@@ -167,7 +156,7 @@ export function HomePage() {
 
       {/* Featured Products */}
       {(loading || featuredProducts.length > 0) && (
-        <section className="container mx-auto px-4 sm:px-6 mb-6">
+        <div className="container mx-auto px-4 sm:px-6 mb-6">
           <div className="bg-white rounded-2xl shadow-md p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -206,31 +195,26 @@ export function HomePage() {
                     transition={{ delay: index * 0.05 }}
                     whileHover={{ y: -8 }}
                     onClick={() => router.push(`/products/${product.slug}`)}
-                    className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all cursor-pointer group relative"
+                    className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all cursor-pointer group relative flex flex-col h-full"
                   >
-                    {/* Flash Sale Badge - Hidden since flash sale feature is disabled */}
-                    {/* {product.isFlashSale && (
-                <div className="absolute top-2 left-2 z-10">
-                  <Badge className="bg-red-500 text-white hover:bg-red-600">
-                    FLASH SALE
-                  </Badge>
-                </div>
-              )} */}
+                    {/* Flash Sale Badge */}
+                    {product.isFlashSale && (
+                      <div className="absolute top-2 left-2 z-10">
+                        <Badge className="bg-red-500 text-white hover:bg-red-600">
+                          FLASH SALE
+                        </Badge>
+                      </div>
+                    )}
 
-                    <div className="aspect-square overflow-hidden bg-gray-100">
+                    <div className="aspect-square overflow-hidden bg-gray-100 shrink-0">
                       <ImageWithFallback
-                        src={
-                          product.thumbnailUrls?.[0] ||
-                          product.images?.[0] ||
-                          product.image ||
-                          ""
-                        }
+                        src={product.image}
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                     </div>
 
-                    <div className="p-3">
+                    <div className="p-3 flex flex-col grow">
                       {/* Category & Brand */}
                       <div className="text-xs text-gray-500 mb-1">
                         {product.brand ||
@@ -240,7 +224,7 @@ export function HomePage() {
                       </div>
 
                       {/* Product Name */}
-                      <h3 className="text-sm mb-2 line-clamp-2">
+                      <h3 className="text-sm mb-2 line-clamp-2 min-h-10">
                         {product.name}
                       </h3>
 
@@ -296,7 +280,7 @@ export function HomePage() {
                       <Button
                         onClick={(e) => handleAddToCart(product, e)}
                         size="sm"
-                        className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
+                        className="w-full bg-linear-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 mt-auto"
                       >
                         {t("products.add_to_cart")}
                       </Button>
@@ -317,7 +301,7 @@ export function HomePage() {
               </Button>
             </div>
           </div>
-        </section>
+        </div>
       )}
 
       {/* Category Product Sections - Top 3 Categories by Sales */}

@@ -376,7 +376,7 @@ export function ProductDetailPage({ productSlug }: ProductDetailPageProps) {
                   onClick={() => router.push(`/products/${relatedProduct.slug}`)}
                   className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all cursor-pointer group"
                 >
-                  <div className="aspect-square overflow-hidden bg-gray-100">
+                  <div className="aspect-[3/4] overflow-hidden bg-gray-100">
                     <ImageWithFallback
                       src={relatedProduct.thumbnailUrls?.[0] || relatedProduct.images?.[0] || relatedProduct.image || ''}
                       alt={relatedProduct.name}

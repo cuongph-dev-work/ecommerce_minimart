@@ -10,10 +10,11 @@ export const checkoutSchema = v.object({
     v.string('Số điện thoại là bắt buộc'),
     v.regex(/^[0-9]{10,11}$/, 'Số điện thoại phải có 10-11 chữ số')
   ),
-  email: v.pipe(
-    v.string('Email là bắt buộc'),
-    v.minLength(1, 'Email không được để trống'),
-    v.email('Email không hợp lệ')
+  email: v.optional(
+    v.union([
+      v.literal(''),
+      v.pipe(v.string(), v.email('Email không hợp lệ'))
+    ])
   ),
   storeId: v.pipe(
     v.string('Địa điểm nhận hàng là bắt buộc'),

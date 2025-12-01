@@ -21,6 +21,7 @@ import {
   Printer,
   MessageSquare,
   Loader2,
+  User,
 } from 'lucide-react';
 import {
   formatCurrency,
@@ -39,9 +40,10 @@ interface OrderDetailsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onStatusUpdate?: (orderId: string, newStatus: OrderStatus, notes: string) => void;
+  onPaymentUpdate?: (orderId: string) => void;
 }
 
-export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate }: OrderDetailsSheetProps) {
+export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate, onPaymentUpdate }: OrderDetailsSheetProps) {
   const [statusUpdateOpen, setStatusUpdateOpen] = useState(false);
   const [paymentUpdateOpen, setPaymentUpdateOpen] = useState(false);
   const [orderDetail, setOrderDetail] = useState<Order | null>(null);
@@ -112,12 +114,26 @@ export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate }:
           </div>
         ) : (
         <div className="mt-6 space-y-6">
-          {/* Status */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Trạng thái</span>
-            <Badge className={cn("border", getStatusColor(displayOrder.status))}>
-              {getStatusLabel(displayOrder.status)}
-            </Badge>
+          {/* Status and Payment Status */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Trạng thái đơn hàng</span>
+              <Badge className={cn("border", getStatusColor(displayOrder.status))}>
+                {getStatusLabel(displayOrder.status)}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Thanh toán</span>
+              <Badge 
+                className={cn(
+                  displayOrder.paymentStatus === 'paid' 
+                    ? "bg-emerald-600 text-white dark:bg-emerald-500"
+                    : "bg-red-600 text-white dark:bg-red-500"
+                )}
+              >
+                {displayOrder.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}
+              </Badge>
+            </div>
           </div>
 
           <Separator />
@@ -130,6 +146,7 @@ export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate }:
             </h3>
             <div className="space-y-2 bg-muted/30 p-4 rounded-lg">
               <div className="flex items-start gap-2">
+                <User className="h-4 w-4 mt-0.5 text-muted-foreground" />
                 <div className="font-medium min-w-[100px]">Họ tên:</div>
                 <div>{displayOrder.customerName}</div>
               </div>
@@ -366,6 +383,10 @@ export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate }:
               // Refresh order detail after payment update
               if (orderId === displayOrder.id) {
                 fetchOrderDetail();
+              }
+              // Trigger parent refresh
+              if (onPaymentUpdate) {
+                onPaymentUpdate(orderId);
               }
             }}
           />

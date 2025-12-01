@@ -8,6 +8,7 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { Toaster } from '../components/ui/sonner';
 import { settingsService } from '../services/settings.service';
+import '../styles/globals.css';
 import '../index.css';
 
 // Helper function to get SEO settings with defaults

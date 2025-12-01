@@ -70,13 +70,15 @@
         "add_to_cart": "Add to Cart",
         "out_of_stock": "Out of Stock",
         "almost_out": "Almost Out",
+        "low_stock": "Low Stock",
+        "stock_label": "Stock: {{stock}}",
         "loading": "Loading...",
         "found_products": "Found {{count, number}} products",
         "no_products": "No products found",
         "no_products_desc": "Try searching with different keywords or select a different category",
         "clear_filters": "Clear Filters",
         "apply": "Apply",
-        "search_badge": "Search: {{query}}",
+        "search_badge": "Search: {query}",
         "category_badge": "Category: {{name}}",
         "brand_badge": "Brand: {{brand}}",
         "sold_count": "Sold {{count, number}}",
@@ -88,7 +90,9 @@
         "back": "Back",
         "back_to_list": "Back to list",
         "not_found": "Not found",
-        "related_products": "Related Products"
+        "related_products": "Related Products",
+        "search_filter": "Search & Filter",
+        "hide_search": "Hide Search"
     },
     "admin": {
         "dashboard": "Dashboard",
@@ -390,11 +394,7 @@
         "products": {
             "title_default": "Products | Full Catalog",
             "title_search": "Search \"{{query}}\" ",
-            "title_category": "{{category}} Products ",
-            "description_default": "Explore all technology products at Minimart. Smart filters by category, brand, price. 100% genuine products, reputable warranty.",
-            "description_search": "Search results for \"{{query}}\" at Minimart. Genuine products, best prices on the market.",
-            "description_category": "List of {{category}} products at Minimart. Genuine products, reputable warranty, fast delivery.",
-            "keywords": "minimart, products, online shopping, genuine products"
+            "title_category": "{{category}} Products "
         },
         "product_detail": {
             "title": "{{name}} | Price {{price}}",

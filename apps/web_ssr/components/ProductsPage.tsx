@@ -18,9 +18,6 @@ import { useTranslation } from 'react-i18next';
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
 } from './ui/sheet';
 import {
   Select,
@@ -68,6 +65,7 @@ export function ProductsPage() {
   const [selectedBrand, setSelectedBrand] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('default');
   const [showFilterSheet, setShowFilterSheet] = useState(false);
+  const [showFilterBlock, setShowFilterBlock] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -306,6 +304,10 @@ export function ProductsPage() {
     }).format(price);
   };
 
+  const stripHtmlTags = (html: string) => {
+    return html.replace(/<[^>]*>/g, '');
+  };
+
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedCategory('all');
@@ -325,20 +327,36 @@ export function ProductsPage() {
           animate={{ y: 0, opacity: 1 }}
           className="mb-6"
         >
-          <h1 className="mb-4">{t('products.title')}</h1>
-          <p className="text-gray-600 max-w-2xl">
-            {t('products.subtitle')}
-          </p>
+          <div className="flex flex-row items-center justify-between gap-4">
+            <div>
+              <h1 className="mb-2 sm:mb-4 text-2xl sm:text-3xl lg:text-4xl">{t('products.title')}</h1>
+              <p className="text-gray-600 max-w-2xl text-sm sm:text-base">
+                {t('products.subtitle')}
+              </p>
+            </div>
+            <Button
+              onClick={() => setShowFilterBlock(!showFilterBlock)}
+              className="bg-linear-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 gap-2 w-fit"
+              size="lg"
+            >
+              <Search className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span>
+                {showFilterBlock ? t('products.hide_search') : t('products.search_filter')}
+              </span>
+            </Button>
+          </div>
         </motion.div>
 
-        {/* Search and Filter */}
+        {/* Search and Filter - Collapsible */}
+        {showFilterBlock && (
         <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="mb-6"
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="mb-6 overflow-hidden"
         >
-          <div className="bg-white rounded-2xl shadow-md p-6">
+          <div className="bg-white rounded-2xl p-6">
             <div className="flex flex-col sm:flex-row gap-4 mb-6">
               {/* Search */}
               <div className="flex-1 relative">
@@ -362,7 +380,7 @@ export function ProductsPage() {
                       setShowSuggestions(false);
                     }
                   }}
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none transition-all"
+                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-red-500 transition-all"
                 />
                 {searchQuery && (
                   <button
@@ -414,7 +432,7 @@ export function ProductsPage() {
                   }}
                   className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all font-medium ${
                     selectedCategory === 'all'
-                      ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md'
+                      ? 'bg-linear-to-r from-red-500 to-orange-500 text-white shadow-md'
                       : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
                   }`}
                 >
@@ -433,7 +451,7 @@ export function ProductsPage() {
                       }}
                       className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all font-medium ${
                         isActive
-                          ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md'
+                          ? 'bg-linear-to-r from-red-500 to-orange-500 text-white shadow-md'
                           : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
                       }`}
                     >
@@ -490,6 +508,7 @@ export function ProductsPage() {
             </div>
           </div>
         </motion.div>
+        )}
 
         {/* Products Grid */}
         <div className="mb-6">
@@ -643,74 +662,80 @@ export function ProductsPage() {
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
-                        {product.stock < 10 && product.stock > 0 && (
+                        {/* Flash Sale Badge */}
+                        {product.isFlashSale && (
                           <div className="absolute top-3 right-3 px-3 py-1 bg-red-500 text-white text-xs rounded-full">
-                            {t('products.almost_out')}
+                            FLASH SALE
                           </div>
                         )}
-                        {product.stock === 0 && (
-                          <div className="absolute top-3 right-3 px-3 py-1 bg-gray-500 text-white text-xs rounded-full">
-                            {t('products.out_of_stock')}
+                        {product.stock < 10 && product.stock > 0 && (
+                          <div className="absolute top-3 left-3 px-3 py-1 bg-orange-500 text-white text-xs rounded-full">
+                            {t('products.low_stock')}
                           </div>
                         )}
                       </div>
+
                       <div className="p-5">
+                        {/* Category & Brand */}
                         <div className="text-sm text-gray-500 mb-1">
-                        {product.brand || (typeof product.category === 'string' ? product.category : product.category?.name)}
-                      </div>
-                      <h3 className="mb-2 line-clamp-2">
-                        {debouncedSearch ? (
-                          <HighlightText text={product.name} highlight={debouncedSearch} />
-                        ) : (
-                          product.name
-                        )}
-                      </h3>
+                          {product.brand || (typeof product.category === 'string' ? product.category : product.category?.name)}
+                        </div>
+
+                        {/* Product Name */}
+                        <h3 className="mb-2 line-clamp-2 min-h-12">
+                          {debouncedSearch ? (
+                            <HighlightText text={product.name} highlight={debouncedSearch} />
+                          ) : (
+                            product.name
+                          )}
+                        </h3>
 
                         {/* Rating */}
-                        {(product.rating != null || product.reviewCount != null) && (
+                        {product.rating != null && (
                           <div className="flex items-center gap-1 mb-2">
                             <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                            <span className="text-xs font-medium">{(product.rating || 0).toFixed(1)}</span>
-                            <span className="text-xs text-gray-500">
-                              ({(product.reviewCount || 0)})
-                            </span>
+                            <span className="text-xs">{(product.rating || 0).toFixed(1)}</span>
+                            {product.reviewCount != null && (
+                              <span className="text-xs text-gray-500">
+                                ({(product.reviewCount || 0)})
+                              </span>
+                            )}
                           </div>
                         )}
-                        
-                        {/* Price with Discount */}
-                        <div className="mb-3">
-                          {product.discount ? (
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-lg font-semibold text-red-600">
-                                  {formatPrice(product.price * (1 - product.discount / 100))}
-                                </span>
-                                <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
+
+                        {/* Description */}
+                        {product.description && (
+                          <p className="text-sm text-gray-600 mb-3 line-clamp-2 min-h-12">
+                            {stripHtmlTags(product.description)}
+                          </p>
+                        )}
+
+                        {/* Price & Stock */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="text-red-600">
+                            {product.discount ? (
+                              <div>
+                                {formatPrice(product.price * (1 - product.discount / 100))}
+                                <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded ml-2">
                                   -{product.discount}%
                                 </span>
+                                <div className="text-xs text-gray-400 line-through">
+                                  {formatPrice(product.price)}
+                                </div>
                               </div>
-                              <div className="text-sm text-gray-400 line-through">
-                                {formatPrice(product.price)}
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="text-lg font-semibold text-red-600">{formatPrice(product.price)}</div>
-                          )}
-                        </div>
-
-                        <div className="flex items-center justify-between mb-4">
-                          {product.soldCount != null && (
-                            <div className="text-sm text-gray-500">
-                              {t('products.sold_count', { count: product.soldCount || 0 })}
-                            </div>
-                          )}
+                            ) : (
+                              formatPrice(product.price)
+                            )}
+                          </div>
                           <div className="text-sm text-gray-500">
-                            {t('products.stock_remaining', { stock: product.stock })}
+                            {t('products.stock_label', { stock: product.stock })}
                           </div>
                         </div>
+
+                        {/* Add to Cart Button */}
                         <Button
                           onClick={(e) => handleAddToCart(product, e)}
-                          className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
+                          className="w-full bg-linear-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
                           disabled={product.stock === 0}
                         >
                           {product.stock === 0 ? t('products.out_of_stock') : t('products.add_to_cart')}
@@ -737,7 +762,7 @@ export function ProductsPage() {
                           onClick={() => setPage(i + 1)}
                           className={`w-10 h-10 rounded-lg transition-all ${
                             page === i + 1
-                              ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
+                              ? 'bg-linear-to-r from-red-500 to-orange-500 text-white'
                               : 'bg-gray-100 hover:bg-gray-200'
                           }`}
                         >
@@ -759,16 +784,16 @@ export function ProductsPage() {
           </div>
         </div>
 
-        {/* Filter Sheet (Mobile) */}
+        {/* Filter Sheet */}
         <Sheet open={showFilterSheet} onOpenChange={setShowFilterSheet}>
           <SheetContent className="w-full max-w-2xl">
-            <SheetHeader>
-              <SheetTitle>{t('products.filter_title')}</SheetTitle>
-              <SheetDescription>
+            <div className="p-4 border-b">
+              <h2 className="text-lg font-semibold mb-1.5">{t('products.filter_title')}</h2>
+              <p className="text-sm text-gray-600">
                 {t('products.filter_description')}
-              </SheetDescription>
-            </SheetHeader>
-            <div className="space-y-6 mt-6">
+              </p>
+            </div>
+            <div className="p-4 space-y-4">
               {/* Brand */}
               {brands.length > 0 && (
                 <div className="space-y-2">
@@ -776,9 +801,9 @@ export function ProductsPage() {
                   <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => setSelectedBrand('all')}
-                      className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all ${
+                      className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all text-sm ${
                         selectedBrand === 'all'
-                          ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md'
+                          ? 'bg-linear-to-r from-red-500 to-orange-500 text-white shadow-md'
                           : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
                       }`}
                     >
@@ -788,9 +813,9 @@ export function ProductsPage() {
                       <button
                         key={brand}
                         onClick={() => setSelectedBrand(brand!)}
-                        className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all ${
+                        className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all text-sm ${
                           selectedBrand === brand
-                            ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md'
+                            ? 'bg-linear-to-r from-red-500 to-orange-500 text-white shadow-md'
                             : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
                         }`}
                       >
@@ -815,9 +840,9 @@ export function ProductsPage() {
                     <button
                       key={option.value}
                       onClick={() => setSortBy(option.value)}
-                      className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all ${
+                      className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all text-sm ${
                         sortBy === option.value
-                          ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md'
+                          ? 'bg-linear-to-r from-red-500 to-orange-500 text-white shadow-md'
                           : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
                       }`}
                     >
@@ -827,19 +852,12 @@ export function ProductsPage() {
                 </div>
               </div>
             </div>
-            <div className="mt-6 flex gap-2">
+            <div className="p-4">
               <Button
                 onClick={clearFilters}
-                variant="outline"
-                className="flex-1"
+                className="w-full bg-linear-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
               >
                 {t('products.clear_filters')}
-              </Button>
-              <Button
-                onClick={() => setShowFilterSheet(false)}
-                className="flex-1 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
-              >
-                {t('products.apply')}
               </Button>
             </div>
           </SheetContent>

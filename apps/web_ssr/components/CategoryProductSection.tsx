@@ -3,7 +3,7 @@
 import { ArrowRight, Star } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from './ui/button';
-// import { Badge } from './ui/badge'; // Unused - flash sale feature disabled
+import { Badge } from './ui/badge';
 import { motion } from 'motion/react';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
@@ -75,18 +75,18 @@ export function CategoryProductSection({ categoryName, categorySlug, products }:
               transition={{ delay: index * 0.05 }}
               whileHover={{ y: -8 }}
               onClick={() => router.push(`/products/${product.slug}`)}
-              className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all cursor-pointer group relative"
+              className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all cursor-pointer group relative flex flex-col h-full"
             >
-              {/* Flash Sale Badge - Hidden since flash sale feature is disabled */}
-              {/* {product.isFlashSale && (
+              {/* Flash Sale Badge */}
+              {product.isFlashSale && (
                 <div className="absolute top-2 left-2 z-10">
                   <Badge className="bg-red-500 text-white hover:bg-red-600">
                     FLASH SALE
                   </Badge>
                 </div>
-              )} */}
+              )}
 
-              <div className="aspect-square overflow-hidden bg-gray-100">
+              <div className="aspect-square overflow-hidden bg-gray-100 shrink-0">
                 <ImageWithFallback
                   src={product.thumbnailUrls?.[0] || product.images?.[0] || product.image || ''}
                   alt={product.name}
@@ -94,22 +94,25 @@ export function CategoryProductSection({ categoryName, categorySlug, products }:
                 />
               </div>
 
-              <div className="p-3">
+              <div className="p-3 flex flex-col grow">
                 {/* Category & Brand */}
                 <div className="text-xs text-gray-500 mb-1">
                   {product.brand || (typeof product.category === 'string' ? product.category : product.category?.name)}
                 </div>
 
                 {/* Product Name */}
-                <h3 className="text-sm mb-2 line-clamp-2">{product.name}</h3>
+                <h3 className="text-sm mb-2 line-clamp-2 min-h-10">{product.name}</h3>
 
                 {/* Rating */}
-                {(product.rating != null || product.reviewCount != null) && (
+                {(product.rating != null ||
+                  product.reviewCount != null) && (
                   <div className="flex items-center gap-1 mb-2">
                     <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                    <span className="text-xs font-medium">{(product.rating || 0).toFixed(1)}</span>
+                    <span className="text-xs font-medium">
+                      {(product.rating || 0).toFixed(1)}
+                    </span>
                     <span className="text-xs text-gray-500">
-                      ({(product.reviewCount || 0)})
+                      ({product.reviewCount || 0})
                     </span>
                   </div>
                 )}
@@ -131,7 +134,9 @@ export function CategoryProductSection({ categoryName, categorySlug, products }:
                       </div>
                     </div>
                   ) : (
-                    <div className="text-red-600 font-semibold">{formatPrice(product.price)}</div>
+                    <div className="text-red-600 font-semibold">
+                      {formatPrice(product.price)}
+                    </div>
                   )}
                 </div>
 
@@ -146,7 +151,7 @@ export function CategoryProductSection({ categoryName, categorySlug, products }:
                 <Button
                   onClick={(e) => handleAddToCart(product, e)}
                   size="sm"
-                  className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
+                  className="w-full bg-linear-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 mt-auto"
                 >
                   {t('products.add_to_cart')}
                 </Button>

@@ -126,7 +126,7 @@ export function CartPage() {
       const orderData = {
         customerName: checkoutData.name,
         customerPhone: checkoutData.phone,
-        customerEmail: checkoutData.email,
+        customerEmail: checkoutData.email || undefined,
         notes: checkoutData.notes || undefined,
         pickupStoreId: selectedStoreId,
         items: cart.map(item => ({
@@ -154,6 +154,20 @@ export function CartPage() {
       }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const resetCheckoutForm = () => {
+    setCheckoutData({
+      name: '',
+      phone: '',
+      email: '',
+      notes: '',
+    });
+    setValidationErrors([]);
+    // Reset to first store if available
+    if (stores.length > 0) {
+      setSelectedStoreId(stores[0].id);
     }
   };
 
@@ -331,7 +345,15 @@ export function CartPage() {
       </div>
 
       {/* Checkout Dialog */}
-      <Dialog open={showCheckout} onOpenChange={setShowCheckout}>
+      <Dialog 
+        open={showCheckout} 
+        onOpenChange={(open) => {
+          setShowCheckout(open);
+          if (!open) {
+            resetCheckoutForm();
+          }
+        }}
+      >
         <DialogContent className="!max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('cart.checkout_title')}</DialogTitle>
@@ -395,7 +417,7 @@ export function CartPage() {
 
               <div>
                 <label className="block mb-2">
-                  {t('cart.email')} <span className="text-red-500">*</span>
+                  {t('cart.email')}
                 </label>
                 <input
                   type="email"

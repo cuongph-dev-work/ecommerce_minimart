@@ -112,7 +112,7 @@ export function FlashSaleSection() {
                 -{item.discount}%
               </div>
 
-              <div className="aspect-square overflow-hidden bg-gray-100">
+              <div className="aspect-[3/4] overflow-hidden bg-gray-100">
                 <ImageWithFallback
                   src={item.product.image}
                   alt={item.product.name}

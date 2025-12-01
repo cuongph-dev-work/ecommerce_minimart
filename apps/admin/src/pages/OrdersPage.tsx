@@ -208,6 +208,12 @@ export function OrdersPage() {
     }
   };
 
+  // Update order payment
+  const handlePaymentUpdate = async (orderId: string) => {
+    // Refresh the orders list to get updated payment status
+    await fetchOrders();
+  };
+
   // Add product to order
   const handleAddProduct = (product: Product) => {
     const existing = selectedProducts.find(sp => sp.productId === product.id);
@@ -624,6 +630,7 @@ export function OrdersPage() {
               <TableHead>Sản phẩm</TableHead>
               <TableHead>Phương thức</TableHead>
               <TableHead>Tổng tiền</TableHead>
+              <TableHead>Thanh toán</TableHead>
               <TableHead>Trạng thái</TableHead>
               <TableHead className="text-right">Thao tác</TableHead>
             </TableRow>
@@ -631,13 +638,13 @@ export function OrdersPage() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   Loading orders...
                 </TableCell>
               </TableRow>
             ) : ordersData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   Không tìm thấy đơn hàng nào
                 </TableCell>
               </TableRow>
@@ -673,6 +680,16 @@ export function OrdersPage() {
                   </TableCell>
                   <TableCell>
                     <span className={cn(
+                      "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium",
+                      order.paymentStatus === 'paid' 
+                        ? "bg-emerald-600 text-white dark:bg-emerald-500"
+                        : "bg-red-600 text-white dark:bg-red-500"
+                    )}>
+                      {order.paymentStatus === 'paid' ? 'Đã TT' : 'Chưa TT'}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className={cn(
                       "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border",
                       getStatusColor(order.status)
                     )}>
@@ -684,8 +701,7 @@ export function OrdersPage() {
                       <DropdownMenuTrigger asChild>
                         <Button 
                           variant="ghost" 
-                          size="icon" 
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          size="icon"
                         >
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
@@ -771,6 +787,7 @@ export function OrdersPage() {
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
         onStatusUpdate={handleStatusUpdate}
+        onPaymentUpdate={handlePaymentUpdate}
       />
 
       {/* Create Order Dialog */}

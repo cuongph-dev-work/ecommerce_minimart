@@ -71,13 +71,15 @@
         "add_to_cart": "Thêm vào giỏ",
         "out_of_stock": "Hết hàng",
         "almost_out": "Sắp hết",
+        "low_stock": "Sắp hết",
+        "stock_label": "Còn {{stock}}",
         "loading": "Đang tải...",
         "found_products": "Tìm thấy {{count, number}} sản phẩm",
         "no_products": "Không tìm thấy sản phẩm",
         "no_products_desc": "Thử tìm kiếm với từ khóa khác hoặc chọn danh mục khác",
         "clear_filters": "Xóa bộ lọc",
         "apply": "Áp dụng",
-        "search_badge": "Tìm kiếm: {{query}}",
+        "search_badge": "Tìm kiếm: {query}",
         "category_badge": "Danh mục: {{name}}",
         "brand_badge": "Thương hiệu: {{brand}}",
         "sold_count": "Đã bán {{count, number}}",
@@ -89,7 +91,9 @@
         "back": "Quay lại",
         "back_to_list": "Quay lại danh sách",
         "not_found": "Không tìm thấy",
-        "related_products": "Sản phẩm liên quan"
+        "related_products": "Sản phẩm liên quan",
+        "search_filter": "Tìm kiếm & Lọc",
+        "hide_search": "Ẩn tìm kiếm"
     },
     "admin": {
         "dashboard": "Tổng quan",
@@ -391,11 +395,7 @@
         "products": {
             "title_default": "Sản phẩm | Danh mục đầy đủ",
             "title_search": "Tìm kiếm \"{{query}}\" ",
-            "title_category": "Sản phẩm {{category}} ",
-            "description_default": "Khám phá toàn bộ sản phẩm công nghệ tại Minimart. Bộ lọc thông minh theo danh mục, thương hiệu, giá cả. Hàng chính hãng 100%, bảo hành uy tín.",
-            "description_search": "Kết quả tìm kiếm cho \"{{query}}\" tại Minimart. Hàng chính hãng, giá tốt nhất thị trường.",
-            "description_category": "Danh sách sản phẩm {{category}} tại Minimart. Hàng chính hãng, bảo hành uy tín, giao hàng nhanh.",
-            "keywords": "minimart, sản phẩm, mua sắm online, hàng chính hãng"
+            "title_category": "Sản phẩm {{category}} "
         },
         "product_detail": {
             "title": "{{name}} | Giá {{price}}",

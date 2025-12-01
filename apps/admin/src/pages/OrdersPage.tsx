@@ -209,7 +209,7 @@ export function OrdersPage() {
   };
 
   // Update order payment
-  const handlePaymentUpdate = async (orderId: string) => {
+  const handlePaymentUpdate = async () => {
     // Refresh the orders list to get updated payment status
     await fetchOrders();
   };

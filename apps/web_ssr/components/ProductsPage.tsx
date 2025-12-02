@@ -704,11 +704,9 @@ export function ProductsPage() {
                         )}
 
                         {/* Description */}
-                        {product.description && (
-                          <p className="text-sm text-gray-600 mb-3 line-clamp-2 min-h-[40px] break-all">
-                            {stripHtmlTags(product.description)}
-                          </p>
-                        )}
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2 min-h-[40px] break-all">
+                          {product.description ? stripHtmlTags(product.description) : ''}
+                        </p>
 
                         {/* Price & Stock */}
                         <div className="flex items-center justify-between mb-4">

@@ -101,7 +101,7 @@ export function CategoryProductSection({ categoryName, categorySlug, products }:
                 </div>
 
                 {/* Product Name */}
-                <h3 className="text-sm mb-2 line-clamp-2 min-h-10">{product.name}</h3>
+                <h3 className="text-sm mb-2 line-clamp-2 min-h-[40px] break-all">{product.name}</h3>
 
                 {/* Rating */}
                 {(product.rating != null ||

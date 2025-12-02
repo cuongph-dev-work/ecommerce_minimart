@@ -682,7 +682,7 @@ export function ProductsPage() {
                         </div>
 
                         {/* Product Name */}
-                        <h3 className="mb-2 line-clamp-2 min-h-12">
+                        <h3 className="mb-2 line-clamp-2 min-h-[40px] break-all">
                           {debouncedSearch ? (
                             <HighlightText text={product.name} highlight={debouncedSearch} />
                           ) : (
@@ -705,7 +705,7 @@ export function ProductsPage() {
 
                         {/* Description */}
                         {product.description && (
-                          <p className="text-sm text-gray-600 mb-3 line-clamp-2 min-h-12">
+                          <p className="text-sm text-gray-600 mb-3 line-clamp-2 min-h-[40px] break-all">
                             {stripHtmlTags(product.description)}
                           </p>
                         )}

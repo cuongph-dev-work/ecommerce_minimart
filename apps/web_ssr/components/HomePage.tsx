@@ -224,7 +224,7 @@ export function HomePage() {
                       </div>
 
                       {/* Product Name */}
-                      <h3 className="text-sm mb-2 line-clamp-2 min-h-10">
+                      <h3 className="text-sm mb-2 line-clamp-2 min-h-[40px] break-all">
                         {product.name}
                       </h3>
 

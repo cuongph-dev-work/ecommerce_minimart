@@ -57,6 +57,7 @@ export function ProductsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [allCategories, setAllCategories] = useState<Category[]>([]); // All categories including subcategories
   const [loading, setLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true); // Track if this is the first load
   const [searchQuery, setSearchQuery] = useState(searchParams?.get('search') || '');
   const categoryParam = searchParams?.get('category') || '';
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -134,8 +135,11 @@ export function ProductsPage() {
         setTimeout(() => {
           isUpdatingFromUrlRef.current = false;
         }, 0);
+      } else {
+        // If already 'all', just mark initial load as done
+        // This will allow products to load via the load products effect
+        setIsInitialLoad(false);
       }
-      setIsInitialLoad(false);
       return;
     }
 
@@ -180,11 +184,22 @@ export function ProductsPage() {
 
   // Load products
   useEffect(() => {
+    // Skip loading if we're still resolving category from URL
+    if (isInitialLoad && categoryParam) {
+      return;
+    }
+
     const abortController = new AbortController();
     
     const loadProducts = async () => {
       try {
         setLoading(true);
+        
+        // Only clear products on initial load or when filters change significantly
+        const isFilterChange = page === 1 && (debouncedSearch || selectedCategory !== 'all' || selectedBrand !== 'all');
+        if (isInitialLoading || isFilterChange) {
+          setProducts([]);
+        }
         
         const params: any = {
           page,
@@ -224,6 +239,7 @@ export function ProductsPage() {
           if (result.pagination) {
             setTotalPages(result.pagination.totalPages || 1);
           }
+          setIsInitialLoading(false);
         }
         } catch (error) {
         if (error instanceof Error && error.name !== 'AbortError') {
@@ -240,6 +256,7 @@ export function ProductsPage() {
     loadProducts();
 
     return () => abortController.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch, selectedCategory, selectedBrand, sortBy, page]);
 
   // Update URL params when selectedCategory changes (from user click)
@@ -623,13 +640,21 @@ export function ProductsPage() {
             )}
 
             {/* Loading Skeleton */}
-            {loading ? (
+            {loading && isInitialLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[...Array(8)].map((_, index) => (
-                  <div key={index} className="bg-gray-200 rounded-2xl animate-pulse h-96" />
+                  <div key={index} className="bg-white rounded-2xl overflow-hidden shadow-md">
+                    <div className="aspect-square bg-gray-200 animate-pulse" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                      <div className="h-6 bg-gray-200 rounded animate-pulse w-3/4" />
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2" />
+                      <div className="h-10 bg-gray-200 rounded animate-pulse" />
+                    </div>
+                  </div>
                 ))}
               </div>
-            ) : products.length === 0 ? (
+            ) : products.length === 0 && !loading ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -644,8 +669,8 @@ export function ProductsPage() {
                 </p>
               </motion.div>
             ) : (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="relative">
+                <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
                   {products.map((product, index) => (
                     <motion.div
                       key={product.id}
@@ -749,7 +774,7 @@ export function ProductsPage() {
                     <Button
                       variant="outline"
                       onClick={() => setPage(p => Math.max(1, p - 1))}
-                      disabled={page === 1}
+                      disabled={page === 1 || loading}
                     >
                       {t('products.previous')}
                     </Button>
@@ -758,11 +783,12 @@ export function ProductsPage() {
                         <button
                           key={i + 1}
                           onClick={() => setPage(i + 1)}
+                          disabled={loading}
                           className={`w-10 h-10 rounded-lg transition-all ${
                             page === i + 1
                               ? 'bg-linear-to-r from-red-500 to-orange-500 text-white'
                               : 'bg-gray-100 hover:bg-gray-200'
-                          }`}
+                          } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                           {i + 1}
                         </button>
@@ -771,13 +797,23 @@ export function ProductsPage() {
                     <Button
                       variant="outline"
                       onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                      disabled={page === totalPages}
+                      disabled={page === totalPages || loading}
                     >
                       {t('products.next')}
                     </Button>
                   </div>
                 )}
-              </>
+                
+                {/* Loading Overlay */}
+                {loading && !isInitialLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm z-10 rounded-lg">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
+                      <p className="text-sm text-gray-600">{t('products.loading')}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>

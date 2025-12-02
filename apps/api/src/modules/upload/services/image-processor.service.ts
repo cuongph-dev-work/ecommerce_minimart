@@ -19,6 +19,7 @@ export class ImageProcessorService {
     }
 
     const quality = this.configService.get<number>('upload.imageQuality') || 85;
+    const thumbnailQuality = this.configService.get<number>('upload.thumbnailQuality') || 92;
     const thumbnailSize = this.configService.get<number>('upload.thumbnailSize') || 150;
     const mediumSize = this.configService.get<number>('upload.mediumSize') || 500;
     const largeSize = this.configService.get<number>('upload.largeSize') || 1200;
@@ -38,26 +39,50 @@ export class ImageProcessorService {
 
     // Process images
     const image = sharp(filePath);
+    const fileStats = await fs.stat(filePath);
+    const fileSize = fileStats.size;
+    const ONE_MB = 1024 * 1024; // 1MB in bytes
 
-    // Thumbnail
-    await image
-      .clone()
-      .resize(thumbnailSize, thumbnailSize, { fit: 'cover' })
-      .jpeg({ quality })
-      .toFile(path.join(thumbnailDir, filename));
+    // Thumbnail - nếu file < 1MB thì dùng ảnh gốc
+    if (fileSize < ONE_MB) {
+      // Dùng ảnh gốc làm thumbnail, chỉ tối ưu chất lượng
+      await image
+        .clone()
+        .jpeg({ 
+          quality: thumbnailQuality,
+          progressive: true,
+          mozjpeg: true
+        })
+        .toFile(path.join(thumbnailDir, filename));
+    } else {
+      // Resize với các tối ưu chất lượng
+      await image
+        .clone()
+        .resize(thumbnailSize, thumbnailSize, { 
+          fit: 'cover',
+          kernel: 'lanczos3'
+        })
+        .sharpen({ sigma: 1, m1: 1.2, m2: 1.4, x1: 2, y2: 10, y3: 20 })
+        .jpeg({ 
+          quality: thumbnailQuality,
+          progressive: true,
+          mozjpeg: true
+        })
+        .toFile(path.join(thumbnailDir, filename));
+    }
 
     // Medium
     await image
       .clone()
       .resize(mediumSize, mediumSize, { fit: 'inside' })
-      .jpeg({ quality })
+      .jpeg({ quality, progressive: true, mozjpeg: true })
       .toFile(path.join(mediumDir, filename));
 
     // Large
     await image
       .clone()
       .resize(largeSize, largeSize, { fit: 'inside' })
-      .jpeg({ quality })
+      .jpeg({ quality, progressive: true, mozjpeg: true })
       .toFile(path.join(largeDir, filename));
   }
 }

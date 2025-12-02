@@ -6,6 +6,7 @@ export default registerAs('upload', () => ({
   publicUrl: process.env.UPLOAD_PUBLIC_URL,
   enableOptimization: process.env.ENABLE_IMAGE_OPTIMIZATION === 'true',
   imageQuality: parseInt(process.env.IMAGE_QUALITY, 10) || 85,
+  thumbnailQuality: parseInt(process.env.THUMBNAIL_QUALITY, 10) || 92,
   thumbnailSize: parseInt(process.env.THUMBNAIL_SIZE, 10) || 150,
   mediumSize: parseInt(process.env.MEDIUM_SIZE, 10) || 500,
   largeSize: parseInt(process.env.LARGE_SIZE, 10) || 1200,

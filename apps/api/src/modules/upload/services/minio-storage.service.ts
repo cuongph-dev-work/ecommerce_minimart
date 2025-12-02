@@ -143,7 +143,7 @@ export class MinioStorageService implements OnModuleInit {
     await this.s3Client.send(uploadCommand);
 
     // Process image to create thumbnails
-    const imageMetadata = await this.processImage(file.buffer, type, filename);
+    const imageMetadata = await this.processImage(file.buffer, type, filename, file.size);
 
     // Construct public URL
     // MinIO public URL format: http://localhost:9000/bucket-name/key
@@ -165,6 +165,7 @@ export class MinioStorageService implements OnModuleInit {
     buffer: Buffer,
     type: 'product' | 'banner' | 'category' | 'store',
     filename: string,
+    fileSize: number,
   ): Promise<{ width?: number; height?: number }> {
     const enableOptimization = this.configService.get<boolean>('upload.enableOptimization');
     
@@ -174,19 +175,43 @@ export class MinioStorageService implements OnModuleInit {
 
     try {
       const quality = this.configService.get<number>('upload.imageQuality') || 85;
+      const thumbnailQuality = this.configService.get<number>('upload.thumbnailQuality') || 92;
       const thumbnailSize = this.configService.get<number>('upload.thumbnailSize') || 150;
       const mediumSize = this.configService.get<number>('upload.mediumSize') || 500;
       const largeSize = this.configService.get<number>('upload.largeSize') || 1200;
 
       const image = sharp(buffer);
       const metadata = await image.metadata();
+      const ONE_MB = 1024 * 1024; // 1MB in bytes
 
-      // Process thumbnail
-      const thumbnailBuffer = await image
-        .clone()
-        .resize(thumbnailSize, thumbnailSize, { fit: 'cover' })
-        .jpeg({ quality })
-        .toBuffer();
+      // Process thumbnail - nếu file < 1MB thì dùng ảnh gốc
+      let thumbnailBuffer: Buffer;
+      if (fileSize < ONE_MB) {
+        // Dùng ảnh gốc làm thumbnail, chỉ tối ưu chất lượng
+        thumbnailBuffer = await image
+          .clone()
+          .jpeg({ 
+            quality: thumbnailQuality,
+            progressive: true,
+            mozjpeg: true
+          })
+          .toBuffer();
+      } else {
+        // Resize với các tối ưu chất lượng
+        thumbnailBuffer = await image
+          .clone()
+          .resize(thumbnailSize, thumbnailSize, { 
+            fit: 'cover',
+            kernel: 'lanczos3'
+          })
+          .sharpen({ sigma: 1, m1: 1.2, m2: 1.4, x1: 2, y2: 10, y3: 20 })
+          .jpeg({ 
+            quality: thumbnailQuality,
+            progressive: true,
+            mozjpeg: true
+          })
+          .toBuffer();
+      }
 
       await this.uploadToMinio(
         `${type}/thumbnail/${filename}`,
@@ -198,7 +223,7 @@ export class MinioStorageService implements OnModuleInit {
       const mediumBuffer = await image
         .clone()
         .resize(mediumSize, mediumSize, { fit: 'inside' })
-        .jpeg({ quality })
+        .jpeg({ quality, progressive: true, mozjpeg: true })
         .toBuffer();
 
       await this.uploadToMinio(
@@ -211,7 +236,7 @@ export class MinioStorageService implements OnModuleInit {
       const largeBuffer = await image
         .clone()
         .resize(largeSize, largeSize, { fit: 'inside' })
-        .jpeg({ quality })
+        .jpeg({ quality, progressive: true, mozjpeg: true })
         .toBuffer();
 
       await this.uploadToMinio(

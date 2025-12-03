@@ -142,9 +142,9 @@ export function CartPage() {
       setShowCheckout(false);
       
       // Navigate to order tracking page after 2 seconds
-      setTimeout(() => {
-        router.push('/order-tracking');
-      }, 2000);
+      // setTimeout(() => {
+      //   router.push('/order-tracking');
+      // }, 2000);
     } catch (err) {
       const apiError = extractApiError(err);
       if (apiError.errors) {
@@ -392,7 +392,7 @@ export function CartPage() {
 
               <div>
                 <label className="block mb-2">
-                  {t('cart.phone_number')} <span className="text-red-500">*</span>
+                  {t('cart.phone_number')}
                 </label>
                 <input
                   type="tel"
@@ -417,7 +417,7 @@ export function CartPage() {
 
               <div>
                 <label className="block mb-2">
-                  {t('cart.email')}
+                  {t('cart.email')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"

@@ -127,7 +127,7 @@ export function Header() {
               <Search className="h-5 w-5" />
             </Button>
 
-            <Button
+            {/* <Button
               variant="ghost"
               size="icon"
               className="rounded-full"
@@ -135,7 +135,7 @@ export function Header() {
               title={t('common.orderTracking')}
             >
               <ClipboardList className="h-5 w-5" />
-            </Button>
+            </Button> */}
 
             <Button
               variant="ghost"

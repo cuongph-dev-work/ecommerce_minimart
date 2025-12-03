@@ -6,15 +6,18 @@ export const checkoutSchema = v.object({
     v.minLength(1, 'Tên khách hàng không được để trống'),
     v.maxLength(100, 'Tên khách hàng không được vượt quá 100 ký tự')
   ),
-  phone: v.pipe(
-    v.string('Số điện thoại là bắt buộc'),
-    v.regex(/^[0-9]{10,11}$/, 'Số điện thoại phải có 10-11 chữ số')
-  ),
-  email: v.optional(
+  phone: v.optional(
     v.union([
       v.literal(''),
-      v.pipe(v.string(), v.email('Email không hợp lệ'))
+      v.pipe(
+        v.string(),
+        v.regex(/^[0-9]{10,11}$/, 'Số điện thoại phải có 10-11 chữ số')
+      )
     ])
+  ),
+  email: v.pipe(
+    v.string('Email là bắt buộc'),
+    v.email('Email không hợp lệ')
   ),
   storeId: v.pipe(
     v.string('Địa điểm nhận hàng là bắt buộc'),

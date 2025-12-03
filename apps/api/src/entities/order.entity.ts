@@ -46,11 +46,11 @@ export class Order {
   @Property()
   customerName!: string;
 
-  @Property()
-  customerPhone!: string;
-
   @Property({ nullable: true })
-  customerEmail?: string;
+  customerPhone?: string;
+
+  @Property()
+  customerEmail!: string;
 
   @Property({ nullable: true })
   notes?: string;

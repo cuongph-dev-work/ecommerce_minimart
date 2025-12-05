@@ -29,11 +29,11 @@ export function Footer() {
                   <img
                     src={logoUrl}
                     alt={settings.store_name || 'Logo'}
-                    className="w-10 h-10 object-contain rounded-lg"
+                    className="w-14 h-14 object-contain rounded-lg"
                   />
                 ) : null;
               })() : (
-                <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center">
+                <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center">
                   <span className="text-white">
                     {isMounted && settings.store_name ? settings.store_name.charAt(0) : 'M'}
                   </span>

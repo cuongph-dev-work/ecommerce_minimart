@@ -66,7 +66,7 @@ export function Header() {
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center"
+                className="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center"
                 suppressHydrationWarning
               >
                 <span className="text-white">
@@ -81,7 +81,7 @@ export function Header() {
                   whileTap={{ scale: 0.95 }}
                   src={logoUrl}
                   alt={settings.store_name || 'Logo'}
-                  className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded-lg"
+                  className="w-10 h-10 sm:w-14 sm:h-14 object-contain rounded-lg"
                 />
               ) : null;
             })()}

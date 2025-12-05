@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { bannersService } from '../services/banners.service';
 import type { Banner } from '../types';
@@ -220,50 +220,58 @@ export function BannerCarousel() {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       >
-      <AnimatePresence mode="wait">
+      {/* Banner Images - Crossfade instead of slide for smoother transition */}
+      {banners.map((banner, index) => (
         <motion.div
-          key={currentIndex}
-          initial={{ opacity: 0, x: 100 }}
+          key={banner.id}
+          initial={false}
           animate={{ 
-            opacity: isDragging ? 0.8 : 1, 
-            x: dragOffset 
+            opacity: index === currentIndex ? 1 : 0,
+            scale: index === currentIndex ? 1 : 1.05,
+            x: isDragging && index === currentIndex ? dragOffset : 0,
           }}
-          exit={{ opacity: 0, x: -100 }}
-          transition={{ duration: isDragging ? 0 : 0.5 }}
+          transition={{ 
+            duration: isDragging ? 0 : 0.3,
+            ease: 'easeOut'
+          }}
           className="absolute inset-0 cursor-pointer"
-          style={{ touchAction: 'pan-x' }}
-          onClick={handleBannerClick}
+          style={{ 
+            touchAction: 'pan-x',
+            zIndex: index === currentIndex ? 1 : 0,
+            pointerEvents: index === currentIndex ? 'auto' : 'none',
+          }}
+          onClick={index === currentIndex ? handleBannerClick : undefined}
         >
           {/* Banner Image */}
-          <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gray-100">
             <ImageWithFallback
-              src={sanitizeImageUrl(banners[currentIndex].image) || ''}
-              alt={banners[currentIndex].title || 'Banner'}
+              src={sanitizeImageUrl(banner.image) || ''}
+              alt={banner.title || 'Banner'}
               className="w-full h-full object-cover"
-              eager
+              eager={index === 0} // Only eager load first banner
             />
           </div>
         </motion.div>
-      </AnimatePresence>
+      ))}
 
       {/* Navigation Buttons */}
       <button
         onClick={goToPrevious}
-        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors flex items-center justify-center text-white"
+        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors flex items-center justify-center text-white z-10"
         aria-label="Previous banner"
       >
         <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
       </button>
       <button
         onClick={goToNext}
-        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors flex items-center justify-center text-white"
+        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors flex items-center justify-center text-white z-10"
         aria-label="Next banner"
       >
         <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
       </button>
 
       {/* Indicators */}
-      <div className="absolute bottom-3 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+      <div className="absolute bottom-3 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
         {banners.map((_, index) => (
           <button
             key={index}

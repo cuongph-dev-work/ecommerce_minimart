@@ -2,16 +2,13 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, SlidersHorizontal, X, ChevronDown, Star } from 'lucide-react';
+import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Input } from './ui/input';
 import { motion } from 'motion/react';
 import { Product, Category } from '../types';
 import { useCart } from '../context/CartContext';
 import { toast } from 'sonner';
-import { ImageWithFallback } from './figma/ImageWithFallback';
-import { HighlightText } from './HighlightText';
 import { SearchSuggestions } from './SearchSuggestions';
 import { useSearchHistory } from '../hooks/useSearchHistory';
 import { useTranslation } from 'react-i18next';
@@ -28,6 +25,7 @@ import {
 } from './ui/select';
 import { productsService } from '../services/products.service';
 import { categoriesService } from '../services/categories.service';
+import { ProductCard } from './ProductCard';
 
 // Debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -106,6 +104,13 @@ export function ProductsPage() {
       }
     };
   }, [hasMore, loading]);
+
+  // Scroll to top when page resets (filters change, category change, etc.)
+  useEffect(() => {
+    if (page === 1) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [page, selectedCategory, debouncedSearch, selectedBrand, sortBy]);
 
   // Get unique brands from products
   const brands = useMemo(() => {
@@ -361,30 +366,36 @@ export function ProductsPage() {
     }
   }, [searchQuery, selectedCategory, allCategories, router, searchParams, isInitialLoad]);
 
-  const handleAddToCart = (product: Product, e: React.MouseEvent) => {
+  // Memoized handlers for performance
+  const handleAddToCart = useCallback((product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
     addToCart(product);
     toast.success(t('products.add_to_cart_success', { name: product.name }));
-  };
+  }, [addToCart, t]);
 
-  const formatPrice = (price: number) => {
+  const handleProductClick = useCallback((slug: string) => {
+    router.push(`/products/${slug}`);
+  }, [router]);
+
+  // Memoized utility functions
+  const formatPrice = useCallback((price: number) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND',
     }).format(price);
-  };
+  }, []);
 
-  const stripHtmlTags = (html: string) => {
+  const stripHtmlTags = useCallback((html: string) => {
     return html.replace(/<[^>]*>/g, '');
-  };
+  }, []);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setSearchQuery('');
     setSelectedCategory('all');
     setSelectedBrand('all');
     setSortBy('default');
     setPage(1);
-  };
+  }, []);
 
   const hasActiveFilters = searchQuery || selectedCategory !== 'all' || selectedBrand !== 'all' || sortBy !== 'default';
 
@@ -725,99 +736,18 @@ export function ProductsPage() {
               <div className="relative">
                 <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
                   {products.map((product, index) => (
-                    <motion.div
+                    <ProductCard
                       key={product.id}
-                      initial={{ y: 30, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: index * 0.05 }}
-                      whileHover={{ y: -8 }}
-                      onClick={() => router.push(`/products/${product.slug}`)}
-                      className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all cursor-pointer group"
-                    >
-                      <div className="aspect-square overflow-hidden bg-gray-100 relative">
-                        <ImageWithFallback
-                          src={product.images?.[0] || product.image || ''}
-                          alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                        {/* Flash Sale Badge */}
-                        {product.isFlashSale && (
-                          <div className="absolute top-3 right-3 px-3 py-1 bg-red-500 text-white text-xs rounded-full">
-                            FLASH SALE
-                          </div>
-                        )}
-                        {product.stock < 10 && product.stock > 0 && (
-                          <div className="absolute top-3 left-3 px-3 py-1 bg-orange-500 text-white text-xs rounded-full">
-                            {t('products.low_stock')}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="p-5">
-                        {/* Category & Brand */}
-                        <div className="text-sm text-gray-500 mb-1">
-                          {product.brand || (typeof product.category === 'string' ? product.category : product.category?.name)}
-                        </div>
-
-                        {/* Product Name */}
-                        <h3 className="mb-2 line-clamp-2 min-h-[40px] break-all">
-                          {debouncedSearch ? (
-                            <HighlightText text={product.name} highlight={debouncedSearch} />
-                          ) : (
-                            product.name
-                          )}
-                        </h3>
-
-                        {/* Rating */}
-                        {product.rating != null && (
-                          <div className="flex items-center gap-1 mb-2">
-                            <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                            <span className="text-xs">{(product.rating || 0).toFixed(1)}</span>
-                            {product.reviewCount != null && (
-                              <span className="text-xs text-gray-500">
-                                ({(product.reviewCount || 0)})
-                              </span>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Description */}
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-2 min-h-[40px] break-all">
-                          {product.description ? stripHtmlTags(product.description) : ''}
-                        </p>
-
-                        {/* Price & Stock */}
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="text-red-600">
-                            {product.discount ? (
-                              <div>
-                                {formatPrice(product.price * (1 - product.discount / 100))}
-                                <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded ml-2">
-                                  -{product.discount}%
-                                </span>
-                                <div className="text-xs text-gray-400 line-through">
-                                  {formatPrice(product.price)}
-                                </div>
-                              </div>
-                            ) : (
-                              formatPrice(product.price)
-                            )}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {t('products.stock_label', { stock: product.stock })}
-                          </div>
-                        </div>
-
-                        {/* Add to Cart Button */}
-                        <Button
-                          onClick={(e) => handleAddToCart(product, e)}
-                          className="w-full bg-linear-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
-                          disabled={product.stock === 0}
-                        >
-                          {product.stock === 0 ? t('products.out_of_stock') : t('products.add_to_cart')}
-                        </Button>
-                      </div>
-                    </motion.div>
+                      product={product}
+                      index={index}
+                      totalProducts={products.length}
+                      searchQuery={debouncedSearch}
+                      onAddToCart={handleAddToCart}
+                      onProductClick={handleProductClick}
+                      formatPrice={formatPrice}
+                      stripHtmlTags={stripHtmlTags}
+                      t={t}
+                    />
                   ))}
                 </div>
 

@@ -68,14 +68,44 @@ export function ProductsPage() {
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [showFilterBlock, setShowFilterBlock] = useState(false);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const isLoadingRef = useRef(false); // Prevent multiple concurrent loads
 
   // Search history
   const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
 
   const debouncedSearch = useDebounce(searchQuery, 500);
+
+  // Infinite scroll - load more when scrolling near bottom
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        // Check both loading state and ref to prevent race conditions
+        if (first.isIntersecting && hasMore && !loading && !isLoadingRef.current) {
+          setPage(p => p + 1);
+        }
+      },
+      { 
+        threshold: 0.1, 
+        rootMargin: '400px' // Increased from 100px for smoother prefetching
+      }
+    );
+
+    const currentRef = loadMoreRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [hasMore, loading]);
 
   // Get unique brands from products
   const brands = useMemo(() => {
@@ -193,17 +223,22 @@ export function ProductsPage() {
     
     const loadProducts = async () => {
       try {
+        // Prevent concurrent requests
+        if (isLoadingRef.current) {
+          return;
+        }
+        
+        isLoadingRef.current = true;
         setLoading(true);
         
-        // Only clear products on initial load or when filters change significantly
-        const isFilterChange = page === 1 && (debouncedSearch || selectedCategory !== 'all' || selectedBrand !== 'all');
-        if (isInitialLoading || isFilterChange) {
+        // Clear products when filters change or on initial load (page 1)
+        if (page === 1) {
           setProducts([]);
         }
         
         const params: any = {
           page,
-          limit: 20,
+          limit: 20, // Always load 20 products
         };
 
         if (debouncedSearch) params.search = debouncedSearch;
@@ -235,10 +270,27 @@ export function ProductsPage() {
         const result = await productsService.getAll(params, abortController.signal);
         
         if (!abortController.signal.aborted) {
-          setProducts(result.products);
-          if (result.pagination) {
-            setTotalPages(result.pagination.totalPages || 1);
+          // Append products for page > 1, replace for page 1
+          if (page === 1) {
+            setProducts(result.products);
+          } else {
+            // Deduplicate products by ID to prevent duplicate keys
+            setProducts(prev => {
+              const existingIds = new Set(prev.map(p => p.id));
+              const newProducts = result.products.filter(p => !existingIds.has(p.id));
+              return [...prev, ...newProducts];
+            });
           }
+          
+          // Check if there are more products to load
+          if (result.pagination) {
+            const currentPage = result.pagination.currentPage || page;
+            const totalPages = result.pagination.totalPages || 1;
+            setHasMore(currentPage < totalPages);
+          } else {
+            setHasMore(false);
+          }
+          
           setIsInitialLoading(false);
         }
         } catch (error) {
@@ -249,6 +301,7 @@ export function ProductsPage() {
       } finally {
         if (!abortController.signal.aborted) {
           setLoading(false);
+          isLoadingRef.current = false; // Reset loading ref
         }
       }
     };
@@ -768,39 +821,22 @@ export function ProductsPage() {
                   ))}
                 </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex justify-center gap-2 mt-8">
-                    <Button
-                      variant="outline"
-                      onClick={() => setPage(p => Math.max(1, p - 1))}
-                      disabled={page === 1 || loading}
-                    >
-                      {t('products.previous')}
-                    </Button>
-                    <div className="flex items-center gap-2">
-                      {[...Array(totalPages)].map((_, i) => (
-                        <button
-                          key={i + 1}
-                          onClick={() => setPage(i + 1)}
-                          disabled={loading}
-                          className={`w-10 h-10 rounded-lg transition-all ${
-                            page === i + 1
-                              ? 'bg-linear-to-r from-red-500 to-orange-500 text-white'
-                              : 'bg-gray-100 hover:bg-gray-200'
-                          } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                          {i + 1}
-                        </button>
-                      ))}
-                    </div>
-                    <Button
-                      variant="outline"
-                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                      disabled={page === totalPages || loading}
-                    >
-                      {t('products.next')}
-                    </Button>
+                {/* Infinite Scroll Trigger & Loading Indicator */}
+                {hasMore && products.length > 0 && (
+                  <div ref={loadMoreRef} className="flex justify-center mt-8 py-4">
+                    {loading && (
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
+                        <p className="text-sm text-gray-600">{t('products.loading')}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* End of products indicator */}
+                {!hasMore && products.length > 0 && (
+                  <div className="flex justify-center mt-8 py-4">
+                    <p className="text-sm text-gray-500">{t('products.no_more_products')}</p>
                   </div>
                 )}
                 

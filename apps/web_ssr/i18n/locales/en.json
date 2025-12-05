@@ -92,7 +92,8 @@
         "not_found": "Not found",
         "related_products": "Related Products",
         "search_filter": "Search & Filter",
-        "hide_search": "Hide Search"
+        "hide_search": "Hide Search",
+        "no_more_products": "All products displayed"
     },
     "admin": {
         "dashboard": "Dashboard",
@@ -170,7 +171,7 @@
         "weekdays": "Mon-Fri",
         "weekends": "Sat-Sun",
         "default_weekdays": "8:00 - 21:00",
-            "default_weekends": "9:00 - 20:00"
+        "default_weekends": "9:00 - 20:00"
     },
     "contact_methods": {
         "phone": "Phone",

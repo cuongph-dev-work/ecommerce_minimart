@@ -3,16 +3,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from './ui/button';
 import { motion, AnimatePresence } from 'motion/react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { bannersService } from '../services/banners.service';
 import type { Banner } from '../types';
-import { useTranslation } from 'react-i18next';
 import { sanitizeUrl, sanitizeImageUrl } from '../lib/security';
 
 export function BannerCarousel() {
-  const { t } = useTranslation();
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -233,54 +230,18 @@ export function BannerCarousel() {
           }}
           exit={{ opacity: 0, x: -100 }}
           transition={{ duration: isDragging ? 0 : 0.5 }}
-          className="absolute inset-0"
+          className="absolute inset-0 cursor-pointer"
           style={{ touchAction: 'pan-x' }}
+          onClick={handleBannerClick}
         >
-          {/* Background Image */}
+          {/* Banner Image */}
           <div className="absolute inset-0">
             <ImageWithFallback
               src={sanitizeImageUrl(banners[currentIndex].image) || ''}
               alt={banners[currentIndex].title || 'Banner'}
               className="w-full h-full object-cover"
+              eager
             />
-          </div>
-          
-          {/* Dark overlay - half width from bottom */}
-          <div className="absolute left-0 bottom-0 w-1/2 h-full bg-gradient-to-r from-black/70 via-black/50 to-transparent"></div>
-          
-          <div className="relative h-full container mx-auto px-4 sm:px-6 flex items-end pb-6 sm:pb-12">
-            <div className="max-w-2xl text-white drop-shadow-lg relative z-10">
-              
-              <motion.h2
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="mb-2 sm:mb-4 text-shadow text-xl sm:text-2xl md:text-3xl lg:text-4xl"
-              >
-                {banners[currentIndex].title}
-              </motion.h2>
-              <motion.p
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="mb-3 sm:mb-6 text-shadow text-sm sm:text-base"
-              >
-                {banners[currentIndex].description}
-              </motion.p>
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.4 }}
-              >
-                <Button
-                  onClick={handleBannerClick}
-                  size="lg"
-                  className="bg-white text-red-600 hover:bg-gray-100 shadow-xl text-sm sm:text-base h-9 sm:h-11"
-                >
-                  {t('home.view_more')}
-                </Button>
-              </motion.div>
-            </div>
           </div>
         </motion.div>
       </AnimatePresence>

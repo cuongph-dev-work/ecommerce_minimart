@@ -93,7 +93,8 @@
         "not_found": "Không tìm thấy",
         "related_products": "Sản phẩm liên quan",
         "search_filter": "Tìm kiếm & Lọc",
-        "hide_search": "Ẩn tìm kiếm"
+        "hide_search": "Ẩn tìm kiếm",
+        "no_more_products": "Đã hiển thị tất cả sản phẩm"
     },
     "admin": {
         "dashboard": "Tổng quan",
@@ -171,7 +172,7 @@
         "weekdays": "T2-T6",
         "weekends": "T7-CN",
         "default_weekdays": "8:00 - 21:00",
-            "default_weekends": "9:00 - 20:00"
+        "default_weekends": "9:00 - 20:00"
     },
     "contact_methods": {
         "phone": "Điện thoại",

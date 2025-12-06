@@ -83,7 +83,13 @@ export const ProductCard = memo(function ProductCard({
       {...animationProps}
       onClick={handleProductClick}
       className="product-card bg-white overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer group"
-      style={{ contain: 'layout style paint' }}
+      style={{ 
+        contain: 'layout style paint',
+        willChange: 'transform',
+        transform: 'translateZ(0)',
+        WebkitBackfaceVisibility: 'hidden',
+        backfaceVisibility: 'hidden'
+      }}
     >
       <div className="aspect-square overflow-hidden bg-gray-100 relative">
         <ImageWithFallback

@@ -742,11 +742,6 @@ export function ProductsPage() {
                       index={index}
                       totalProducts={products.length}
                       searchQuery={debouncedSearch}
-                      onAddToCart={handleAddToCart}
-                      onProductClick={handleProductClick}
-                      formatPrice={formatPrice}
-                      stripHtmlTags={stripHtmlTags}
-                      t={t}
                     />
                   ))}
                 </div>

@@ -16,7 +16,7 @@ export function Footer() {
   }, []);
 
   return (
-    <footer className="bg-white border-t mt-20">
+    <footer className="bg-white border-t">
       <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-10">
         {/* Row 1: Logo + Name + Description */}
         <div className="flex flex-col items-center text-center sm:flex-row sm:items-center sm:text-left gap-3 sm:gap-6">

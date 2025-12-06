@@ -11,13 +11,15 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #dc2626; /* red-600 */
+  --primary: #dc2626;
+  /* red-600 */
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.95 0.0058 264.53);
   --secondary-foreground: #030213;
   --muted: #ececf0;
   --muted-foreground: #717182;
-  --accent: #ea580c; /* orange-600 */
+  --accent: #ea580c;
+  /* orange-600 */
   --accent-foreground: #030213;
   --destructive: #d4183d;
   --destructive-foreground: #ffffff;
@@ -36,7 +38,8 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #dc2626; /* red-600 */
+  --sidebar-primary: #dc2626;
+  /* red-600 */
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
@@ -196,43 +199,63 @@ html {
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
-/* Product grid responsive - Shopee style */
-/* Default: 2 columns on mobile, following Shopee's mobile layout */
+/* Product grid responsive - Shopee style Masonry */
+/* Using CSS columns for masonry effect */
 .product-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
+  column-count: 2;
+  column-gap: 0.5rem;
+}
+
+.product-grid>* {
+  break-inside: avoid;
+  margin-bottom: 0.5rem;
 }
 
 /* Only 1 column for very small screens (≤375px) */
 @media (max-width: 375px) {
   .product-grid {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-    gap: 0.75rem;
+    column-count: 1;
+    column-gap: 0.75rem;
+  }
+
+  .product-grid>* {
+    margin-bottom: 0.75rem;
   }
 }
 
 /* 3 columns for sm screens (≥640px) */
 @media (min-width: 640px) {
   .product-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1rem;
+    column-count: 3;
+    column-gap: 0.75rem;
+  }
+
+  .product-grid>* {
+    margin-bottom: 0.75rem;
   }
 }
 
 /* 4 columns for lg screens (≥1024px) */
 @media (min-width: 1024px) {
   .product-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 1.25rem;
+    column-count: 4;
+    column-gap: 1rem;
+  }
+
+  .product-grid>* {
+    margin-bottom: 1rem;
   }
 }
 
 /* 5 columns for xl screens (≥1280px) */
 @media (min-width: 1280px) {
   .product-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 1.5rem;
+    column-count: 5;
+    column-gap: 1rem;
+  }
+
+  .product-grid>* {
+    margin-bottom: 1rem;
   }
 }
 

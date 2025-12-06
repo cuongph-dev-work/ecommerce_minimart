@@ -136,7 +136,7 @@ export function Header() {
               variant="ghost"
               size="icon"
               className="rounded-full w-10 h-10 sm:w-14 sm:h-14"
-              onClick={() => router.push('/products?search=open')}
+              onClick={() => router.push('/products?trigger=search_open')}
             >
               <Search className="h-5 w-5 sm:h-7 sm:w-7" />
             </Button>

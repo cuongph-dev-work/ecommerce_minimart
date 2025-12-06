@@ -81,12 +81,12 @@ export function ProductsPage() {
 
   // Show Search & Filter button when coming from search icon
   useEffect(() => {
-    const searchParam = searchParams?.get('search');
-    if (searchParam === 'open') {
+    const triggerParam = searchParams?.get('trigger');
+    if (triggerParam === 'search_open') {
       setShowSearchButton(true);
-      // Remove the search=open parameter from URL to clean it up
+      // Remove the trigger=search_open parameter from URL to clean it up
       const params = new URLSearchParams(window.location.search);
-      params.delete('search');
+      params.delete('trigger');
       const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
       window.history.replaceState({}, '', newUrl);
     }

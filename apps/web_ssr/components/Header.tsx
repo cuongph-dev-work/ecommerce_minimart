@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { ShoppingCart, Menu, X, Search, ClipboardList } from 'lucide-react';
@@ -20,6 +20,8 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [cartAnimation, setCartAnimation] = useState(false);
+  const prevItemCount = useRef(getTotalItems());
   const pathname = usePathname();
   const router = useRouter();
 
@@ -35,6 +37,18 @@ export function Header() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Trigger animation when cart items change
+  useEffect(() => {
+    const currentCount = getTotalItems();
+    if (isMounted && currentCount !== prevItemCount.current && currentCount > 0) {
+      setCartAnimation(true);
+      const timer = setTimeout(() => setCartAnimation(false), 600);
+      prevItemCount.current = currentCount;
+      return () => clearTimeout(timer);
+    }
+    prevItemCount.current = currentCount;
+  }, [getTotalItems(), isMounted]);
 
   const navItems = [
     { label: t('common.home'), path: '/' },
@@ -144,15 +158,44 @@ export function Header() {
               onClick={() => router.push('/cart')}
               suppressHydrationWarning
             >
-              <ShoppingCart className="h-5 w-5 sm:h-7 sm:w-7" />
+              <motion.div
+                animate={cartAnimation ? {
+                  scale: [1, 1.2, 0.9, 1.1, 1],
+                  rotate: [0, -10, 10, -5, 0]
+                } : {}}
+                transition={{ duration: 0.6, ease: "easeInOut" }}
+              >
+                <ShoppingCart className="h-5 w-5 sm:h-7 sm:w-7" />
+              </motion.div>
               {isMounted && getTotalItems() > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-0.5 -right-0.5 sm:top-0 sm:right-0 bg-blue-600 text-white text-xs w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center"
-                >
-                  {getTotalItems()}
-                </motion.span>
+                <div className="absolute -top-0.5 -right-0.5 sm:top-0 sm:right-0">
+                  {/* Ripple/Ping effect */}
+                  <motion.span
+                    className="absolute inset-0 w-5 h-5 sm:w-6 sm:h-6 bg-blue-600 rounded-full"
+                    animate={{
+                      scale: [1, 2.5],
+                      opacity: [0.6, 0],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "linear",
+                      repeatDelay: 0.3
+                    }}
+                  />
+                  {/* Badge number */}
+                  <motion.span
+                    key={getTotalItems()}
+                    initial={{ scale: 0 }}
+                    animate={cartAnimation ? {
+                      scale: [1, 1.3, 1],
+                    } : { scale: 1 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="relative bg-blue-600 text-white text-xs w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center"
+                  >
+                    {getTotalItems()}
+                  </motion.span>
+                </div>
               )}
             </Button>
 

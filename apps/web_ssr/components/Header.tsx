@@ -115,16 +115,16 @@ export function Header() {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-1 sm:gap-2">
             {/* <LanguageSwitcher /> */}
             
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full"
+              className="rounded-full w-10 h-10 sm:w-14 sm:h-14"
               onClick={() => router.push('/products')}
             >
-              <Search className="h-5 w-5" />
+              <Search className="h-5 w-5 sm:h-7 sm:w-7" />
             </Button>
 
             {/* <Button
@@ -140,16 +140,16 @@ export function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full relative"
+              className="rounded-full relative w-10 h-10 sm:w-14 sm:h-14"
               onClick={() => router.push('/cart')}
               suppressHydrationWarning
             >
-              <ShoppingCart className="h-5 w-5" />
+              <ShoppingCart className="h-5 w-5 sm:h-7 sm:w-7" />
               {isMounted && getTotalItems() > 0 && (
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center"
+                  className="absolute -top-0.5 -right-0.5 sm:top-0 sm:right-0 bg-blue-600 text-white text-xs w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center"
                 >
                   {getTotalItems()}
                 </motion.span>
@@ -160,13 +160,13 @@ export function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden rounded-full"
+              className="md:hidden rounded-full w-10 h-10 sm:w-14 sm:h-14"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? (
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5 sm:h-7 sm:w-7" />
               ) : (
-                <Menu className="h-5 w-5" />
+                <Menu className="h-5 w-5 sm:h-7 sm:w-7" />
               )}
             </Button>
           </div>

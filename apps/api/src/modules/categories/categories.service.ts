@@ -212,7 +212,7 @@ export class CategoriesService {
       { populate: ['children', 'products'] }
     );
 
-    // Calculate total soldCount for each parent category
+    // Calculate total soldCount and product count for each parent category
     const categoriesWithSales = await Promise.all(
       parentCategories.map(async (category) => {
         // Get all subcategory IDs including the parent
@@ -228,17 +228,35 @@ export class CategoriesService {
           return sum + (product.soldCount || 0);
         }, 0);
 
+        const productCount = products.length;
+
         return {
           ...category,
           totalSold,
+          productCount, // Used for sorting only
         };
       })
     );
 
-    // Sort by totalSold descending and return top N
-    categoriesWithSales.sort((a, b) => b.totalSold - a.totalSold);
+    // Sort: if totalSold > 0, sort by totalSold; otherwise sort by productCount
+    categoriesWithSales.sort((a, b) => {
+      // If both have sales, sort by totalSold
+      if (a.totalSold > 0 && b.totalSold > 0) {
+        return b.totalSold - a.totalSold;
+      }
+      // If only one has sales, prioritize it
+      if (a.totalSold > 0 && b.totalSold === 0) {
+        return -1;
+      }
+      if (a.totalSold === 0 && b.totalSold > 0) {
+        return 1;
+      }
+      // If neither has sales, sort by productCount
+      return (b as any).productCount - (a as any).productCount;
+    });
     
-    return categoriesWithSales.slice(0, limit);
+    // Remove productCount from return value
+    return categoriesWithSales.slice(0, limit).map(({ productCount, ...rest }) => rest);
   }
 }
 

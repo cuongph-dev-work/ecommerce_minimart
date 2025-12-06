@@ -58,12 +58,12 @@ export function HomePage() {
         if (signal.aborted) return;
         setTopCategories(topCats);
 
-        // Load top 5 products for each category
+        // Load top 6 products for each category
         const productsMap: Record<string, Product[]> = {};
         for (const category of topCats) {
           const products = await productsService.getByCategory(
             category.id,
-            5,
+            6,
             "sold",
             "desc",
             signal
@@ -156,7 +156,7 @@ export function HomePage() {
             </div>
 
             {loading ? (
-              <div className="product-grid">
+              <div className="product-grid-home">
                 {[...Array(5)].map((_, index) => (
                   <div
                     key={index}
@@ -165,7 +165,7 @@ export function HomePage() {
                 ))}
               </div>
             ) : (
-              <div className="product-grid">
+              <div className="product-grid-home">
                 {featuredProducts.map((product, index) => (
                   <ProductCard
                     key={product.id}

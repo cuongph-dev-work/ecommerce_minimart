@@ -32,9 +32,9 @@ export function CategoryProductSection({ categoryName, categorySlug, products }:
         <div className="flex items-center justify-between mb-6 p-3 bg-gray-50 rounded-xl">
           <div>
             <h2 className="text-xl font-medium text-gray-900 mb-1">{categoryName}</h2>
-            <p className="text-xs text-gray-500">
+            {/* <p className="text-xs text-gray-500">
               {t('home.products_count', { count: products.length })}
-            </p>
+            </p> */}
           </div>
           <button
             onClick={handleViewAll}
@@ -46,7 +46,7 @@ export function CategoryProductSection({ categoryName, categorySlug, products }:
         </div>
 
         {/* Products Grid */}
-        <div className="product-grid">
+        <div className="product-grid-home">
           {displayProducts.map((product, index) => (
             <ProductCard
               key={product.id}

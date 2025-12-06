@@ -592,10 +592,10 @@ export function ProductsPage() {
         <div className="mb-6">
           <div className="bg-white rounded-2xl shadow-md p-6">
             {/* Filter & Sort Bar */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-6 border-b">
-              <div className="text-sm text-gray-600">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between sm:gap-4 sm:mb-6 sm:pb-6 sm:border-b">
+              {/* <div className="text-sm text-gray-600">
                 {loading ? t('products.loading') : t('products.found_products', { count: products.length })}
-              </div>
+              </div> */}
               
               {/* Desktop Filter & Sort */}
               <div className="hidden sm:flex items-center gap-4">
@@ -702,7 +702,7 @@ export function ProductsPage() {
 
             {/* Loading Skeleton */}
             {loading && isInitialLoading ? (
-              <div className="product-grid">
+              <div className="product-grid-products-page">
                 {[...Array(8)].map((_, index) => (
                   <div key={index} className="bg-white rounded overflow-hidden shadow-sm">
                     <div className="aspect-square bg-gray-200 animate-pulse" />
@@ -731,7 +731,7 @@ export function ProductsPage() {
               </motion.div>
             ) : (
               <div className="relative">
-                <div className="product-grid">
+                <div className="product-grid-products-page">
                   {products.map((product, index) => (
                     <ProductCard
                       key={product.id}

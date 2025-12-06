@@ -176,16 +176,16 @@ export function HomePage() {
             </div>
 
             {loading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <div className="product-grid">
                 {[...Array(5)].map((_, index) => (
                   <div
                     key={index}
-                    className="bg-gray-200 rounded-xl animate-pulse h-64"
+                    className="bg-gray-200 rounded animate-pulse h-64"
                   />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <div className="product-grid">
                 {featuredProducts.map((product, index) => (
                   <motion.div
                     key={product.id}

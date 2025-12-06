@@ -65,7 +65,7 @@ export function CategoryProductSection({ categoryName, categorySlug, products }:
         </div>
 
         {/* Products Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="product-grid">
           {displayProducts.map((product, index) => (
             <motion.div
               key={product.id}

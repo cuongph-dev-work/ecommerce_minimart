@@ -195,3 +195,60 @@ html {
 .text-shadow {
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.6);
 }
+
+/* Product grid responsive - Shopee style */
+/* Default: 2 columns on mobile, following Shopee's mobile layout */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+/* Only 1 column for very small screens (≤375px) */
+@media (max-width: 375px) {
+  .product-grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+/* 3 columns for sm screens (≥640px) */
+@media (min-width: 640px) {
+  .product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+/* 4 columns for lg screens (≥1024px) */
+@media (min-width: 1024px) {
+  .product-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+/* 5 columns for xl screens (≥1280px) */
+@media (min-width: 1280px) {
+  .product-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+/* Shopee-style compact product card adjustments */
+.product-card {
+  border-radius: 0.25rem;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+@media (min-width: 640px) {
+  .product-card {
+    border-radius: 0.5rem;
+  }
+}
+
+.product-card:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+}

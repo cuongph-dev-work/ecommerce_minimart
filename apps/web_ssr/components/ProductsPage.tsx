@@ -763,15 +763,8 @@ export function ProductsPage() {
                   </div>
                 )}
                 
-                {/* Loading Overlay */}
-                {loading && !isInitialLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10 rounded-lg">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
-                      <p className="text-sm text-gray-600">{t('products.loading')}</p>
-                    </div>
-                  </div>
-                )}
+                {/* Loading Overlay - REMOVED to prevent white flash during load more */}
+                {/* The loading spinner at the bottom (line 747-758) is sufficient */}
               </div>
             )}
           </div>

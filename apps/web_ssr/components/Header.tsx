@@ -173,7 +173,7 @@ export function Header() {
                   <motion.span
                     className="absolute inset-0 w-5 h-5 sm:w-6 sm:h-6 bg-blue-600 rounded-full"
                     animate={{
-                      scale: [1, 2.5],
+                      scale: [1, 1.8],
                       opacity: [0.6, 0],
                     }}
                     transition={{

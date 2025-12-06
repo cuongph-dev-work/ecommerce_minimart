@@ -199,71 +199,50 @@ html {
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
-/* Product grid responsive - Shopee style Masonry */
-/* Using CSS columns for masonry effect */
+/* Product grid responsive - Standard CSS Grid */
 .product-grid {
-  column-count: 2;
-  column-gap: 0.5rem;
-}
-
-.product-grid>* {
-  break-inside: avoid;
-  margin-bottom: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
 }
 
 /* Only 1 column for very small screens (≤375px) */
 @media (max-width: 375px) {
   .product-grid {
-    column-count: 1;
-    column-gap: 0.75rem;
-  }
-
-  .product-grid>* {
-    margin-bottom: 0.75rem;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
 }
 
 /* 3 columns for sm screens (≥640px) */
 @media (min-width: 640px) {
   .product-grid {
-    column-count: 3;
-    column-gap: 0.75rem;
-  }
-
-  .product-grid>* {
-    margin-bottom: 0.75rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
   }
 }
 
 /* 4 columns for lg screens (≥1024px) */
 @media (min-width: 1024px) {
   .product-grid {
-    column-count: 4;
-    column-gap: 1rem;
-  }
-
-  .product-grid>* {
-    margin-bottom: 1rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
   }
 }
 
 /* 5 columns for xl screens (≥1280px) */
 @media (min-width: 1280px) {
   .product-grid {
-    column-count: 5;
-    column-gap: 1rem;
-  }
-
-  .product-grid>* {
-    margin-bottom: 1rem;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
   }
 }
 
-/* Shopee-style compact product card adjustments */
+/* Product card adjustments */
 .product-card {
   border-radius: 0.25rem;
   overflow: hidden;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition: box-shadow 0.2s ease;
 }
 
 @media (min-width: 640px) {

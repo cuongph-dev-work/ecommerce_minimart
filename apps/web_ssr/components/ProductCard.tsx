@@ -73,7 +73,8 @@ export const ProductCard = memo(function ProductCard({
         initial: isNewProduct ? { y: 30, opacity: 0 } : false,
         animate: { y: 0, opacity: 1 },
         transition: { delay: animationDelay, duration: 0.3 },
-        whileHover: { y: -8 },
+        // Changed from y: -8 to scale to fix Safari masonry grid bug
+        whileHover: { scale: 1.02, transition: { duration: 0.2 } },
       };
 
   const descriptionText = product.description ? stripHtmlTags(product.description) : '';
@@ -84,11 +85,8 @@ export const ProductCard = memo(function ProductCard({
       onClick={handleProductClick}
       className="product-card bg-white overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer group"
       style={{ 
-        contain: 'layout style paint',
-        willChange: 'transform',
-        transform: 'translateZ(0)',
-        WebkitBackfaceVisibility: 'hidden',
-        backfaceVisibility: 'hidden'
+        // contain: 'layout style paint',
+       
       }}
     >
       <div className="aspect-square overflow-hidden bg-gray-100 relative">

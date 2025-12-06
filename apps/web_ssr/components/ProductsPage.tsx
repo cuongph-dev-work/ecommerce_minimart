@@ -65,17 +65,32 @@ export function ProductsPage() {
   const [sortBy, setSortBy] = useState<string>('default');
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [showFilterBlock, setShowFilterBlock] = useState(false);
+  const [showSearchButton, setShowSearchButton] = useState(false); // Control button visibility
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const isLoadingRef = useRef(false); // Prevent multiple concurrent loads
+  const prevProductsCountRef = useRef(0); // Track previous count for animation
 
   // Search history
   const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
 
   const debouncedSearch = useDebounce(searchQuery, 500);
+
+  // Show Search & Filter button when coming from search icon
+  useEffect(() => {
+    const searchParam = searchParams?.get('search');
+    if (searchParam === 'open') {
+      setShowSearchButton(true);
+      // Remove the search=open parameter from URL to clean it up
+      const params = new URLSearchParams(window.location.search);
+      params.delete('search');
+      const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [searchParams]);
 
   // Infinite scroll - load more when scrolling near bottom
   useEffect(() => {
@@ -277,10 +292,12 @@ export function ProductsPage() {
         if (!abortController.signal.aborted) {
           // Append products for page > 1, replace for page 1
           if (page === 1) {
+            prevProductsCountRef.current = 0; // Reset on new search/filter
             setProducts(result.products);
           } else {
-            // Deduplicate products by ID to prevent duplicate keys
+            // Store current count before adding new products
             setProducts(prev => {
+              prevProductsCountRef.current = prev.length;
               const existingIds = new Set(prev.map(p => p.id));
               const newProducts = result.products.filter(p => !existingIds.has(p.id));
               return [...prev, ...newProducts];
@@ -366,29 +383,6 @@ export function ProductsPage() {
     }
   }, [searchQuery, selectedCategory, allCategories, router, searchParams, isInitialLoad]);
 
-  // Memoized handlers for performance
-  const handleAddToCart = useCallback((product: Product, e: React.MouseEvent) => {
-    e.stopPropagation();
-    addToCart(product);
-    toast.success(t('products.add_to_cart_success', { name: product.name }));
-  }, [addToCart, t]);
-
-  const handleProductClick = useCallback((slug: string) => {
-    router.push(`/products/${slug}`);
-  }, [router]);
-
-  // Memoized utility functions
-  const formatPrice = useCallback((price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(price);
-  }, []);
-
-  const stripHtmlTags = useCallback((html: string) => {
-    return html.replace(/<[^>]*>/g, '');
-  }, []);
-
   const clearFilters = useCallback(() => {
     setSearchQuery('');
     setSelectedCategory('all');
@@ -410,11 +404,13 @@ export function ProductsPage() {
         >
           <div className="flex flex-row items-center justify-between gap-4">
             <div>
-              <h1 className="mb-2 sm:mb-4 text-2xl sm:text-3xl lg:text-4xl">{t('products.title')}</h1>
-              <p className="text-gray-600 max-w-2xl text-sm sm:text-base">
-                {t('products.subtitle')}
-              </p>
-            </div>
+            <h1 className="mb-2 sm:mb-4 text-2xl sm:text-3xl lg:text-4xl">{t('products.title')}</h1>
+            {/* <p className="text-gray-600 max-w-2xl text-sm sm:text-base">
+              {t('products.subtitle')}
+            </p> */}
+          </div>
+          {/* Conditionally show button: when triggered from search icon OR filter block is open */}
+          {(showSearchButton || showFilterBlock) && (
             <Button
               onClick={() => setShowFilterBlock(!showFilterBlock)}
               className="bg-linear-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 gap-2 w-fit"
@@ -425,6 +421,7 @@ export function ProductsPage() {
                 {showFilterBlock ? t('products.hide_search') : t('products.search_filter')}
               </span>
             </Button>
+          )}
           </div>
         </motion.div>
 
@@ -734,13 +731,14 @@ export function ProductsPage() {
               </motion.div>
             ) : (
               <div className="relative">
-                <div className={`product-grid transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
+                <div className="product-grid">
                   {products.map((product, index) => (
                     <ProductCard
                       key={product.id}
                       product={product}
                       index={index}
                       totalProducts={products.length}
+                      previousTotal={prevProductsCountRef.current}
                       searchQuery={debouncedSearch}
                     />
                   ))}
@@ -767,7 +765,7 @@ export function ProductsPage() {
                 
                 {/* Loading Overlay */}
                 {loading && !isInitialLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm z-10 rounded-lg">
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10 rounded-lg">
                     <div className="flex flex-col items-center gap-2">
                       <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
                       <p className="text-sm text-gray-600">{t('products.loading')}</p>

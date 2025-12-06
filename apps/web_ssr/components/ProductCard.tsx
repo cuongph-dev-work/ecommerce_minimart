@@ -18,6 +18,8 @@ interface ProductCardProps {
   index?: number;
   /** Optional total products count for animation optimization */
   totalProducts?: number;
+  /** Optional previous total count for detecting new products */
+  previousTotal?: number;
   /** Optional search query for highlighting */
   searchQuery?: string;
   /** Optional: disable animation */
@@ -44,6 +46,7 @@ export const ProductCard = memo(function ProductCard({
   product,
   index = 0,
   totalProducts = 0,
+  previousTotal = 0,
   searchQuery,
   disableAnimation = false,
   showCategory = true,
@@ -53,9 +56,10 @@ export const ProductCard = memo(function ProductCard({
   const { addToCart } = useCart();
   const router = useRouter();
 
-  // Only animate newly loaded products (last 20) to improve performance
-  const isNewProduct = totalProducts > 0 ? index >= totalProducts - 20 : true;
-  const animationDelay = isNewProduct ? (index % 20) * 0.02 : 0;
+  // Only animate newly loaded products (those added after previousTotal)
+  const isNewProduct = previousTotal > 0 ? index >= previousTotal : (totalProducts > 0 ? index >= totalProducts - 20 : false);
+  // Stagger only the new products, with reduced delay for smoother animation
+  const animationDelay = isNewProduct ? (index - previousTotal) * 0.015 : 0;
 
   const handleProductClick = useCallback(() => {
     router.push(`/products/${product.slug}`);

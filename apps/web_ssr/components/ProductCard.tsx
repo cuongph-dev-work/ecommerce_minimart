@@ -85,15 +85,17 @@ export const ProductCard = memo(function ProductCard({
       onClick={handleProductClick}
       className="product-card bg-white overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer group"
       style={{ 
-        // contain: 'layout style paint',
-       
+        contain: 'layout style paint',
+        willChange: isNewProduct ? 'transform, opacity' : 'auto',
+        transform: 'translateZ(0)',
+        WebkitTransform: 'translateZ(0)',
       }}
     >
-      <div className="aspect-square overflow-hidden bg-gray-100 relative">
+      <div className="aspect-square overflow-hidden bg-gray-100 relative" style={{ willChange: 'transform' }}>
         <ImageWithFallback
           src={product.thumbnailUrls?.[0] || product.images?.[0] || product.image || ''}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
         />
         {/* Flash Sale Badge */}
         {product.isFlashSale && (

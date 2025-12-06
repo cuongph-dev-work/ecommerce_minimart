@@ -204,6 +204,8 @@ html {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
+  /* Safari performance optimizations */
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Only 1 column for very small screens (≤375px) */
@@ -243,6 +245,11 @@ html {
   border-radius: 0.25rem;
   overflow: hidden;
   transition: box-shadow 0.2s ease;
+  /* Safari GPU acceleration */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 @media (min-width: 640px) {

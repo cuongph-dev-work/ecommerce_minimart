@@ -52,7 +52,7 @@ export function Footer() {
         </div>
 
         {/* Row 2: Social Icons */}
-        <div className="flex justify-center sm:!justify-start gap-3 mt-5" suppressHydrationWarning>
+        <div className="flex justify-center gap-3 mt-5" suppressHydrationWarning>
           {isMounted && (() => {
             const facebookUrl = sanitizeUrl(settings.facebook_link);
             return facebookUrl ? (

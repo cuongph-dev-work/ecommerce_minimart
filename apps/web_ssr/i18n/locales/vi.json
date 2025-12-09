@@ -382,6 +382,9 @@
         "select_store": "Chọn chi nhánh",
         "processing": "Đang xử lý...",
         "confirm_order": "Xác nhận đặt hàng",
+        "express_delivery_label": "Hoả Tốc (Giao trong ngày)",
+        "express_delivery_description": "Nhận hàng trong cùng ngày",
+        "express_delivery_priority_message": "Đơn hàng của bạn sẽ được ưu tiên giao trong ngày",
         "errors": {
             "load_stores_failed": "Không thể tải danh sách cửa hàng",
             "create_order_failed": "Không thể tạo đơn hàng. Vui lòng thử lại."

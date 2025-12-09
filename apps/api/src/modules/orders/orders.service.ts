@@ -106,6 +106,7 @@ export class OrdersService {
         discount,
         total,
         voucherCode: createDto.voucherCode,
+        expressDelivery: createDto.expressDelivery || false,
         statusHistory: [{
           status: OrderStatus.PENDING,
           note: 'Đơn hàng mới',
@@ -113,6 +114,7 @@ export class OrdersService {
           updatedBy: 'system',
         }],
       });
+
 
       await em.persistAndFlush(order);
 

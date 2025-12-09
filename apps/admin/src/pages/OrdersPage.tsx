@@ -80,14 +80,14 @@ export function OrdersPage() {
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [productPage, setProductPage] = useState(1);
   const [productPagination, setProductPagination] = useState<{ total: number; totalPages: number; page: number; limit: number } | null>(null);
-  
+
   // Date range filter
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [tempStartDate, setTempStartDate] = useState<string>('');
   const [tempEndDate, setTempEndDate] = useState<string>('');
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  
+
   // Validation errors
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
 
@@ -122,8 +122,8 @@ export function OrdersPage() {
   const fetchProductsForDialog = useCallback(async (signal?: AbortSignal) => {
     try {
       setIsLoadingProductsStores(true);
-      const productsRes = await productsService.getAll({ 
-        page: productPage, 
+      const productsRes = await productsService.getAll({
+        page: productPage,
         limit: 12,
         search: productSearchTerm || undefined,
       }, signal);
@@ -194,8 +194,8 @@ export function OrdersPage() {
         notes,
       });
       // Update local state
-      setOrdersData(prevOrders => 
-        prevOrders.map(order => 
+      setOrdersData(prevOrders =>
+        prevOrders.map(order =>
           order.id === orderId ? { ...order, ...updatedOrder } : order
         )
       );
@@ -276,7 +276,7 @@ export function OrdersPage() {
     // Frontend validation with valibot
     setError(null);
     setValidationErrors([]);
-    
+
     const orderData = {
       customerName,
       customerPhone,
@@ -289,9 +289,9 @@ export function OrdersPage() {
       })),
       voucherCode: voucherCode || undefined,
     };
-    
+
     const result = v.safeParse(createOrderSchema, orderData);
-    
+
     if (!result.success) {
       // Convert valibot issues to ValidationError[]
       const errors: ValidationError[] = result.issues.map(issue => {
@@ -302,7 +302,7 @@ export function OrdersPage() {
           message: issue.message,
         };
       });
-      
+
       setValidationErrors(errors);
       // Scroll to top of dialog to show validation errors
       setTimeout(() => {
@@ -340,7 +340,7 @@ export function OrdersPage() {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
@@ -359,7 +359,7 @@ export function OrdersPage() {
             <Download className="mr-2 h-4 w-4" />
             Xuất Excel
           </Button> */}
-          <Button 
+          <Button
             className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
             onClick={() => setIsCreateDialogOpen(true)}
           >
@@ -386,8 +386,8 @@ export function OrdersPage() {
         </div>
 
         {/* Status Filter */}
-        <Select 
-          value={statusFilter} 
+        <Select
+          value={statusFilter}
           onValueChange={(value) => {
             setStatusFilter(value as OrderStatus | 'all');
             setCurrentPage(1); // Reset to page 1 when filter changes
@@ -409,8 +409,8 @@ export function OrdersPage() {
         </Select>
 
         {/* Date Range Picker */}
-        <DropdownMenu 
-          open={isDatePickerOpen} 
+        <DropdownMenu
+          open={isDatePickerOpen}
           onOpenChange={(open) => {
             setIsDatePickerOpen(open);
             if (open) {
@@ -424,14 +424,14 @@ export function OrdersPage() {
             <Button variant="outline" className="w-full sm:w-auto relative">
               <Calendar className="mr-2 h-4 w-4 shrink-0" />
               <span className="flex-1 text-left">
-                {startDate || endDate 
+                {startDate || endDate
                   ? `${startDate ? new Date(startDate).toLocaleDateString('vi-VN') : '...'} - ${endDate ? new Date(endDate).toLocaleDateString('vi-VN') : '...'}`
                   : 'Chọn ngày'
                 }
               </span>
               {(startDate || endDate) && (
-                <X 
-                  className="ml-2 h-4 w-4 shrink-0" 
+                <X
+                  className="ml-2 h-4 w-4 shrink-0"
                   onClick={(e) => {
                     e.stopPropagation();
                     setStartDate('');
@@ -548,12 +548,12 @@ export function OrdersPage() {
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <span className="text-muted-foreground">Khoảng thời gian:</span>
                       <span className="font-medium">
-                        {tempStartDate 
+                        {tempStartDate
                           ? new Date(tempStartDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
                           : '...'
                         }
                         {' - '}
-                        {tempEndDate 
+                        {tempEndDate
                           ? new Date(tempEndDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
                           : '...'
                         }
@@ -629,6 +629,7 @@ export function OrdersPage() {
               <TableHead>Ngày đặt</TableHead>
               <TableHead>Sản phẩm</TableHead>
               <TableHead>Phương thức</TableHead>
+              <TableHead>Hoả Tốc</TableHead>
               <TableHead>Tổng tiền</TableHead>
               <TableHead>Thanh toán</TableHead>
               <TableHead>Trạng thái</TableHead>
@@ -638,13 +639,13 @@ export function OrdersPage() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                   Loading orders...
                 </TableCell>
               </TableRow>
             ) : ordersData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                   Không tìm thấy đơn hàng nào
                 </TableCell>
               </TableRow>
@@ -671,17 +672,25 @@ export function OrdersPage() {
                     {order.items?.length || 0} sản phẩm
                   </TableCell>
                   <TableCell>
-                    <span className="text-xs px-2 py-1 rounded-full bg-muted">
+                    <span className="text-xs px-2 py-1 rounded-full bg-muted inline-block min-w-[80px] text-center">
                       {typeof order.pickupLocation === 'string' ? order.pickupLocation : order.pickupLocation?.name || 'N/A'}
                     </span>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {order.expressDelivery && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-600 text-white dark:bg-amber-500 min-w-[90px] justify-center">
+                        <span>⚡</span>
+                        <span>Hoả Tốc</span>
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell className="font-semibold">
                     {formatCurrency(order.total)}
                   </TableCell>
                   <TableCell>
                     <span className={cn(
-                      "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium",
-                      order.paymentStatus === 'paid' 
+                      "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium min-w-[70px] justify-center",
+                      order.paymentStatus === 'paid'
                         ? "bg-emerald-600 text-white dark:bg-emerald-500"
                         : "bg-red-600 text-white dark:bg-red-500"
                     )}>
@@ -690,7 +699,7 @@ export function OrdersPage() {
                   </TableCell>
                   <TableCell>
                     <span className={cn(
-                      "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border",
+                      "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border min-w-[110px] justify-center",
                       getStatusColor(order.status)
                     )}>
                       {getStatusLabel(order.status)}
@@ -699,8 +708,8 @@ export function OrdersPage() {
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="icon"
                         >
                           <MoreHorizontal className="h-4 w-4" />
@@ -782,7 +791,7 @@ export function OrdersPage() {
       </div>
 
       {/* Order Details Sheet */}
-      <OrderDetailsSheet 
+      <OrderDetailsSheet
         order={selectedOrder}
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
@@ -802,13 +811,13 @@ export function OrdersPage() {
               Nhập thông tin khách hàng và chọn sản phẩm để tạo đơn hàng
             </DialogDescription>
           </DialogHeader>
-          
+
           {error && (
             <div className="p-3 bg-destructive/10 text-destructive rounded-lg text-sm">
               {error}
             </div>
           )}
-          
+
           <div className="grid gap-6 py-6">
             {/* Customer Information */}
             <div className="space-y-4">
@@ -877,8 +886,8 @@ export function OrdersPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="pickupStore">Cửa hàng nhận <span className="text-destructive">*</span></Label>
-                  <Select 
-                    value={selectedStoreId} 
+                  <Select
+                    value={selectedStoreId}
                     onValueChange={(value) => {
                       setSelectedStoreId(value);
                       if (getFieldError(validationErrors, 'pickupStoreId')) {
@@ -920,7 +929,7 @@ export function OrdersPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Sản phẩm</h3>
-                <Button 
+                <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsProductDialogOpen(true)}
@@ -1060,53 +1069,53 @@ export function OrdersPage() {
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {availableProducts.map((product) => {
-                  const isSelected = selectedProducts.some(sp => sp.productId === product.id);
-                  return (
-                    <button
-                      key={product.id}
-                      type="button"
-                      onClick={() => handleAddProduct(product)}
-                      disabled={isSelected}
-                      className={cn(
-                        "relative p-3 border rounded-lg hover:border-primary transition-all text-left",
-                        isSelected && "opacity-50 cursor-not-allowed bg-muted"
-                      )}
-                    >
-                      {/* Product Image */}
-                      <div className="aspect-square w-full rounded-lg overflow-hidden bg-muted mb-2">
-                        <img
-                          src={product.image || product.images?.[0] || '/placeholder.png'}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/placeholder.png';
-                          }}
-                        />
-                      </div>
-                      
-                      {/* Product Info */}
-                      <div className="space-y-1">
-                        <div className="font-medium text-sm line-clamp-2">{product.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {product.sku && `SKU: ${product.sku}`}
+                    const isSelected = selectedProducts.some(sp => sp.productId === product.id);
+                    return (
+                      <button
+                        key={product.id}
+                        type="button"
+                        onClick={() => handleAddProduct(product)}
+                        disabled={isSelected}
+                        className={cn(
+                          "relative p-3 border rounded-lg hover:border-primary transition-all text-left",
+                          isSelected && "opacity-50 cursor-not-allowed bg-muted"
+                        )}
+                      >
+                        {/* Product Image */}
+                        <div className="aspect-square w-full rounded-lg overflow-hidden bg-muted mb-2">
+                          <img
+                            src={product.image || product.images?.[0] || '/placeholder.png'}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/placeholder.png';
+                            }}
+                          />
                         </div>
-                        <div className="font-semibold text-primary">
-                          {formatCurrency(product.price)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Tồn kho: {product.stock}
-                        </div>
-                      </div>
 
-                      {/* Selected Badge */}
-                      {isSelected && (
-                        <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
-                          Đã chọn
+                        {/* Product Info */}
+                        <div className="space-y-1">
+                          <div className="font-medium text-sm line-clamp-2">{product.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {product.sku && `SKU: ${product.sku}`}
+                          </div>
+                          <div className="font-semibold text-primary">
+                            {formatCurrency(product.price)}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Tồn kho: {product.stock}
+                          </div>
                         </div>
-                      )}
-                    </button>
-                  );
-                })}
+
+                        {/* Selected Badge */}
+                        {isSelected && (
+                          <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full min-w-[70px] text-center">
+                            Đã chọn
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* Pagination */}

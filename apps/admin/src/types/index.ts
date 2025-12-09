@@ -130,4 +130,7 @@ export interface Order {
   // Status
   status: OrderStatus;
   statusHistory?: OrderStatusHistory[];
+  
+  // Express Delivery
+  expressDelivery?: boolean;
 }

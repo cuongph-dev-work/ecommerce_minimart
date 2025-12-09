@@ -381,6 +381,9 @@
         "select_store": "Select branch",
         "processing": "Processing...",
         "confirm_order": "Confirm Order",
+        "express_delivery_label": "Express Delivery (Same-day delivery)",
+        "express_delivery_description": "Get your order delivered within the same day",
+        "express_delivery_priority_message": "Your order will be prioritized for same-day delivery",
         "errors": {
             "load_stores_failed": "Failed to load store list",
             "create_order_failed": "Failed to create order. Please try again."

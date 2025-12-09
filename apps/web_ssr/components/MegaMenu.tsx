@@ -56,7 +56,7 @@ export function MegaMenu() {
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
     >
-      <button className="flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
+      <button className="flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-colors text-white">
         <span>{t('mega_menu.categories')}</span>
         <ChevronDown
           className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -75,9 +75,9 @@ export function MegaMenu() {
           >
             <div className="grid grid-cols-3 gap-6 p-6 max-h-[600px] overflow-y-auto">
               {loading ? (
-                <div className="col-span-3 text-center py-8 text-gray-500">{t('home.loading')}</div>
+                <div className="col-span-3 text-center py-8 text-white">{t('home.loading')}</div>
               ) : categories.length === 0 ? (
-                <div className="col-span-3 text-center py-8 text-gray-500">{t('home.no_categories')}</div>
+                <div className="col-span-3 text-center py-8 text-white">{t('home.no_categories')}</div>
               ) : (
                 categories.map((category) => {
                   // Normalize icon name: capitalize first letter to match iconMap keys

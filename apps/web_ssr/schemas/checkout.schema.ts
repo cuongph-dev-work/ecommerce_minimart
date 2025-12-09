@@ -24,7 +24,9 @@ export const checkoutSchema = v.object({
     v.minLength(1, 'Vui lòng chọn địa điểm nhận hàng')
   ),
   notes: v.optional(v.string()),
+  expressDelivery: v.optional(v.boolean()),
 });
+
 
 export type CheckoutFormData = v.InferOutput<typeof checkoutSchema>;
 

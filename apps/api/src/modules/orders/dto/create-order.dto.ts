@@ -41,5 +41,9 @@ export class CreateOrderDto {
   @IsString()
   @IsOptional()
   voucherCode?: string;
+
+  @IsOptional()
+  expressDelivery?: boolean;
 }
+
 

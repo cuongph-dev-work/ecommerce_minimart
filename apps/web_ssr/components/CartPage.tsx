@@ -46,12 +46,13 @@ export function CartPage() {
     email: '',
     notes: '',
   });
+  const [expressDelivery, setExpressDelivery] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
 
   // Fetch stores from API
   useEffect(() => {
     const controller = new AbortController();
-    
+
     const fetchStores = async () => {
       try {
         setIsLoadingStores(true);
@@ -68,9 +69,9 @@ export function CartPage() {
         setIsLoadingStores(false);
       }
     };
-    
+
     fetchStores();
-    
+
     return () => controller.abort();
   }, []);
 
@@ -85,20 +86,21 @@ export function CartPage() {
 
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate with valibot
     setValidationErrors([]);
-    
+
     const formData = {
       name: checkoutData.name,
       phone: checkoutData.phone,
       email: checkoutData.email,
       storeId: selectedStoreId,
       notes: checkoutData.notes || undefined,
+      expressDelivery,
     };
-    
+
     const result = v.safeParse(checkoutSchema, formData);
-    
+
     if (!result.success) {
       // Convert valibot issues to ValidationError[]
       const errors: ValidationError[] = result.issues.map(issue => {
@@ -108,7 +110,7 @@ export function CartPage() {
           message: issue.message,
         };
       });
-      
+
       setValidationErrors(errors);
       // Scroll to top of dialog to show errors
       setTimeout(() => {
@@ -119,7 +121,7 @@ export function CartPage() {
       }, 100);
       return;
     }
-    
+
     // Create order via API
     setIsSubmitting(true);
     try {
@@ -133,14 +135,15 @@ export function CartPage() {
           productId: item.id,
           quantity: item.quantity,
         })),
+        expressDelivery,
       };
 
       const response = await ordersService.create(orderData);
-      
+
       toast.success(t('cart.order_created', { orderNumber: response.orderNumber }));
       clearCart();
       setShowCheckout(false);
-      
+
       // Navigate to order tracking page after 2 seconds
       // setTimeout(() => {
       //   router.push('/order-tracking');
@@ -164,6 +167,7 @@ export function CartPage() {
       email: '',
       notes: '',
     });
+    setExpressDelivery(false);
     setValidationErrors([]);
     // Reset to first store if available
     if (stores.length > 0) {
@@ -345,8 +349,8 @@ export function CartPage() {
       </div>
 
       {/* Checkout Dialog */}
-      <Dialog 
-        open={showCheckout} 
+      <Dialog
+        open={showCheckout}
         onOpenChange={(open) => {
           setShowCheckout(open);
           if (!open) {
@@ -378,9 +382,8 @@ export function CartPage() {
                       setValidationErrors(validationErrors.filter(err => err.field !== 'name'));
                     }
                   }}
-                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none ${
-                    getFieldError(validationErrors, 'name') ? 'border-red-500' : 'border-gray-200'
-                  }`}
+                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none ${getFieldError(validationErrors, 'name') ? 'border-red-500' : 'border-gray-200'
+                    }`}
                   placeholder={t('cart.name_placeholder')}
                 />
                 {getFieldError(validationErrors, 'name') && (
@@ -403,9 +406,8 @@ export function CartPage() {
                       setValidationErrors(validationErrors.filter(err => err.field !== 'phone'));
                     }
                   }}
-                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none ${
-                    getFieldError(validationErrors, 'phone') ? 'border-red-500' : 'border-gray-200'
-                  }`}
+                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none ${getFieldError(validationErrors, 'phone') ? 'border-red-500' : 'border-gray-200'
+                    }`}
                   placeholder="0912345678"
                 />
                 {getFieldError(validationErrors, 'phone') && (
@@ -428,9 +430,8 @@ export function CartPage() {
                       setValidationErrors(validationErrors.filter(err => err.field !== 'email'));
                     }
                   }}
-                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none ${
-                    getFieldError(validationErrors, 'email') ? 'border-red-500' : 'border-gray-200'
-                  }`}
+                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none ${getFieldError(validationErrors, 'email') ? 'border-red-500' : 'border-gray-200'
+                    }`}
                   placeholder="email@example.com"
                 />
                 {getFieldError(validationErrors, 'email') && (
@@ -444,8 +445,8 @@ export function CartPage() {
                 <label className="block mb-2">
                   {t('cart.pickup_location')} <span className="text-red-500">*</span>
                 </label>
-                <Select 
-                  value={selectedStoreId} 
+                <Select
+                  value={selectedStoreId}
                   onValueChange={(value) => {
                     setSelectedStoreId(value);
                     if (getFieldError(validationErrors, 'storeId')) {
@@ -453,11 +454,10 @@ export function CartPage() {
                     }
                   }}
                 >
-                  <SelectTrigger 
+                  <SelectTrigger
                     disabled={isLoadingStores}
-                    className={`w-full h-12 bg-gray-50 rounded-xl ${
-                      getFieldError(validationErrors, 'storeId') ? 'border-red-500' : 'border-gray-200'
-                    }`}
+                    className={`w-full h-12 bg-gray-50 rounded-xl ${getFieldError(validationErrors, 'storeId') ? 'border-red-500' : 'border-gray-200'
+                      }`}
                   >
                     <SelectValue placeholder={isLoadingStores ? t('cart.loading_stores') : t('cart.select_store')} />
                   </SelectTrigger>
@@ -474,7 +474,7 @@ export function CartPage() {
                     {getFieldError(validationErrors, 'storeId')}
                   </p>
                 )}
-                
+
                 {/* Display selected store info */}
                 {selectedStore && (
                   <div className="mt-4 p-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-xl border border-red-100 shadow-sm">
@@ -490,6 +490,44 @@ export function CartPage() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Express Delivery Checkbox */}
+              <div className="space-y-2">
+                <label className="flex items-start gap-3 p-4 bg-orange-50 rounded-xl border-2 border-orange-400 cursor-pointer hover:border-orange-500 transition-colors">
+                  <div className="relative flex items-center justify-center mt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={expressDelivery}
+                      onChange={(e) => setExpressDelivery(e.target.checked)}
+                      className="peer sr-only"
+                    />
+                    <div className="h-5 w-5 rounded border-2 border-gray-300 bg-white peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center">
+                      {expressDelivery && (
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xl">⚡</span>
+                      <span className="font-medium text-gray-900">
+                        {t('cart.express_delivery_label')}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {t('cart.express_delivery_description')}
+                    </p>
+                    {expressDelivery && (
+                      <div className="flex items-center gap-1.5 mt-2 text-sm text-orange-600">
+                        <span>⚡</span>
+                        <span>{t('cart.express_delivery_priority_message')}</span>
+                      </div>
+                    )}
+                  </div>
+                </label>
               </div>
 
               <div>

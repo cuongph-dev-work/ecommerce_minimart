@@ -76,6 +76,10 @@ export class Order {
   @ManyToOne(() => Store)
   pickupStore!: Store;
 
+  @Property({ default: false })
+  expressDelivery: boolean = false;
+
+
   @Property({ nullable: true })
   voucherCode?: string;
 

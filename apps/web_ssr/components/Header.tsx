@@ -68,8 +68,8 @@ export function Header() {
     <motion.header
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-white/95 backdrop-blur-md shadow-sm' : 'bg-white'
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-gradient-to-r from-red-500 to-orange-500 ${
+        isScrolled ? 'shadow-lg' : 'shadow-md'
       }`}
     >
       <div className="container mx-auto px-4 sm:px-6">
@@ -80,10 +80,10 @@ export function Header() {
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center"
+                className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg flex items-center justify-center shadow-md"
                 suppressHydrationWarning
               >
-                <span className="text-white">
+                <span className="bg-gradient-to-br from-red-500 to-orange-500 bg-clip-text text-transparent">
                   {isMounted && settings.store_name ? settings.store_name.charAt(0) : 'M'}
                 </span>
               </motion.div>
@@ -99,7 +99,7 @@ export function Header() {
                 />
               ) : null;
             })()}
-            <span className="hidden sm:block transition-colors" suppressHydrationWarning>
+            <span className="hidden sm:block text-white transition-colors" suppressHydrationWarning>
               {isMounted && settings.store_name ? settings.store_name : 'Mini Mart'}
             </span>
           </Link>
@@ -113,15 +113,15 @@ export function Header() {
                 href={item.path}
                 className={`relative py-2 transition-colors ${
                   isActive(item.path)
-                    ? 'text-red-600'
-                    : 'text-gray-700 hover:text-red-600'
+                    ? 'text-white'
+                    : 'text-white/80 hover:text-white'
                 }`}
               >
                 {item.label}
                 {isActive(item.path) && (
                   <motion.div
                     layoutId="activeNav"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-white"
                   />
                 )}
               </Link>
@@ -135,7 +135,7 @@ export function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full w-10 h-10 sm:w-14 sm:h-14"
+              className="rounded-full text-white hover:bg-white/20 w-10 h-10 sm:w-14 sm:h-14"
               onClick={() => router.push('/products?trigger=search_open')}
             >
               <Search className="h-5 w-5 sm:h-7 sm:w-7" />
@@ -154,7 +154,7 @@ export function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full relative w-10 h-10 sm:w-14 sm:h-14"
+              className="rounded-full relative text-white hover:bg-white/20 w-10 h-10 sm:w-14 sm:h-14"
               onClick={() => router.push('/cart')}
               suppressHydrationWarning
             >
@@ -171,7 +171,7 @@ export function Header() {
                 <div className="absolute -top-0.5 -right-0.5 sm:top-0 sm:right-0">
                   {/* Ripple/Ping effect */}
                   <motion.span
-                    className="absolute inset-0 w-5 h-5 sm:w-6 sm:h-6 bg-blue-600 rounded-full"
+                    className="absolute inset-0 w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-full"
                     animate={{
                       scale: [1, 1.8],
                       opacity: [0.6, 0],
@@ -191,7 +191,7 @@ export function Header() {
                       scale: [1, 1.3, 1],
                     } : { scale: 1 }}
                     transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="relative bg-blue-600 text-white text-xs w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center"
+                    className="relative bg-white text-red-600 text-xs w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center font-medium shadow-md"
                   >
                     {getTotalItems()}
                   </motion.span>
@@ -203,7 +203,7 @@ export function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden rounded-full w-10 h-10 sm:w-14 sm:h-14"
+              className="md:hidden rounded-full text-white hover:bg-white/20 w-10 h-10 sm:w-14 sm:h-14"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? (
@@ -223,7 +223,7 @@ export function Header() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white border-t"
+            className="md:hidden bg-white/10 backdrop-blur-md border-t border-white/20"
           >
             <nav className="container mx-auto px-4 py-4 flex flex-col gap-2">
               {navItems.map((item) => (
@@ -233,8 +233,8 @@ export function Header() {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`text-left px-4 py-3 rounded-lg transition-colors ${
                     isActive(item.path)
-                      ? 'bg-red-50 text-red-600'
-                      : 'hover:bg-gray-50'
+                      ? 'bg-white/20 text-white'
+                      : 'text-white/80 hover:bg-white/10 hover:text-white'
                   }`}
                 >
                   {item.label}

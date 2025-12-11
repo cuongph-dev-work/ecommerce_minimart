@@ -1,3 +1,4 @@
+import './polyfills';
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { SettingsProvider } from '../context/SettingsContext';
@@ -17,12 +18,12 @@ async function getSEOSettings() {
     const settings = await settingsService.getAll();
     const storeName = settings.store_name;
     const storeDescription = settings.store_description;
-    
+
     return {
       defaultTitle: settings.seo_default_title || storeName,
       titleTemplate: settings.seo_title_template || `%s | ${storeName}`,
       defaultDescription: settings.seo_default_description || storeDescription,
-      keywords: settings.seo_keywords 
+      keywords: settings.seo_keywords
         ? settings.seo_keywords.split(',').map(k => k.trim()).filter(Boolean)
         : ['minimart', 'ecommerce', 'online shopping', 'products'],
       author: settings.seo_author || storeName,
@@ -50,7 +51,7 @@ async function getSEOSettings() {
 export async function generateMetadata(): Promise<Metadata> {
   const seoSettings = await getSEOSettings();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-  
+
   return {
     metadataBase: new URL(siteUrl),
     title: {

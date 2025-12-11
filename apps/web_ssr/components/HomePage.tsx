@@ -30,6 +30,7 @@ import {
   CategoryWithSales,
 } from "../services/categories.service";
 import { useTranslation } from "react-i18next";
+import { useInfiniteProductList } from "../hooks/useInfiniteProductList";
 
 export function HomePage() {
   const { t } = useTranslation();
@@ -41,72 +42,24 @@ export function HomePage() {
     Record<string, Product[]>
   >({});
   const [loading, setLoading] = useState(true);
-  
-  // Products list state
-  const [products, setProducts] = useState<Product[]>([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+
+  // Products list state using custom hook
+  const {
+    products,
+    isLoading: isLoadingProducts,
+    hasMore,
+    loadMore
+  } = useInfiniteProductList();
+
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const isLoadingRef = useRef(false);
-
-  useEffect(() => {
-    const abortController = new AbortController();
-    const signal = abortController.signal;
-
-    const loadData = async () => {
-      try {
-        // Load featured products
-        const featured = await productsService.getFeatured(5, signal);
-        if (signal.aborted) return;
-        setFeaturedProducts(featured);
-
-        // Load top 3 categories by sales
-        const topCats = await categoriesService.getTopBySales(3, signal);
-        if (signal.aborted) return;
-        setTopCategories(topCats);
-
-        // Load top 6 products for each category
-        const productsMap: Record<string, Product[]> = {};
-        for (const category of topCats) {
-          const products = await productsService.getByCategory(
-            category.id,
-            6,
-            "sold",
-            "desc",
-            signal
-          );
-          if (signal.aborted) return;
-          productsMap[category.id] = products;
-        }
-        setCategoryProducts(productsMap);
-      } catch (error) {
-        if (error instanceof Error && error.name === "AbortError") {
-          console.log("Request cancelled");
-          return;
-        }
-        console.error("Failed to load homepage data:", error);
-      } finally {
-        if (!signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadData();
-
-    return () => {
-      abortController.abort();
-    };
-  }, []);
 
   // Infinite scroll - load more when scrolling near bottom
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         const first = entries[0];
-        if (first.isIntersecting && hasMore && !isLoadingProducts && !isLoadingRef.current) {
-          setPage((p) => p + 1);
+        if (first.isIntersecting && !isLoadingProducts) {
+          loadMore();
         }
       },
       {
@@ -125,72 +78,7 @@ export function HomePage() {
         observer.unobserve(currentRef);
       }
     };
-  }, [hasMore, isLoadingProducts]);
-
-  // Load products with pagination
-  useEffect(() => {
-    const abortController = new AbortController();
-    const signal = abortController.signal;
-
-    const loadProducts = async () => {
-      try {
-        if (isLoadingRef.current) {
-          return;
-        }
-
-        isLoadingRef.current = true;
-        setIsLoadingProducts(true);
-
-        if (page === 1) {
-          setProducts([]);
-        }
-
-        const params: any = {
-          page,
-          limit: 20,
-        };
-
-        const result = await productsService.getAll(params, signal);
-
-        if (!signal.aborted) {
-          if (page === 1) {
-            setProducts(result.products);
-          } else {
-            setProducts((prev) => {
-              const existingIds = new Set(prev.map((p) => p.id));
-              const newProducts = result.products.filter(
-                (p) => !existingIds.has(p.id)
-              );
-              return [...prev, ...newProducts];
-            });
-          }
-
-          if (result.pagination) {
-            const currentPage = result.pagination.currentPage || page;
-            const totalPages = result.pagination.totalPages || 1;
-            setHasMore(currentPage < totalPages);
-          } else {
-            setHasMore(false);
-          }
-        }
-      } catch (error) {
-        if (error instanceof Error && error.name !== "AbortError") {
-          console.error("Failed to load products:", error);
-        }
-      } finally {
-        if (!signal.aborted) {
-          setIsLoadingProducts(false);
-          isLoadingRef.current = false;
-        }
-      }
-    };
-
-    loadProducts();
-
-    return () => {
-      abortController.abort();
-    };
-  }, [page]);
+  }, [isLoadingProducts, loadMore]);
 
   const handleCategoryClick = (
     _categoryId: string,
@@ -306,8 +194,8 @@ export function HomePage() {
       {/* Products List */}
       <div className="container mx-auto px-4 sm:px-6 mb-6">
         <div className="bg-white rounded-2xl shadow-md p-6">
-          {isLoadingProducts && page === 1 ? (
-            <div className="product-grid-products-page">
+          {isLoadingProducts && products.length === 0 ? (
+            <div className="product-grid-home">
               {[...Array(8)].map((_, index) => (
                 <div key={index} className="bg-white rounded overflow-hidden shadow-sm">
                   <div className="aspect-square bg-gray-200 animate-pulse" />
@@ -330,10 +218,11 @@ export function HomePage() {
             </div>
           ) : (
             <div className="relative">
-              <div className="product-grid-products-page">
+              <div className="product-grid-home">
                 {products.map((product, index) => (
                   <ProductCard
-                    key={product.id}
+                    // Needs unique key because we duplicate products
+                    key={`${product.id}-${index}`}
                     product={product}
                     index={index}
                     totalProducts={products.length}
@@ -342,7 +231,7 @@ export function HomePage() {
               </div>
 
               {/* Infinite Scroll Trigger & Loading Indicator */}
-              {hasMore && products.length > 0 && (
+              {hasMore && (
                 <div ref={loadMoreRef} className="flex justify-center mt-8 py-4">
                   {isLoadingProducts && (
                     <div className="flex flex-col items-center gap-2">

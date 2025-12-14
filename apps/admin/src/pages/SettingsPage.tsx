@@ -20,7 +20,7 @@ export function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
-  
+
   // Logo upload state
   const [pendingLogoFile, setPendingLogoFile] = useState<PendingFile | null>(null);
   const [uploadedLogoUrl, setUploadedLogoUrl] = useState<string>('');
@@ -32,11 +32,11 @@ export function SettingsPage() {
       setIsLoading(true);
       const data = await settingsService.getAll();
       // API trả về object Record<string, any>, không phải array
-      const settingsMap: Record<string, string> = Array.isArray(data) 
+      const settingsMap: Record<string, string> = Array.isArray(data)
         ? data.reduce((acc: Record<string, string>, setting: any) => {
-            acc[setting.key] = setting.value;
-            return acc;
-          }, {})
+          acc[setting.key] = setting.value;
+          return acc;
+        }, {})
         : (data as Record<string, string>);
       setSettings(settingsMap);
       // Initialize form state from settings
@@ -51,6 +51,7 @@ export function SettingsPage() {
       setInstagramLink(settingsMap.instagram_link || '');
       setTelegramLink(settingsMap.telegram_link || '');
       setYoutubeLink(settingsMap.youtube_link || '');
+      setTiktokLink(settingsMap.tiktok_link || '');
       setWorkingHours(settingsMap.working_hours || '');
       setBankAccount(settingsMap.bank_account || '');
       setAccountName(settingsMap.account_name || '');
@@ -105,6 +106,7 @@ export function SettingsPage() {
   const [instagramLink, setInstagramLink] = useState('');
   const [telegramLink, setTelegramLink] = useState('');
   const [youtubeLink, setYoutubeLink] = useState('');
+  const [tiktokLink, setTiktokLink] = useState('');
   const [workingHours, setWorkingHours] = useState('');
 
 
@@ -212,7 +214,7 @@ export function SettingsPage() {
       if (tab === 'store') {
         // Upload logo if there's a pending file
         let logoUrl = uploadedLogoUrl || storeLogo;
-        
+
         if (pendingLogoFile) {
           setUploadingLogo(0);
           try {
@@ -254,6 +256,7 @@ export function SettingsPage() {
           instagram_link: instagramLink?.trim() || undefined,
           telegram_link: telegramLink?.trim() || undefined,
           youtube_link: youtubeLink?.trim() || undefined,
+          tiktok_link: tiktokLink?.trim() || undefined,
           working_hours: workingHours?.trim() || undefined,
         };
 
@@ -278,6 +281,7 @@ export function SettingsPage() {
           { key: 'instagram_link', value: instagramLink?.trim() || '' },
           { key: 'telegram_link', value: telegramLink?.trim() || '' },
           { key: 'youtube_link', value: youtubeLink?.trim() || '' },
+          { key: 'tiktok_link', value: tiktokLink?.trim() || '' },
           { key: 'working_hours', value: workingHours?.trim() || '' },
         ];
       } else if (tab === 'seo') {
@@ -399,654 +403,662 @@ export function SettingsPage() {
           Loading settings...
         </div>
       ) : (
-      <Tabs defaultValue="store" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="store">
-            <Store className="w-4 h-4 mr-2" />
-            Thông tin cửa hàng
-          </TabsTrigger>
-          <TabsTrigger value="seo">
-            <Search className="w-4 h-4 mr-2" />
-            SEO
-          </TabsTrigger>
-          <TabsTrigger value="payment">
-            <CreditCard className="w-4 h-4 mr-2" />
-            Thanh toán
-          </TabsTrigger>
-          <TabsTrigger value="policies">
-            <FileText className="w-4 h-4 mr-2" />
-            Chính sách
-          </TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="store" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="store">
+              <Store className="w-4 h-4 mr-2" />
+              Thông tin cửa hàng
+            </TabsTrigger>
+            <TabsTrigger value="seo">
+              <Search className="w-4 h-4 mr-2" />
+              SEO
+            </TabsTrigger>
+            <TabsTrigger value="payment">
+              <CreditCard className="w-4 h-4 mr-2" />
+              Thanh toán
+            </TabsTrigger>
+            <TabsTrigger value="policies">
+              <FileText className="w-4 h-4 mr-2" />
+              Chính sách
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="store" className="space-y-6">
-          <div className="bg-card p-6 rounded-xl shadow-sm border border-border space-y-6">
-            <h3 className="text-xl font-semibold">Thông tin cửa hàng</h3>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Tên cửa hàng <span className="text-destructive">*</span></Label>
-                <Input
-                  value={storeName}
-                  onChange={(e) => {
-                    setStoreName(e.target.value);
-                    if (getFieldError(validationErrors, 'store_name')) {
-                      setValidationErrors(validationErrors.filter(err => err.field !== 'store_name'));
-                    }
-                  }}
-                  className={getFieldError(validationErrors, 'store_name') ? 'border-destructive' : ''}
-                />
-                {getFieldError(validationErrors, 'store_name') && (
-                  <p className="text-sm text-destructive">
-                    {getFieldError(validationErrors, 'store_name')}
-                  </p>
-                )}
-              </div>
+          <TabsContent value="store" className="space-y-6">
+            <div className="bg-card p-6 rounded-xl shadow-sm border border-border space-y-6">
+              <h3 className="text-xl font-semibold">Thông tin cửa hàng</h3>
 
-              <div className="space-y-2">
-                <Label>Logo</Label>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  {/* Upload Button */}
-                  <div className="flex gap-2">
-                    <label className="flex-1">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleLogoUpload}
-                        className="hidden"
+                  <Label>Tên cửa hàng <span className="text-destructive">*</span></Label>
+                  <Input
+                    value={storeName}
+                    onChange={(e) => {
+                      setStoreName(e.target.value);
+                      if (getFieldError(validationErrors, 'store_name')) {
+                        setValidationErrors(validationErrors.filter(err => err.field !== 'store_name'));
+                      }
+                    }}
+                    className={getFieldError(validationErrors, 'store_name') ? 'border-destructive' : ''}
+                  />
+                  {getFieldError(validationErrors, 'store_name') && (
+                    <p className="text-sm text-destructive">
+                      {getFieldError(validationErrors, 'store_name')}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Logo</Label>
+                  <div className="space-y-2">
+                    {/* Upload Button */}
+                    <div className="flex gap-2">
+                      <label className="flex-1">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                          className="hidden"
+                          disabled={uploadingLogo !== null}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full"
+                          disabled={uploadingLogo !== null}
+                          asChild
+                        >
+                          <span>
+                            <Upload className="w-4 h-4 mr-2" />
+                            Chọn file
+                          </span>
+                        </Button>
+                      </label>
+                    </div>
+
+                    {/* URL Input */}
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="https://example.com/logo.jpg"
+                        value={currentLogoUrl}
+                        onChange={(e) => {
+                          setCurrentLogoUrl(e.target.value);
+                          if (getFieldError(validationErrors, 'store_logo')) {
+                            setValidationErrors(validationErrors.filter(err => err.field !== 'store_logo'));
+                          }
+                        }}
                         disabled={uploadingLogo !== null}
+                        className="flex-1"
                       />
                       <Button
                         type="button"
-                        variant="outline"
-                        className="w-full"
-                        disabled={uploadingLogo !== null}
-                        asChild
+                        variant="secondary"
+                        onClick={handleAddLogoUrl}
+                        disabled={!currentLogoUrl || uploadingLogo !== null}
                       >
-                        <span>
-                          <Upload className="w-4 h-4 mr-2" />
-                          Chọn file
-                        </span>
+                        Thêm
                       </Button>
-                    </label>
+                    </div>
                   </div>
 
-                  {/* URL Input */}
-                  <div className="flex gap-2">
+                  {getFieldError(validationErrors, 'store_logo') && (
+                    <p className="text-sm text-destructive">
+                      {getFieldError(validationErrors, 'store_logo')}
+                    </p>
+                  )}
+
+                  {/* Logo Preview */}
+                  {(pendingLogoFile || uploadedLogoUrl || uploadingLogo !== null) ? (
+                    <div className="relative rounded-lg overflow-hidden border border-border">
+                      {uploadingLogo !== null ? (
+                        <div className="w-full h-32 flex flex-col items-center justify-center bg-muted/50">
+                          <div className="text-sm text-muted-foreground mb-2">Đang upload...</div>
+                          <div className="w-3/4 h-1 bg-secondary rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-primary transition-all duration-300"
+                              style={{ width: `${uploadingLogo}%` }}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <img
+                            src={pendingLogoFile?.preview || uploadedLogoUrl}
+                            alt="Logo preview"
+                            className="w-full h-32 object-contain bg-muted/30"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleRemoveLogo}
+                            className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                          {pendingLogoFile && (
+                            <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-yellow-500/80 text-white text-xs rounded">
+                              Chờ upload
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="h-32 flex flex-col items-center justify-center border-2 border-dashed rounded-lg text-muted-foreground bg-muted/30">
+                      <Upload className="w-8 h-8 mb-2 opacity-50" />
+                      <span className="text-sm">Chưa có logo</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Số điện thoại hotline <span className="text-destructive">*</span></Label>
+                  <Input
+                    value={storePhone}
+                    onChange={(e) => {
+                      setStorePhone(e.target.value);
+                      if (getFieldError(validationErrors, 'store_phone')) {
+                        setValidationErrors(validationErrors.filter(err => err.field !== 'store_phone'));
+                      }
+                    }}
+                    className={getFieldError(validationErrors, 'store_phone') ? 'border-destructive' : ''}
+                  />
+                  {getFieldError(validationErrors, 'store_phone') && (
+                    <p className="text-sm text-destructive">
+                      {getFieldError(validationErrors, 'store_phone')}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Email liên hệ <span className="text-destructive">*</span></Label>
+                  <Input
+                    type="email"
+                    value={storeEmail}
+                    onChange={(e) => {
+                      setStoreEmail(e.target.value);
+                      if (getFieldError(validationErrors, 'store_email')) {
+                        setValidationErrors(validationErrors.filter(err => err.field !== 'store_email'));
+                      }
+                    }}
+                    className={getFieldError(validationErrors, 'store_email') ? 'border-destructive' : ''}
+                  />
+                  {getFieldError(validationErrors, 'store_email') && (
+                    <p className="text-sm text-destructive">
+                      {getFieldError(validationErrors, 'store_email')}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Địa chỉ <span className="text-destructive">*</span></Label>
+                <Textarea
+                  value={storeAddress}
+                  onChange={(e) => {
+                    setStoreAddress(e.target.value);
+                    if (getFieldError(validationErrors, 'store_address')) {
+                      setValidationErrors(validationErrors.filter(err => err.field !== 'store_address'));
+                    }
+                  }}
+                  className={`min-h-[80px] ${getFieldError(validationErrors, 'store_address') ? 'border-destructive' : ''}`}
+                />
+                {getFieldError(validationErrors, 'store_address') && (
+                  <p className="text-sm text-destructive">
+                    {getFieldError(validationErrors, 'store_address')}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Mô tả ngắn</Label>
+                <Textarea
+                  value={storeDescription}
+                  onChange={(e) => {
+                    setStoreDescription(e.target.value);
+                    if (getFieldError(validationErrors, 'store_description')) {
+                      setValidationErrors(validationErrors.filter(err => err.field !== 'store_description'));
+                    }
+                  }}
+                  className={`min-h-[100px] ${getFieldError(validationErrors, 'store_description') ? 'border-destructive' : ''}`}
+                />
+                {getFieldError(validationErrors, 'store_description') && (
+                  <p className="text-sm text-destructive">
+                    {getFieldError(validationErrors, 'store_description')}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Giờ làm việc</Label>
+                <Input
+                  value={workingHours}
+                  onChange={(e) => {
+                    setWorkingHours(e.target.value);
+                    if (getFieldError(validationErrors, 'working_hours')) {
+                      setValidationErrors(validationErrors.filter(err => err.field !== 'working_hours'));
+                    }
+                  }}
+                  placeholder="VD: T2-T6: 8:00-17:00, T7-CN: 9:00-18:00"
+                  className={getFieldError(validationErrors, 'working_hours') ? 'border-destructive' : ''}
+                />
+                {getFieldError(validationErrors, 'working_hours') && (
+                  <p className="text-sm text-destructive">
+                    {getFieldError(validationErrors, 'working_hours')}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-4 border-t pt-4">
+                <Label>Mạng xã hội</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm">Facebook</Label>
                     <Input
-                      placeholder="https://example.com/logo.jpg"
-                      value={currentLogoUrl}
-                      onChange={(e) => {
-                        setCurrentLogoUrl(e.target.value);
-                        if (getFieldError(validationErrors, 'store_logo')) {
-                          setValidationErrors(validationErrors.filter(err => err.field !== 'store_logo'));
-                        }
-                      }}
-                      disabled={uploadingLogo !== null}
-                      className="flex-1"
+                      value={facebookLink}
+                      onChange={(e) => setFacebookLink(e.target.value)}
+                      placeholder="https://facebook.com/..."
                     />
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={handleAddLogoUrl}
-                      disabled={!currentLogoUrl || uploadingLogo !== null}
-                    >
-                      Thêm
-                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm">Instagram</Label>
+                    <Input
+                      value={instagramLink}
+                      onChange={(e) => setInstagramLink(e.target.value)}
+                      placeholder="https://instagram.com/..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm">Telegram</Label>
+                    <Input
+                      value={telegramLink}
+                      onChange={(e) => setTelegramLink(e.target.value)}
+                      placeholder="https://t.me/..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm">YouTube</Label>
+                    <Input
+                      value={youtubeLink}
+                      onChange={(e) => setYoutubeLink(e.target.value)}
+                      placeholder="https://youtube.com/..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm">TikTok</Label>
+                    <Input
+                      value={tiktokLink}
+                      onChange={(e) => setTiktokLink(e.target.value)}
+                      placeholder="https://tiktok.com/@..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Button onClick={() => handleSave('store')} className="w-full sm:w-auto" disabled={isSaving}>
+                <Save className="mr-2 h-4 w-4" />
+                {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="seo" className="space-y-6">
+            <div className="bg-card p-6 rounded-xl shadow-sm border border-border space-y-6">
+              <h3 className="text-xl font-semibold">Cấu hình SEO</h3>
+
+              <div className="space-y-6">
+                <div>
+                  <h4 className="font-medium mb-4">Cài đặt SEO chung</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Tiêu đề mặc định</Label>
+                      <Input
+                        value={storeName || ''}
+                        readOnly
+                        className="bg-muted cursor-not-allowed"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Tự động lấy từ <strong>Tên cửa hàng</strong> trong tab "Thông tin cửa hàng"
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Template tiêu đề</Label>
+                      <Input
+                        value={storeName ? `%s | ${storeName}` : '%s | Minimart'}
+                        readOnly
+                        className="bg-muted cursor-not-allowed"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        %s sẽ được thay thế bằng tiêu đề trang. Tự động tạo từ <strong>Tên cửa hàng</strong>
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 col-span-2">
+                      <Label>Mô tả mặc định</Label>
+                      <Textarea
+                        value={storeDescription || ''}
+                        readOnly
+                        className="min-h-[80px] bg-muted cursor-not-allowed"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Tự động lấy từ <strong>Mô tả ngắn</strong> trong tab "Thông tin cửa hàng"
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 col-span-2">
+                      <Label>Từ khóa (phân cách bằng dấu phẩy)</Label>
+                      <Input
+                        value={seoKeywords}
+                        onChange={(e) => setSeoKeywords(e.target.value)}
+                        placeholder="minimart, ecommerce, online shopping"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Tác giả</Label>
+                      <Input
+                        value={seoAuthor}
+                        onChange={(e) => setSeoAuthor(e.target.value)}
+                        placeholder="Tên tác giả"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Người tạo</Label>
+                      <Input
+                        value={seoCreator}
+                        onChange={(e) => setSeoCreator(e.target.value)}
+                        placeholder="Tên người tạo"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Nhà xuất bản</Label>
+                      <Input
+                        value={seoPublisher}
+                        onChange={(e) => setSeoPublisher(e.target.value)}
+                        placeholder="Tên nhà xuất bản"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Twitter Handle</Label>
+                      <Input
+                        value={seoTwitterHandle}
+                        onChange={(e) => setSeoTwitterHandle(e.target.value)}
+                        placeholder="@minimart"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Google Verification Code</Label>
+                      <Input
+                        value={seoGoogleVerification}
+                        onChange={(e) => setSeoGoogleVerification(e.target.value)}
+                        placeholder="Verification code từ Google Search Console"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {getFieldError(validationErrors, 'store_logo') && (
-                  <p className="text-sm text-destructive">
-                    {getFieldError(validationErrors, 'store_logo')}
-                  </p>
-                )}
-
-                {/* Logo Preview */}
-                {(pendingLogoFile || uploadedLogoUrl || uploadingLogo !== null) ? (
-                  <div className="relative rounded-lg overflow-hidden border border-border">
-                    {uploadingLogo !== null ? (
-                      <div className="w-full h-32 flex flex-col items-center justify-center bg-muted/50">
-                        <div className="text-sm text-muted-foreground mb-2">Đang upload...</div>
-                        <div className="w-3/4 h-1 bg-secondary rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary transition-all duration-300"
-                            style={{ width: `${uploadingLogo}%` }}
+                <div className="border-t pt-6">
+                  <h4 className="font-medium mb-4">SEO theo trang</h4>
+                  <div className="space-y-6">
+                    {/* Home Page */}
+                    <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+                      <h5 className="font-medium">Trang chủ</h5>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Tiêu đề</Label>
+                          <Input
+                            value={seoHomeTitle}
+                            onChange={(e) => setSeoHomeTitle(e.target.value)}
+                            placeholder="Để trống sẽ dùng mặc định"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Từ khóa</Label>
+                          <Input
+                            value={seoHomeKeywords}
+                            onChange={(e) => setSeoHomeKeywords(e.target.value)}
+                            placeholder="keyword1, keyword2"
+                          />
+                        </div>
+                        <div className="space-y-2 col-span-2">
+                          <Label>Mô tả</Label>
+                          <Textarea
+                            value={seoHomeDescription}
+                            onChange={(e) => setSeoHomeDescription(e.target.value)}
+                            className="min-h-[60px]"
+                            placeholder="Để trống sẽ dùng mặc định"
                           />
                         </div>
                       </div>
-                    ) : (
-                      <>
-                        <img
-                          src={pendingLogoFile?.preview || uploadedLogoUrl}
-                          alt="Logo preview"
-                          className="w-full h-32 object-contain bg-muted/30"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleRemoveLogo}
-                          className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                        {pendingLogoFile && (
-                          <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-yellow-500/80 text-white text-xs rounded">
-                            Chờ upload
-                          </div>
-                        )}
-                      </>
-                    )}
+                    </div>
+
+                    {/* Products Page */}
+                    <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+                      <h5 className="font-medium">Trang sản phẩm</h5>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Tiêu đề</Label>
+                          <Input
+                            value={seoProductsTitle}
+                            onChange={(e) => setSeoProductsTitle(e.target.value)}
+                            placeholder="Để trống sẽ dùng mặc định"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Từ khóa</Label>
+                          <Input
+                            value={seoProductsKeywords}
+                            onChange={(e) => setSeoProductsKeywords(e.target.value)}
+                            placeholder="products, shopping, ecommerce"
+                          />
+                        </div>
+                        <div className="space-y-2 col-span-2">
+                          <Label>Mô tả</Label>
+                          <Textarea
+                            value={seoProductsDescription}
+                            onChange={(e) => setSeoProductsDescription(e.target.value)}
+                            className="min-h-[60px]"
+                            placeholder="Để trống sẽ dùng mặc định"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Contact Page */}
+                    <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+                      <h5 className="font-medium">Trang liên hệ</h5>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Tiêu đề</Label>
+                          <Input
+                            value={seoContactTitle}
+                            onChange={(e) => setSeoContactTitle(e.target.value)}
+                            placeholder="Để trống sẽ dùng mặc định"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Từ khóa</Label>
+                          <Input
+                            value={seoContactKeywords}
+                            onChange={(e) => setSeoContactKeywords(e.target.value)}
+                            placeholder="contact, support, help"
+                          />
+                        </div>
+                        <div className="space-y-2 col-span-2">
+                          <Label>Mô tả</Label>
+                          <Textarea
+                            value={seoContactDescription}
+                            onChange={(e) => setSeoContactDescription(e.target.value)}
+                            className="min-h-[60px]"
+                            placeholder="Để trống sẽ dùng mặc định"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stores Page */}
+                    <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+                      <h5 className="font-medium">Trang cửa hàng</h5>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Tiêu đề</Label>
+                          <Input
+                            value={seoStoresTitle}
+                            onChange={(e) => setSeoStoresTitle(e.target.value)}
+                            placeholder="Để trống sẽ dùng mặc định"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Từ khóa</Label>
+                          <Input
+                            value={seoStoresKeywords}
+                            onChange={(e) => setSeoStoresKeywords(e.target.value)}
+                            placeholder="stores, locations, find store"
+                          />
+                        </div>
+                        <div className="space-y-2 col-span-2">
+                          <Label>Mô tả</Label>
+                          <Textarea
+                            value={seoStoresDescription}
+                            onChange={(e) => setSeoStoresDescription(e.target.value)}
+                            className="min-h-[60px]"
+                            placeholder="Để trống sẽ dùng mặc định"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <div className="h-32 flex flex-col items-center justify-center border-2 border-dashed rounded-lg text-muted-foreground bg-muted/30">
-                    <Upload className="w-8 h-8 mb-2 opacity-50" />
-                    <span className="text-sm">Chưa có logo</span>
-                  </div>
-                )}
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Số điện thoại hotline <span className="text-destructive">*</span></Label>
-                <Input
-                  value={storePhone}
-                  onChange={(e) => {
-                    setStorePhone(e.target.value);
-                    if (getFieldError(validationErrors, 'store_phone')) {
-                      setValidationErrors(validationErrors.filter(err => err.field !== 'store_phone'));
-                    }
-                  }}
-                  className={getFieldError(validationErrors, 'store_phone') ? 'border-destructive' : ''}
-                />
-                {getFieldError(validationErrors, 'store_phone') && (
-                  <p className="text-sm text-destructive">
-                    {getFieldError(validationErrors, 'store_phone')}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label>Email liên hệ <span className="text-destructive">*</span></Label>
-                <Input
-                  type="email"
-                  value={storeEmail}
-                  onChange={(e) => {
-                    setStoreEmail(e.target.value);
-                    if (getFieldError(validationErrors, 'store_email')) {
-                      setValidationErrors(validationErrors.filter(err => err.field !== 'store_email'));
-                    }
-                  }}
-                  className={getFieldError(validationErrors, 'store_email') ? 'border-destructive' : ''}
-                />
-                {getFieldError(validationErrors, 'store_email') && (
-                  <p className="text-sm text-destructive">
-                    {getFieldError(validationErrors, 'store_email')}
-                  </p>
-                )}
-              </div>
+              <Button onClick={() => handleSave('seo')} className="w-full sm:w-auto" disabled={isSaving}>
+                <Save className="mr-2 h-4 w-4" />
+                {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+              </Button>
             </div>
+          </TabsContent>
 
-            <div className="space-y-2">
-              <Label>Địa chỉ <span className="text-destructive">*</span></Label>
-              <Textarea
-                value={storeAddress}
-                onChange={(e) => {
-                  setStoreAddress(e.target.value);
-                  if (getFieldError(validationErrors, 'store_address')) {
-                    setValidationErrors(validationErrors.filter(err => err.field !== 'store_address'));
-                  }
-                }}
-                className={`min-h-[80px] ${getFieldError(validationErrors, 'store_address') ? 'border-destructive' : ''}`}
-              />
-              {getFieldError(validationErrors, 'store_address') && (
-                <p className="text-sm text-destructive">
-                  {getFieldError(validationErrors, 'store_address')}
+          <TabsContent value="payment" className="space-y-6">
+            <div className="bg-card p-6 rounded-xl shadow-sm border border-border space-y-6">
+              <h3 className="text-xl font-semibold">Cấu hình thanh toán</h3>
+
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <strong>Lưu ý:</strong> Hệ thống không hỗ trợ thanh toán online, chỉ hỗ trợ thanh toán offline (COD).
                 </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Mô tả ngắn</Label>
-              <Textarea
-                value={storeDescription}
-                onChange={(e) => {
-                  setStoreDescription(e.target.value);
-                  if (getFieldError(validationErrors, 'store_description')) {
-                    setValidationErrors(validationErrors.filter(err => err.field !== 'store_description'));
-                  }
-                }}
-                className={`min-h-[100px] ${getFieldError(validationErrors, 'store_description') ? 'border-destructive' : ''}`}
-              />
-              {getFieldError(validationErrors, 'store_description') && (
-                <p className="text-sm text-destructive">
-                  {getFieldError(validationErrors, 'store_description')}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Giờ làm việc</Label>
-              <Input
-                value={workingHours}
-                onChange={(e) => {
-                  setWorkingHours(e.target.value);
-                  if (getFieldError(validationErrors, 'working_hours')) {
-                    setValidationErrors(validationErrors.filter(err => err.field !== 'working_hours'));
-                  }
-                }}
-                placeholder="VD: T2-T6: 8:00-17:00, T7-CN: 9:00-18:00"
-                className={getFieldError(validationErrors, 'working_hours') ? 'border-destructive' : ''}
-              />
-              {getFieldError(validationErrors, 'working_hours') && (
-                <p className="text-sm text-destructive">
-                  {getFieldError(validationErrors, 'working_hours')}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-4 border-t pt-4">
-              <Label>Mạng xã hội</Label>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-sm">Facebook</Label>
-                  <Input
-                    value={facebookLink}
-                    onChange={(e) => setFacebookLink(e.target.value)}
-                    placeholder="https://facebook.com/..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm">Instagram</Label>
-                  <Input
-                    value={instagramLink}
-                    onChange={(e) => setInstagramLink(e.target.value)}
-                    placeholder="https://instagram.com/..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm">Telegram</Label>
-                  <Input
-                    value={telegramLink}
-                    onChange={(e) => setTelegramLink(e.target.value)}
-                    placeholder="https://t.me/..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm">YouTube</Label>
-                  <Input
-                    value={youtubeLink}
-                    onChange={(e) => setYoutubeLink(e.target.value)}
-                    placeholder="https://youtube.com/..."
-                  />
-                </div>
               </div>
-            </div>
 
-            <Button onClick={() => handleSave('store')} className="w-full sm:w-auto" disabled={isSaving}>
-              <Save className="mr-2 h-4 w-4" />
-              {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
-            </Button>
-          </div>
-        </TabsContent>
+              <div className="space-y-4">
+                <h4 className="font-medium">Thông tin chuyển khoản (nếu khách muốn chuyển khoản trước)</h4>
 
-        <TabsContent value="seo" className="space-y-6">
-          <div className="bg-card p-6 rounded-xl shadow-sm border border-border space-y-6">
-            <h3 className="text-xl font-semibold">Cấu hình SEO</h3>
-            
-            <div className="space-y-6">
-              <div>
-                <h4 className="font-medium mb-4">Cài đặt SEO chung</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Tiêu đề mặc định</Label>
+                    <Label>Số tài khoản</Label>
                     <Input
-                      value={storeName || ''}
-                      readOnly
-                      className="bg-muted cursor-not-allowed"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Tự động lấy từ <strong>Tên cửa hàng</strong> trong tab "Thông tin cửa hàng"
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Template tiêu đề</Label>
-                    <Input
-                      value={storeName ? `%s | ${storeName}` : '%s | Minimart'}
-                      readOnly
-                      className="bg-muted cursor-not-allowed"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      %s sẽ được thay thế bằng tiêu đề trang. Tự động tạo từ <strong>Tên cửa hàng</strong>
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 col-span-2">
-                    <Label>Mô tả mặc định</Label>
-                    <Textarea
-                      value={storeDescription || ''}
-                      readOnly
-                      className="min-h-[80px] bg-muted cursor-not-allowed"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Tự động lấy từ <strong>Mô tả ngắn</strong> trong tab "Thông tin cửa hàng"
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 col-span-2">
-                    <Label>Từ khóa (phân cách bằng dấu phẩy)</Label>
-                    <Input
-                      value={seoKeywords}
-                      onChange={(e) => setSeoKeywords(e.target.value)}
-                      placeholder="minimart, ecommerce, online shopping"
+                      value={bankAccount}
+                      onChange={(e) => setBankAccount(e.target.value)}
+                      placeholder="1234567890"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Tác giả</Label>
+                    <Label>Tên chủ tài khoản</Label>
                     <Input
-                      value={seoAuthor}
-                      onChange={(e) => setSeoAuthor(e.target.value)}
-                      placeholder="Tên tác giả"
+                      value={accountName}
+                      onChange={(e) => setAccountName(e.target.value)}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Người tạo</Label>
+                    <Label>Tên ngân hàng</Label>
                     <Input
-                      value={seoCreator}
-                      onChange={(e) => setSeoCreator(e.target.value)}
-                      placeholder="Tên người tạo"
+                      value={bankName}
+                      onChange={(e) => setBankName(e.target.value)}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Nhà xuất bản</Label>
+                    <Label>Chi nhánh</Label>
                     <Input
-                      value={seoPublisher}
-                      onChange={(e) => setSeoPublisher(e.target.value)}
-                      placeholder="Tên nhà xuất bản"
+                      value={bankBranch}
+                      onChange={(e) => setBankBranch(e.target.value)}
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label>Twitter Handle</Label>
-                    <Input
-                      value={seoTwitterHandle}
-                      onChange={(e) => setSeoTwitterHandle(e.target.value)}
-                      placeholder="@minimart"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Google Verification Code</Label>
-                    <Input
-                      value={seoGoogleVerification}
-                      onChange={(e) => setSeoGoogleVerification(e.target.value)}
-                      placeholder="Verification code từ Google Search Console"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t pt-6">
-                <h4 className="font-medium mb-4">SEO theo trang</h4>
-                <div className="space-y-6">
-                  {/* Home Page */}
-                  <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
-                    <h5 className="font-medium">Trang chủ</h5>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Tiêu đề</Label>
-                        <Input
-                          value={seoHomeTitle}
-                          onChange={(e) => setSeoHomeTitle(e.target.value)}
-                          placeholder="Để trống sẽ dùng mặc định"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Từ khóa</Label>
-                        <Input
-                          value={seoHomeKeywords}
-                          onChange={(e) => setSeoHomeKeywords(e.target.value)}
-                          placeholder="keyword1, keyword2"
-                        />
-                      </div>
-                      <div className="space-y-2 col-span-2">
-                        <Label>Mô tả</Label>
-                        <Textarea
-                          value={seoHomeDescription}
-                          onChange={(e) => setSeoHomeDescription(e.target.value)}
-                          className="min-h-[60px]"
-                          placeholder="Để trống sẽ dùng mặc định"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Products Page */}
-                  <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
-                    <h5 className="font-medium">Trang sản phẩm</h5>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Tiêu đề</Label>
-                        <Input
-                          value={seoProductsTitle}
-                          onChange={(e) => setSeoProductsTitle(e.target.value)}
-                          placeholder="Để trống sẽ dùng mặc định"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Từ khóa</Label>
-                        <Input
-                          value={seoProductsKeywords}
-                          onChange={(e) => setSeoProductsKeywords(e.target.value)}
-                          placeholder="products, shopping, ecommerce"
-                        />
-                      </div>
-                      <div className="space-y-2 col-span-2">
-                        <Label>Mô tả</Label>
-                        <Textarea
-                          value={seoProductsDescription}
-                          onChange={(e) => setSeoProductsDescription(e.target.value)}
-                          className="min-h-[60px]"
-                          placeholder="Để trống sẽ dùng mặc định"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Contact Page */}
-                  <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
-                    <h5 className="font-medium">Trang liên hệ</h5>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Tiêu đề</Label>
-                        <Input
-                          value={seoContactTitle}
-                          onChange={(e) => setSeoContactTitle(e.target.value)}
-                          placeholder="Để trống sẽ dùng mặc định"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Từ khóa</Label>
-                        <Input
-                          value={seoContactKeywords}
-                          onChange={(e) => setSeoContactKeywords(e.target.value)}
-                          placeholder="contact, support, help"
-                        />
-                      </div>
-                      <div className="space-y-2 col-span-2">
-                        <Label>Mô tả</Label>
-                        <Textarea
-                          value={seoContactDescription}
-                          onChange={(e) => setSeoContactDescription(e.target.value)}
-                          className="min-h-[60px]"
-                          placeholder="Để trống sẽ dùng mặc định"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Stores Page */}
-                  <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
-                    <h5 className="font-medium">Trang cửa hàng</h5>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Tiêu đề</Label>
-                        <Input
-                          value={seoStoresTitle}
-                          onChange={(e) => setSeoStoresTitle(e.target.value)}
-                          placeholder="Để trống sẽ dùng mặc định"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Từ khóa</Label>
-                        <Input
-                          value={seoStoresKeywords}
-                          onChange={(e) => setSeoStoresKeywords(e.target.value)}
-                          placeholder="stores, locations, find store"
-                        />
-                      </div>
-                      <div className="space-y-2 col-span-2">
-                        <Label>Mô tả</Label>
-                        <Textarea
-                          value={seoStoresDescription}
-                          onChange={(e) => setSeoStoresDescription(e.target.value)}
-                          className="min-h-[60px]"
-                          placeholder="Để trống sẽ dùng mặc định"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Button onClick={() => handleSave('seo')} className="w-full sm:w-auto" disabled={isSaving}>
-              <Save className="mr-2 h-4 w-4" />
-              {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
-            </Button>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="payment" className="space-y-6">
-          <div className="bg-card p-6 rounded-xl shadow-sm border border-border space-y-6">
-            <h3 className="text-xl font-semibold">Cấu hình thanh toán</h3>
-            
-            <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <p className="text-sm text-blue-800 dark:text-blue-200">
-                <strong>Lưu ý:</strong> Hệ thống không hỗ trợ thanh toán online, chỉ hỗ trợ thanh toán offline (COD).
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="font-medium">Thông tin chuyển khoản (nếu khách muốn chuyển khoản trước)</h4>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Số tài khoản</Label>
-                  <Input
-                    value={bankAccount}
-                    onChange={(e) => setBankAccount(e.target.value)}
-                    placeholder="1234567890"
-                  />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Tên chủ tài khoản</Label>
+                  <Label>Nội dung chuyển khoản (mẫu)</Label>
                   <Input
-                    value={accountName}
-                    onChange={(e) => setAccountName(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Tên ngân hàng</Label>
-                  <Input
-                    value={bankName}
-                    onChange={(e) => setBankName(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Chi nhánh</Label>
-                  <Input
-                    value={bankBranch}
-                    onChange={(e) => setBankBranch(e.target.value)}
+                    value={transferNote}
+                    onChange={(e) => setTransferNote(e.target.value)}
+                    placeholder="Nội dung: [Mã đơn hàng]"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Nội dung chuyển khoản (mẫu)</Label>
-                <Input
-                  value={transferNote}
-                  onChange={(e) => setTransferNote(e.target.value)}
-                  placeholder="Nội dung: [Mã đơn hàng]"
-                />
-              </div>
+              <Button onClick={() => handleSave('payment')} className="w-full sm:w-auto" disabled={isSaving}>
+                <Save className="mr-2 h-4 w-4" />
+                {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+              </Button>
             </div>
+          </TabsContent>
 
-            <Button onClick={() => handleSave('payment')} className="w-full sm:w-auto" disabled={isSaving}>
-              <Save className="mr-2 h-4 w-4" />
-              {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
-            </Button>
-          </div>
-        </TabsContent>
+          <TabsContent value="policies" className="space-y-6">
+            <div className="bg-card p-6 rounded-xl shadow-sm border border-border space-y-6">
+              <h3 className="text-xl font-semibold">Chính sách và nội dung</h3>
 
-        <TabsContent value="policies" className="space-y-6">
-          <div className="bg-card p-6 rounded-xl shadow-sm border border-border space-y-6">
-            <h3 className="text-xl font-semibold">Chính sách và nội dung</h3>
-            
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Chính sách bảo hành</Label>
-                <Textarea
-                  value={warrantyPolicy}
-                  onChange={(e) => setWarrantyPolicy(e.target.value)}
-                  className="min-h-[150px]"
-                  placeholder="Nhập nội dung chính sách bảo hành..."
-                />
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Chính sách bảo hành</Label>
+                  <Textarea
+                    value={warrantyPolicy}
+                    onChange={(e) => setWarrantyPolicy(e.target.value)}
+                    className="min-h-[150px]"
+                    placeholder="Nhập nội dung chính sách bảo hành..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Chính sách đổi trả</Label>
+                  <Textarea
+                    value={returnPolicy}
+                    onChange={(e) => setReturnPolicy(e.target.value)}
+                    className="min-h-[150px]"
+                    placeholder="Nhập nội dung chính sách đổi trả..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Hướng dẫn mua hàng</Label>
+                  <Textarea
+                    value={shoppingGuide}
+                    onChange={(e) => setShoppingGuide(e.target.value)}
+                    className="min-h-[150px]"
+                    placeholder="Nhập hướng dẫn mua hàng..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Câu hỏi thường gặp (FAQ)</Label>
+                  <Textarea
+                    value={faq}
+                    onChange={(e) => setFaq(e.target.value)}
+                    className="min-h-[150px]"
+                    placeholder="Nhập câu hỏi thường gặp..."
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Chính sách đổi trả</Label>
-                <Textarea
-                  value={returnPolicy}
-                  onChange={(e) => setReturnPolicy(e.target.value)}
-                  className="min-h-[150px]"
-                  placeholder="Nhập nội dung chính sách đổi trả..."
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Hướng dẫn mua hàng</Label>
-                <Textarea
-                  value={shoppingGuide}
-                  onChange={(e) => setShoppingGuide(e.target.value)}
-                  className="min-h-[150px]"
-                  placeholder="Nhập hướng dẫn mua hàng..."
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Câu hỏi thường gặp (FAQ)</Label>
-                <Textarea
-                  value={faq}
-                  onChange={(e) => setFaq(e.target.value)}
-                  className="min-h-[150px]"
-                  placeholder="Nhập câu hỏi thường gặp..."
-                />
-              </div>
+              <Button onClick={() => handleSave('policies')} className="w-full sm:w-auto" disabled={isSaving}>
+                <Save className="mr-2 h-4 w-4" />
+                {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+              </Button>
             </div>
-
-            <Button onClick={() => handleSave('policies')} className="w-full sm:w-auto" disabled={isSaving}>
-              <Save className="mr-2 h-4 w-4" />
-              {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
-            </Button>
-          </div>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
       )}
     </motion.div>
   );

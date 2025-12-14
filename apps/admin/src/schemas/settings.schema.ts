@@ -59,6 +59,12 @@ export const storeSettingsSchema = v.object({
       v.url('Link YouTube không hợp lệ')
     )
   ),
+  tiktok_link: v.optional(
+    v.pipe(
+      v.string(),
+      v.url('Link TikTok không hợp lệ')
+    )
+  ),
   working_hours: v.optional(
     v.pipe(
       v.string(),

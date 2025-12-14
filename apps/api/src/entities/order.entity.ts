@@ -32,6 +32,11 @@ export enum PaymentStatus {
   PAID = 'paid',
 }
 
+export enum DeliveryType {
+  PICKUP = 'pickup',
+  DELIVERY = 'delivery',
+}
+
 @Entity()
 export class Order {
   @PrimaryKey({ type: 'uuid' })
@@ -73,11 +78,17 @@ export class Order {
   @Enum(() => PaymentStatus)
   paymentStatus: PaymentStatus = PaymentStatus.UNPAID;
 
-  @ManyToOne(() => Store)
-  pickupStore!: Store;
+  @ManyToOne(() => Store, { nullable: true })
+  pickupStore?: Store;
 
   @Property({ default: false })
   expressDelivery: boolean = false;
+
+  @Enum(() => DeliveryType)
+  deliveryType: DeliveryType = DeliveryType.PICKUP;
+
+  @Property({ nullable: true })
+  deliveryAddress?: string;
 
 
   @Property({ nullable: true })

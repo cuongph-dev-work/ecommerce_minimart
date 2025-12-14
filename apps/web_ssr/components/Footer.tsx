@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Facebook, Instagram, Send, Youtube } from 'lucide-react';
+import { Facebook, Instagram, Send, Youtube, Music } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
 import { useTranslation } from 'react-i18next';
 import { sanitizeUrl, sanitizeImageUrl } from '../lib/security';
@@ -106,6 +106,20 @@ export function Footer() {
                 style={{ backgroundColor: '#FF0000' }}
               >
                 <Youtube className="h-5 w-5 text-white" />
+              </a>
+            ) : null;
+          })()}
+          {isMounted && (() => {
+            const tiktokUrl = sanitizeUrl(settings.tiktok_link);
+            return tiktokUrl ? (
+              <a
+                href={tiktokUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-md flex items-center justify-center transition-opacity hover:opacity-80"
+                style={{ backgroundColor: '#000000' }}
+              >
+                <Music className="h-5 w-5 text-white" />
               </a>
             ) : null;
           })()}

@@ -55,12 +55,12 @@ export function StoresPage() {
     try {
       setIsLoading(true);
       const response = await storesService.getAll(undefined, signal);
-      
+
       let filtered: Store[] = response.stores;
       if (statusFilter !== 'all') {
         filtered = response.stores.filter((store: Store) => store.status === statusFilter);
       }
-      
+
       setStores(filtered as Store[]);
     } catch (err: unknown) {
       if (axios.isCancel(err)) return;
@@ -107,7 +107,7 @@ export function StoresPage() {
       setGeocodeError('Thiếu Google Maps API key. Vui lòng cấu hình biến VITE_GOOGLE_MAPS_API_KEY.');
       return;
     }
-    
+
     try {
       setIsGeocoding(true);
       setGeocodeError(null);
@@ -159,7 +159,7 @@ export function StoresPage() {
     };
 
     const result = safeParse(storeSchema, formData);
-    
+
     if (!result.success) {
       // Convert Valibot errors to ValidationError format
       const errors: ValidationError[] = result.issues.map((issue) => {
@@ -282,7 +282,7 @@ export function StoresPage() {
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
+            <Button className="hidden bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
               <Plus className="mr-2 h-4 w-4" /> Thêm cửa hàng
             </Button>
           </DialogTrigger>
@@ -601,67 +601,67 @@ export function StoresPage() {
               </TableRow>
             ) : (
               filteredStores.map((store) => (
-              <TableRow key={store.id} className="group">
-                <TableCell className="font-medium">{store.name}</TableCell>
-                <TableCell className="text-sm text-muted-foreground max-w-[250px] truncate">
-                  {store.address}
-                </TableCell>
-                <TableCell>
-                  <div className="text-sm space-y-1">
-                    <div className="flex items-center gap-1.5">
-                      <Phone className="w-3 h-3" />
-                      {store.phone}
+                <TableRow key={store.id} className="group">
+                  <TableCell className="font-medium">{store.name}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground max-w-[250px] truncate">
+                    {store.address}
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm space-y-1">
+                      <div className="flex items-center gap-1.5">
+                        <Phone className="w-3 h-3" />
+                        {store.phone}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Mail className="w-3 h-3" />
+                        {store.email}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <Mail className="w-3 h-3" />
-                      {store.email}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {store.allowPickup ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      Có
-                    </span>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">Không</span>
-                  )}
-                </TableCell>
-                <TableCell>{(store as Store & { orderCount?: number }).orderCount || 0}</TableCell>
-                <TableCell>
-                  {store.status === 'active' ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600">
-                      Hoạt động
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-500/10 text-gray-600">
-                      Tạm đóng
-                    </span>
-                  )}
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onSelect={() => handleEditStore(store)}>
-                        <Edit className="mr-2 h-4 w-4" /> Sửa
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
-                        onSelect={() => setStoreToDelete(store.id)}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" /> Xóa
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))
+                  </TableCell>
+                  <TableCell>
+                    {store.allowPickup ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        Có
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Không</span>
+                    )}
+                  </TableCell>
+                  <TableCell>{(store as Store & { orderCount?: number }).orderCount || 0}</TableCell>
+                  <TableCell>
+                    {store.status === 'active' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600">
+                        Hoạt động
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-500/10 text-gray-600">
+                        Tạm đóng
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onSelect={() => handleEditStore(store)}>
+                          <Edit className="mr-2 h-4 w-4" /> Sửa
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onSelect={() => setStoreToDelete(store.id)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" /> Xóa
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>

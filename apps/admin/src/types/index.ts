@@ -105,6 +105,10 @@ export interface Order {
   customerNotes?: string;
   notes?: string; // API field name
   
+  // Delivery Type and Information
+  deliveryType?: 'pickup' | 'delivery'; // Delivery type
+  deliveryAddress?: string; // Delivery address for home delivery
+  
   // Pickup Location (customer selects where to pick up)
   pickupLocation?: PickupLocation | string;
   pickupStore?: PickupLocation | string; // API field name

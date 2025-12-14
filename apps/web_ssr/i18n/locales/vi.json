@@ -385,6 +385,23 @@
         "express_delivery_label": "Hoả Tốc (Giao trong ngày)",
         "express_delivery_description": "Nhận hàng trong cùng ngày",
         "express_delivery_priority_message": "Đơn hàng của bạn sẽ được ưu tiên giao trong ngày",
+        "delivery_type": "Phương thức nhận hàng",
+        "store_pickup": "Nhận tại cửa hàng",
+        "home_delivery": "Giao tận nơi",
+        "delivery_address": "Địa chỉ giao hàng",
+        "delivery_address_placeholder": "Nhập địa chỉ chi tiết: số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố",
+        "delivery_address_hint": "Vui lòng nhập địa chỉ đầy đủ để chúng tôi có thể giao hàng chính xác",
+        "delivery_fee": "Phí giao tận nơi",
+        "validation": {
+            "name_required": "Tên khách hàng là bắt buộc",
+            "name_empty": "Tên khách hàng không được để trống",
+            "name_max_length": "Tên khách hàng không được vượt quá 100 ký tự",
+            "phone_invalid": "Số điện thoại phải có 10-11 chữ số",
+            "email_required": "Email là bắt buộc",
+            "email_invalid": "Email không hợp lệ",
+            "delivery_address_required": "Vui lòng nhập địa chỉ giao hàng",
+            "store_required": "Vui lòng chọn địa điểm nhận hàng"
+        },
         "errors": {
             "load_stores_failed": "Không thể tải danh sách cửa hàng",
             "create_order_failed": "Không thể tạo đơn hàng. Vui lòng thử lại."

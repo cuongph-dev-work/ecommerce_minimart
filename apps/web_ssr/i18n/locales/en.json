@@ -384,6 +384,23 @@
         "express_delivery_label": "Express Delivery (Same-day delivery)",
         "express_delivery_description": "Get your order delivered within the same day",
         "express_delivery_priority_message": "Your order will be prioritized for same-day delivery",
+        "delivery_type": "Delivery Method",
+        "store_pickup": "Pickup at Store",
+        "home_delivery": "Home Delivery",
+        "delivery_address": "Delivery Address",
+        "delivery_address_placeholder": "Enter detailed address: house number, street, ward, district, city/province",
+        "delivery_address_hint": "Please enter full address so we can deliver accurately",
+        "delivery_fee": "Home Delivery Fee",
+        "validation": {
+            "name_required": "Customer name is required",
+            "name_empty": "Customer name cannot be empty",
+            "name_max_length": "Customer name cannot exceed 100 characters",
+            "phone_invalid": "Phone number must be 10-11 digits",
+            "email_required": "Email is required",
+            "email_invalid": "Invalid email",
+            "delivery_address_required": "Please enter delivery address",
+            "store_required": "Please select pickup location"
+        },
         "errors": {
             "load_stores_failed": "Failed to load store list",
             "create_order_failed": "Failed to create order. Please try again."

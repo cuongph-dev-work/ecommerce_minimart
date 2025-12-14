@@ -185,7 +185,11 @@ export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate, o
                 <div className="flex items-start gap-2">
                   <div className="font-medium min-w-[120px]">Phương thức:</div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span>Nhận tại cửa hàng</span>
+                    <span>
+                      {displayOrder.deliveryType === 'delivery'
+                        ? '🚚 Giao hàng tận nơi'
+                        : '🏪 Nhận tại cửa hàng'}
+                    </span>
                     {displayOrder.expressDelivery && (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-600 text-white dark:bg-amber-500 min-w-[90px] justify-center">
                         <span>⚡</span>
@@ -195,7 +199,8 @@ export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate, o
                   </div>
                 </div>
 
-                {(displayOrder.pickupStore || displayOrder.pickupLocation) && (
+                {/* Show store info for pickup orders */}
+                {displayOrder.deliveryType !== 'delivery' && (displayOrder.pickupStore || displayOrder.pickupLocation) && (
                   <>
                     <div className="flex items-start gap-2">
                       <Store className="h-4 w-4 mt-0.5 text-muted-foreground" />
@@ -231,6 +236,14 @@ export function OrderDetailsSheet({ order, open, onOpenChange, onStatusUpdate, o
                         </div>
                       )}
                   </>
+                )}
+
+                {/* Show delivery address for delivery orders */}
+                {displayOrder.deliveryType === 'delivery' && displayOrder.deliveryAddress && (
+                  <div className="flex items-center gap-2">
+                    <div className="font-medium min-w-[120px]">Địa chỉ giao hàng:</div>
+                    <div className="text-sm">{displayOrder.deliveryAddress}</div>
+                  </div>
                 )}
               </div>
             </div>

@@ -55,12 +55,15 @@ class OrdersService {
     customerPhone: string;
     customerEmail?: string;
     notes?: string;
-    pickupStoreId: string;
+    deliveryType: 'pickup' | 'delivery';
+    pickupStoreId?: string;
+    deliveryAddress?: string;
     items: Array<{
       productId: string;
       quantity: number;
     }>;
     voucherCode?: string;
+    expressDelivery?: boolean;
   }): Promise<Order> {
     const response = await apiClient.post<{ success: boolean; data: Order }>(
       '/orders',

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { EntityManager, LockMode } from '@mikro-orm/core';
-import { Order, OrderStatus } from '../../entities/order.entity';
+import { Order, OrderStatus, DeliveryType } from '../../entities/order.entity';
 import { OrderItem } from '../../entities/order-item.entity';
 import { ContactHistory } from '../../entities/contact-history.entity';
 import { Product } from '../../entities/product.entity';
@@ -20,9 +20,13 @@ export class OrdersService {
   async create(createDto: CreateOrderDto): Promise<Order> {
     // Use transaction to ensure atomicity and prevent race conditions
     return await this.em.transactional(async (em) => {
-      const store = await em.findOne(Store, { id: createDto.pickupStoreId, deletedAt: null });
-      if (!store) {
-        throw new NotFoundException('Store not found');
+      // Only validate and fetch store for pickup orders
+      let store: Store | null = null;
+      if (createDto.deliveryType === 'pickup' || !createDto.deliveryType) {
+        store = await em.findOne(Store, { id: createDto.pickupStoreId, deletedAt: null });
+        if (!store) {
+          throw new NotFoundException('Store not found');
+        }
       }
 
       // First pass: Validate products and calculate totals with pessimistic lock
@@ -94,14 +98,16 @@ export class OrdersService {
         productSkus,
       );
 
-      // Create order
+      // Create order with conditional fields based on delivery type
       const order = em.create(Order, {
         orderNumber,
         customerName: createDto.customerName,
         customerPhone: createDto.customerPhone,
         customerEmail: createDto.customerEmail,
         notes: createDto.notes,
-        pickupStore: store,
+        pickupStore: store || undefined,
+        deliveryType: createDto.deliveryType || DeliveryType.PICKUP,
+        deliveryAddress: createDto.deliveryAddress,
         subtotal,
         discount,
         total,

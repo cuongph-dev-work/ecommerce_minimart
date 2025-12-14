@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, MapPin } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, MapPin, Home, Truck, Zap } from 'lucide-react';
 import { Button } from './ui/button';
 import { motion, AnimatePresence } from 'motion/react';
 import { useCart } from '../context/CartContext';
@@ -45,8 +45,11 @@ export function CartPage() {
     phone: '',
     email: '',
     notes: '',
+    deliveryAddress: '',
   });
   const [expressDelivery, setExpressDelivery] = useState(false);
+  const [deliveryType, setDeliveryType] = useState<'pickup' | 'delivery'>('pickup');
+  const DELIVERY_FEE = 30000; // 30,000 VND for home delivery
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
 
   // Fetch stores from API
@@ -94,24 +97,41 @@ export function CartPage() {
       name: checkoutData.name,
       phone: checkoutData.phone,
       email: checkoutData.email,
-      storeId: selectedStoreId,
+      deliveryType: deliveryType,
+      storeId: deliveryType === 'pickup' ? selectedStoreId : undefined,
+      deliveryAddress: deliveryType === 'delivery' ? checkoutData.deliveryAddress : undefined,
       notes: checkoutData.notes || undefined,
       expressDelivery,
     };
 
+    // Custom validation for delivery type
+    const customErrors: ValidationError[] = [];
+    if (deliveryType === 'pickup' && !selectedStoreId) {
+      customErrors.push({ field: 'storeId', message: t('cart.validation.store_required') });
+    }
+    if (deliveryType === 'delivery' && !checkoutData.deliveryAddress?.trim()) {
+      customErrors.push({ field: 'deliveryAddress', message: t('cart.validation.delivery_address_required') });
+    }
+
     const result = v.safeParse(checkoutSchema, formData);
+
+    // Merge custom errors with valibot errors
+    let allErrors: ValidationError[] = [...customErrors];
 
     if (!result.success) {
       // Convert valibot issues to ValidationError[]
-      const errors: ValidationError[] = result.issues.map(issue => {
+      const valibotErrors: ValidationError[] = result.issues.map(issue => {
         const fieldPath = issue.path?.map(p => p.key).join('.') || 'unknown';
         return {
           field: fieldPath,
           message: issue.message,
         };
       });
+      allErrors = [...allErrors, ...valibotErrors];
+    }
 
-      setValidationErrors(errors);
+    if (allErrors.length > 0) {
+      setValidationErrors(allErrors);
       // Scroll to top of dialog to show errors
       setTimeout(() => {
         const dialogContent = document.querySelector('[role="dialog"]');
@@ -130,12 +150,15 @@ export function CartPage() {
         customerPhone: checkoutData.phone,
         customerEmail: checkoutData.email || undefined,
         notes: checkoutData.notes || undefined,
-        pickupStoreId: selectedStoreId,
+        deliveryType: deliveryType,
         items: cart.map(item => ({
           productId: item.id,
           quantity: item.quantity,
         })),
         expressDelivery,
+        // Conditionally include pickupStoreId or deliveryAddress based on delivery type
+        ...(deliveryType === 'pickup' && selectedStoreId ? { pickupStoreId: selectedStoreId } : {}),
+        ...(deliveryType === 'delivery' && checkoutData.deliveryAddress ? { deliveryAddress: checkoutData.deliveryAddress } : {}),
       };
 
       const response = await ordersService.create(orderData);
@@ -166,8 +189,10 @@ export function CartPage() {
       phone: '',
       email: '',
       notes: '',
+      deliveryAddress: '',
     });
     setExpressDelivery(false);
+    setDeliveryType('pickup');
     setValidationErrors([]);
     // Reset to first store if available
     if (stores.length > 0) {
@@ -442,55 +467,137 @@ export function CartPage() {
               </div>
 
               <div>
-                <label className="block mb-2">
-                  {t('cart.pickup_location')} <span className="text-red-500">*</span>
+                <label className="block mb-3">
+                  {t('cart.delivery_type')} <span className="text-red-500">*</span>
                 </label>
-                <Select
-                  value={selectedStoreId}
-                  onValueChange={(value) => {
-                    setSelectedStoreId(value);
-                    if (getFieldError(validationErrors, 'storeId')) {
-                      setValidationErrors(validationErrors.filter(err => err.field !== 'storeId'));
-                    }
-                  }}
-                >
-                  <SelectTrigger
-                    disabled={isLoadingStores}
-                    className={`w-full h-12 bg-gray-50 rounded-xl ${getFieldError(validationErrors, 'storeId') ? 'border-red-500' : 'border-gray-200'
+
+                {/* Delivery Type Selection */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryType('pickup')}
+                    className={`p-4 rounded-xl border-2 transition-all ${deliveryType === 'pickup'
+                      ? 'border-red-500 bg-red-50'
+                      : 'border-gray-200 hover:border-gray-300'
                       }`}
                   >
-                    <SelectValue placeholder={isLoadingStores ? t('cart.loading_stores') : t('cart.select_store')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {stores.map((store) => (
-                      <SelectItem key={store.id} value={store.id}>
-                        {store.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {getFieldError(validationErrors, 'storeId') && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {getFieldError(validationErrors, 'storeId')}
-                  </p>
-                )}
-
-                {/* Display selected store info */}
-                {selectedStore && (
-                  <div className="mt-4 p-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-xl border border-red-100 shadow-sm">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0">
-                        <MapPin className="h-5 w-5 text-red-500" />
+                    <div className="flex flex-col items-center gap-2">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${deliveryType === 'pickup' ? 'bg-red-500' : 'bg-gray-200'
+                        }`}>
+                        <Home className={`h-6 w-6 ${deliveryType === 'pickup' ? 'text-white' : 'text-gray-600'
+                          }`} />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm mb-1.5">{selectedStore.name}</p>
-                        <p className="text-xs text-gray-600 mb-1 leading-relaxed">{selectedStore.address}</p>
-                        <p className="text-xs text-gray-600">📞 {selectedStore.phone}</p>
+                      <span className="text-sm">{t('cart.store_pickup')}</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryType('delivery')}
+                    className={`p-4 rounded-xl border-2 transition-all ${deliveryType === 'delivery'
+                      ? 'border-red-500 bg-red-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${deliveryType === 'delivery' ? 'bg-red-500' : 'bg-gray-200'
+                        }`}>
+                        <Truck className={`h-6 w-6 ${deliveryType === 'delivery' ? 'text-white' : 'text-gray-600'
+                          }`} />
+                      </div>
+                      <span className="text-sm">{t('cart.home_delivery')}</span>
+                      {deliveryType === 'delivery' && (
+                        <span className="text-xs text-red-600">+{formatPrice(DELIVERY_FEE)}</span>
+                      )}
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Store Selection - Only show if pickup */}
+              {deliveryType === 'pickup' && (
+                <div>
+                  <label className="block mb-2">
+                    {t('cart.pickup_location')} <span className="text-red-500">*</span>
+                  </label>
+                  <Select
+                    value={selectedStoreId}
+                    onValueChange={(value) => {
+                      setSelectedStoreId(value);
+                      if (getFieldError(validationErrors, 'storeId')) {
+                        setValidationErrors(validationErrors.filter(err => err.field !== 'storeId'));
+                      }
+                    }}
+                  >
+                    <SelectTrigger
+                      disabled={isLoadingStores}
+                      className={`w-full h-12 bg-gray-50 rounded-xl ${getFieldError(validationErrors, 'storeId') ? 'border-red-500' : 'border-gray-200'
+                        }`}
+                    >
+                      <SelectValue placeholder={isLoadingStores ? t('cart.loading_stores') : t('cart.select_store')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {stores.map((store) => (
+                        <SelectItem key={store.id} value={store.id}>
+                          {store.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {getFieldError(validationErrors, 'storeId') && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {getFieldError(validationErrors, 'storeId')}
+                    </p>
+                  )}
+
+                  {/* Display selected store info */}
+                  {selectedStore && (
+                    <div className="mt-4 p-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-xl border border-red-100 shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0">
+                          <MapPin className="h-5 w-5 text-red-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm mb-1.5">{selectedStore.name}</p>
+                          <p className="text-xs text-gray-600 mb-1 leading-relaxed">{selectedStore.address}</p>
+                          <p className="text-xs text-gray-600">📞 {selectedStore.phone}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
+
+              {/* Delivery Address - Only show if home delivery */}
+              {deliveryType === 'delivery' && (
+                <div>
+                  <label className="block mb-2">
+                    {t('cart.delivery_address')} <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    required={deliveryType === 'delivery'}
+                    value={checkoutData.deliveryAddress}
+                    onChange={(e) => {
+                      setCheckoutData({ ...checkoutData, deliveryAddress: e.target.value });
+                      if (getFieldError(validationErrors, 'deliveryAddress')) {
+                        setValidationErrors(validationErrors.filter(err => err.field !== 'deliveryAddress'));
+                      }
+                    }}
+                    rows={3}
+                    className={`w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none resize-none ${getFieldError(validationErrors, 'deliveryAddress') ? 'border-red-500' : 'border-gray-200'
+                      }`}
+                    placeholder={t('cart.delivery_address_placeholder')}
+                  />
+                  {getFieldError(validationErrors, 'deliveryAddress') && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {getFieldError(validationErrors, 'deliveryAddress')}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-2">
+                    💡 {t('cart.delivery_address_hint')}
+                  </p>
+                </div>
+              )}
 
               {/* Express Delivery Checkbox */}
               <div className="space-y-2">
@@ -550,9 +657,18 @@ export function CartPage() {
                       <span>{formatPrice(item.price * item.quantity)}</span>
                     </div>
                   ))}
+                  {deliveryType === 'delivery' && (
+                    <div className="flex justify-between text-blue-600">
+                      <span className="flex items-center gap-1">
+                        <Truck className="h-3 w-3" />
+                        {t('cart.delivery_fee')}
+                      </span>
+                      <span>+{formatPrice(DELIVERY_FEE)}</span>
+                    </div>
+                  )}
                   <div className="pt-2 border-t flex justify-between">
                     <span>{t('cart.total')}:</span>
-                    <span className="text-red-600">{formatPrice(getTotalPrice())}</span>
+                    <span className="text-red-600">{formatPrice(getTotalPrice() + (deliveryType === 'delivery' ? DELIVERY_FEE : 0))}</span>
                   </div>
                 </div>
               </div>

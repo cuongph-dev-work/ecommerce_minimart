@@ -672,8 +672,11 @@ export function OrdersPage() {
                     {order.items?.length || 0} sản phẩm
                   </TableCell>
                   <TableCell>
-                    <span className="text-xs px-2 py-1 rounded-full bg-muted inline-block min-w-[80px] text-center">
-                      {typeof order.pickupLocation === 'string' ? order.pickupLocation : order.pickupLocation?.name || 'N/A'}
+                    <span className={`text-xs px-2 py-1 rounded-full inline-block min-w-[100px] text-center ${order.deliveryType === 'delivery'
+                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
+                      : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                      }`}>
+                      {order.deliveryType === 'delivery' ? '🚚 Giao hàng' : '🏪 Nhận tại CH'}
                     </span>
                   </TableCell>
                   <TableCell className="text-center">

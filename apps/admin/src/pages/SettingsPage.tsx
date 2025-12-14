@@ -58,7 +58,7 @@ export function SettingsPage() {
       setBankName(settingsMap.bank_name || '');
       setBankBranch(settingsMap.bank_branch || '');
       setTransferNote(settingsMap.transfer_note || '');
-      setDeliveryFee(settingsMap.deliveryFee || '30000');
+      setDeliveryFee(settingsMap.deliveryFee || '0');
       setWarrantyPolicy(settingsMap.warranty_policy || '');
       setReturnPolicy(settingsMap.return_policy || '');
       setShoppingGuide(settingsMap.shopping_guide || '');
@@ -117,7 +117,7 @@ export function SettingsPage() {
   const [bankName, setBankName] = useState('Vietcombank');
   const [bankBranch, setBankBranch] = useState('Chi nhánh HCM');
   const [transferNote, setTransferNote] = useState('Nội dung: [Mã đơn hàng]');
-  const [deliveryFee, setDeliveryFee] = useState('30000');
+  const [deliveryFee, setDeliveryFee] = useState('0');
 
   // Policies
   const [warrantyPolicy, setWarrantyPolicy] = useState('');
@@ -1029,7 +1029,7 @@ export function SettingsPage() {
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Phí giao hàng áp dụng cho đơn "Giao hàng tận nơi". Mặc định: 30,000 VND
+                    Phí giao hàng áp dụng cho đơn "Giao hàng tận nơi". Mặc định: Miễn phí
                   </p>
                 </div>
               </div>

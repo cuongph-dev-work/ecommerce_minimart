@@ -91,7 +91,7 @@ export class OrdersService {
       }
 
       // Get delivery fee from settings
-      const DEFAULT_DELIVERY_FEE = 30000; // Default: 30,000 VND
+      const DEFAULT_DELIVERY_FEE = 0; // Default: Free delivery
       let deliveryFeeValue = DEFAULT_DELIVERY_FEE;
       
       try {

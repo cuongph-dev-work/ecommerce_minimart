@@ -25,11 +25,11 @@ class SettingsService {
   async getDeliveryFee(signal?: AbortSignal): Promise<number> {
     try {
       const settings = await this.getAll(signal);
-      const deliveryFee = Number(settings.deliveryFee) || 30000;
+      const deliveryFee = Number(settings.deliveryFee) || 0;
       return deliveryFee;
     } catch (error) {
       // Return default if API fails
-      return 30000;
+      return 0;
     }
   }
 }

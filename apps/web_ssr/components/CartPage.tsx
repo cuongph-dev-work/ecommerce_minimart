@@ -50,7 +50,7 @@ export function CartPage() {
   });
   const [expressDelivery, setExpressDelivery] = useState(false);
   const [deliveryType, setDeliveryType] = useState<'pickup' | 'delivery'>('pickup');
-  const [deliveryFee, setDeliveryFee] = useState(30000); // Default: 30,000 VND
+  const [deliveryFee, setDeliveryFee] = useState(0); // Default: Free delivery
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
 
   // Fetch stores and delivery fee from API

@@ -20,8 +20,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from './ui/dialog';
-import { storesService } from '../services/stores.service';
 import { ordersService } from '../services/orders.service';
+import { storesService } from '../services/stores.service';
+import { settingsService } from '../services/settings.service';
 import type { Store } from '../types';
 import {
   Select,
@@ -49,18 +50,22 @@ export function CartPage() {
   });
   const [expressDelivery, setExpressDelivery] = useState(false);
   const [deliveryType, setDeliveryType] = useState<'pickup' | 'delivery'>('pickup');
-  const DELIVERY_FEE = 30000; // 30,000 VND for home delivery
+  const [deliveryFee, setDeliveryFee] = useState(30000); // Default: 30,000 VND
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
 
-  // Fetch stores from API
+  // Fetch stores and delivery fee from API
   useEffect(() => {
     const controller = new AbortController();
 
-    const fetchStores = async () => {
+    const fetchStoresAndSettings = async () => {
       try {
         setIsLoadingStores(true);
-        const storesData = await storesService.getAll(controller.signal);
+        const [storesData, fee] = await Promise.all([
+          storesService.getAll(controller.signal),
+          settingsService.getDeliveryFee(controller.signal),
+        ]);
         setStores(storesData);
+        setDeliveryFee(fee);
         // Set first store as default if available
         if (storesData.length > 0) {
           setSelectedStoreId(storesData[0].id);
@@ -73,7 +78,7 @@ export function CartPage() {
       }
     };
 
-    fetchStores();
+    fetchStoresAndSettings();
 
     return () => controller.abort();
   }, []);
@@ -507,7 +512,7 @@ export function CartPage() {
                       </div>
                       <span className="text-sm">{t('cart.home_delivery')}</span>
                       {deliveryType === 'delivery' && (
-                        <span className="text-xs text-red-600">+{formatPrice(DELIVERY_FEE)}</span>
+                        <span className="text-xs text-red-600">+{formatPrice(deliveryFee)}</span>
                       )}
                     </div>
                   </button>
@@ -663,12 +668,12 @@ export function CartPage() {
                         <Truck className="h-3 w-3" />
                         {t('cart.delivery_fee')}
                       </span>
-                      <span>+{formatPrice(DELIVERY_FEE)}</span>
+                      <span>+{formatPrice(deliveryFee)}</span>
                     </div>
                   )}
                   <div className="pt-2 border-t flex justify-between">
                     <span>{t('cart.total')}:</span>
-                    <span className="text-red-600">{formatPrice(getTotalPrice() + (deliveryType === 'delivery' ? DELIVERY_FEE : 0))}</span>
+                    <span className="text-red-600">{formatPrice(getTotalPrice() + (deliveryType === 'delivery' ? deliveryFee : 0))}</span>
                   </div>
                 </div>
               </div>

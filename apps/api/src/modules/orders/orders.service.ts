@@ -7,6 +7,7 @@ import { Product } from '../../entities/product.entity';
 import { Store } from '../../entities/store.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { VouchersService } from '../vouchers/vouchers.service';
+import { SettingsService } from '../settings/settings.service';
 import { createPaginatedResponse } from '../../common/utils/pagination.util';
 import { generateUniqueOrderNumber } from '../../common/utils/order-number.util';
 
@@ -15,6 +16,7 @@ export class OrdersService {
   constructor(
     private readonly em: EntityManager,
     private readonly vouchersService: VouchersService,
+    private readonly settingsService: SettingsService,
   ) {}
 
   async create(createDto: CreateOrderDto): Promise<Order> {
@@ -88,9 +90,19 @@ export class OrdersService {
         discount = voucherValidation.discount;
       }
 
-      // Calculate shipping fee for delivery orders
-      const DELIVERY_FEE = 30000; // 30,000 VND
-      const shippingFee = createDto.deliveryType === 'delivery' ? DELIVERY_FEE : 0;
+      // Get delivery fee from settings
+      const DEFAULT_DELIVERY_FEE = 30000; // Default: 30,000 VND
+      let deliveryFeeValue = DEFAULT_DELIVERY_FEE;
+      
+      try {
+        const deliveryFeeSetting = await this.settingsService.findOne('deliveryFee');
+        deliveryFeeValue = Number(deliveryFeeSetting.value) || DEFAULT_DELIVERY_FEE;
+      } catch (error) {
+        // Use default if setting doesn't exist
+        deliveryFeeValue = DEFAULT_DELIVERY_FEE;
+      }
+
+      const shippingFee = createDto.deliveryType === 'delivery' ? deliveryFeeValue : 0;
 
       const total = subtotal - discount + shippingFee;
 

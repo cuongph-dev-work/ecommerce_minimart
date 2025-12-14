@@ -8,11 +8,13 @@ import { ContactHistory } from '../../entities/contact-history.entity';
 import { Product } from '../../entities/product.entity';
 import { Store } from '../../entities/store.entity';
 import { VouchersModule } from '../vouchers/vouchers.module';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
   imports: [
     MikroOrmModule.forFeature([Order, OrderItem, ContactHistory, Product, Store]),
     VouchersModule,
+    SettingsModule,
   ],
   controllers: [OrdersController, PublicOrdersController],
   providers: [OrdersService],

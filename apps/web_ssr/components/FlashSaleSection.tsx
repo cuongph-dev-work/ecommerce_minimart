@@ -121,8 +121,8 @@ export function FlashSaleSection() {
               </div>
 
               <div className="p-4">
-                <h3 className="mb-2 line-clamp-2 text-sm">{item.product.name}</h3>
-                
+                <h3 className="mb-2 line-clamp-1 text-sm">{item.product.name}</h3>
+
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-red-600">{formatPrice(item.salePrice)}</span>
                   <span className="text-xs text-gray-400 line-through">

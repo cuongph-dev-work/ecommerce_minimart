@@ -74,12 +74,12 @@ export const ProductCard = memo(function ProductCard({
   const animationProps = disableAnimation
     ? {}
     : {
-        initial: isNewProduct ? { y: 30, opacity: 0 } : false,
-        animate: { y: 0, opacity: 1 },
-        transition: { delay: animationDelay, duration: 0.3 },
-        // Changed from y: -8 to scale to fix Safari masonry grid bug
-        whileHover: { scale: 1.02, transition: { duration: 0.2 } },
-      };
+      initial: isNewProduct ? { y: 30, opacity: 0 } : false,
+      animate: { y: 0, opacity: 1 },
+      transition: { delay: animationDelay, duration: 0.3 },
+      // Changed from y: -8 to scale to fix Safari masonry grid bug
+      whileHover: { scale: 1.02, transition: { duration: 0.2 } },
+    };
 
   const descriptionText = product.description ? stripHtmlTags(product.description) : '';
 
@@ -88,7 +88,7 @@ export const ProductCard = memo(function ProductCard({
       {...animationProps}
       onClick={handleProductClick}
       className="product-card bg-white overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer group"
-      style={{ 
+      style={{
         contain: 'layout style paint',
         willChange: isNewProduct ? 'transform, opacity' : 'auto',
         transform: 'translateZ(0)',
@@ -126,7 +126,7 @@ export const ProductCard = memo(function ProductCard({
 
         {/* Product Name */}
         <div title={product.name} className="relative">
-          <h3 className="mb-1.5 line-clamp-2 text-xs font-medium text-gray-800">
+          <h3 className="mb-1.5 line-clamp-1 text-xs font-medium text-gray-800">
             {searchQuery ? (
               <HighlightText text={product.name} highlight={searchQuery} />
             ) : (

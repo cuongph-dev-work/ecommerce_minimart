@@ -58,6 +58,7 @@ export function SettingsPage() {
       setBankName(settingsMap.bank_name || '');
       setBankBranch(settingsMap.bank_branch || '');
       setTransferNote(settingsMap.transfer_note || '');
+      setDeliveryFee(settingsMap.deliveryFee || '30000');
       setWarrantyPolicy(settingsMap.warranty_policy || '');
       setReturnPolicy(settingsMap.return_policy || '');
       setShoppingGuide(settingsMap.shopping_guide || '');
@@ -116,6 +117,7 @@ export function SettingsPage() {
   const [bankName, setBankName] = useState('Vietcombank');
   const [bankBranch, setBankBranch] = useState('Chi nhánh HCM');
   const [transferNote, setTransferNote] = useState('Nội dung: [Mã đơn hàng]');
+  const [deliveryFee, setDeliveryFee] = useState('30000');
 
   // Policies
   const [warrantyPolicy, setWarrantyPolicy] = useState('');
@@ -306,6 +308,13 @@ export function SettingsPage() {
           { key: 'seo_stores_keywords', value: seoStoresKeywords?.trim() || '' },
         ];
       } else if (tab === 'payment') {
+        // Validate delivery fee
+        const deliveryFeeNum = Number(deliveryFee);
+        if (isNaN(deliveryFeeNum) || deliveryFeeNum < 0) {
+          setValidationErrors([{ field: 'deliveryFee', message: 'Phí giao hàng phải là số dương' }]);
+          return;
+        }
+
         formData = {
           bank_account: bankAccount?.trim() || undefined,
           account_name: accountName?.trim() || undefined,
@@ -330,6 +339,7 @@ export function SettingsPage() {
           { key: 'bank_name', value: bankName?.trim() || '' },
           { key: 'bank_branch', value: bankBranch?.trim() || '' },
           { key: 'transfer_note', value: transferNote?.trim() || '' },
+          { key: 'deliveryFee', value: deliveryFee },
         ];
       } else if (tab === 'policies') {
         formData = {
@@ -996,6 +1006,31 @@ export function SettingsPage() {
                     onChange={(e) => setTransferNote(e.target.value)}
                     placeholder="Nội dung: [Mã đơn hàng]"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Phí giao hàng (VND) <span className="text-destructive">*</span></Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={deliveryFee}
+                    onChange={(e) => {
+                      setDeliveryFee(e.target.value);
+                      if (getFieldError(validationErrors, 'deliveryFee')) {
+                        setValidationErrors(validationErrors.filter(err => err.field !== 'deliveryFee'));
+                      }
+                    }}
+                    placeholder="30000"
+                    className={getFieldError(validationErrors, 'deliveryFee') ? 'border-destructive' : ''}
+                  />
+                  {getFieldError(validationErrors, 'deliveryFee') && (
+                    <p className="text-sm text-destructive">
+                      {getFieldError(validationErrors, 'deliveryFee')}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Phí giao hàng áp dụng cho đơn "Giao hàng tận nơi". Mặc định: 30,000 VND
+                  </p>
                 </div>
               </div>
 

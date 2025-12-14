@@ -130,7 +130,16 @@ docker-compose -f docker-compose.prod.yml up -d --remove-orphans web_ssr
 
 # Step 7: Build and start admin
 echo ""
-echo "🔨 Step 7: Rebuilding admin service..."
+echo "🛑 Step 7: Stopping admin container..."
+docker-compose -f docker-compose.prod.yml stop admin || true
+
+echo "🗑️  Removing admin container..."
+docker-compose -f docker-compose.prod.yml rm -f admin || true
+
+echo "🔨 Rebuilding admin service..."
+echo "🧹 Cleaning up old admin images..."
+docker images | grep -E "ecommerce.*admin|.*admin.*latest" | awk '{print $3}' | xargs -r docker rmi -f 2>/dev/null || true
+
 docker-compose -f docker-compose.prod.yml build --no-cache admin
 
 echo "🚀 Starting admin service..."

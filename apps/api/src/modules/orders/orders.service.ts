@@ -88,7 +88,11 @@ export class OrdersService {
         discount = voucherValidation.discount;
       }
 
-      const total = subtotal - discount;
+      // Calculate shipping fee for delivery orders
+      const DELIVERY_FEE = 30000; // 30,000 VND
+      const shippingFee = createDto.deliveryType === 'delivery' ? DELIVERY_FEE : 0;
+
+      const total = subtotal - discount + shippingFee;
 
       // Generate unique order number based on customer info and product SKUs
       const orderNumber = await generateUniqueOrderNumber(
@@ -110,6 +114,7 @@ export class OrdersService {
         deliveryAddress: createDto.deliveryAddress,
         subtotal,
         discount,
+        shippingFee,
         total,
         voucherCode: createDto.voucherCode,
         expressDelivery: createDto.expressDelivery || false,

@@ -72,6 +72,9 @@ export class Order {
   @Property({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   discount: number = 0;
 
+  @Property({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  shippingFee: number = 0;
+
   @Enum(() => PaymentMethod)
   paymentMethod: PaymentMethod = PaymentMethod.COD;
 

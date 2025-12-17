@@ -64,6 +64,7 @@ export function ReviewsPage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isReplyOpen, setIsReplyOpen] = useState(false);
   const [replyText, setReplyText] = useState('');
+  const [replyError, setReplyError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -142,8 +143,16 @@ export function ReviewsPage() {
 
   const handleReply = async () => {
     if (!selectedReview || !replyText) return;
+
+    // Validate reply length
+    if (replyText.length > 2000) {
+      setReplyError('Phản hồi không được vượt quá 2000 ký tự');
+      return;
+    }
+
     try {
       setIsSaving(true);
+      setReplyError(null);
       await reviewsService.reply(selectedReview.id, { reply: replyText });
       setIsReplyOpen(false);
       setReplyText('');
@@ -204,7 +213,7 @@ export function ReviewsPage() {
           {error}
         </div>
       )}
-      
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Đánh giá sản phẩm</h2>
@@ -280,69 +289,69 @@ export function ReviewsPage() {
               </TableRow>
             ) : (
               reviews.map((review) => (
-              <TableRow key={review.id} className="group">
-                <TableCell className="font-medium">{review.productName}</TableCell>
-                <TableCell>{review.userName}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    {renderStars(review.rating)}
-                    <span className="text-sm text-muted-foreground ml-1">({review.rating})</span>
-                  </div>
-                </TableCell>
-                <TableCell className="max-w-[300px]">
-                  <p className="text-sm text-muted-foreground truncate">{review.comment}</p>
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {new Date(review.date).toLocaleDateString('vi-VN')}
-                </TableCell>
-                <TableCell>
-                  <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium", getStatusColor(review.status))}>
-                    {getStatusLabel(review.status)}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onSelect={() => {
-                        setSelectedReview(review);
-                        setIsDetailOpen(true);
-                      }}>
-                        <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
-                      </DropdownMenuItem>
-                      {review.status === 'pending' && (
-                        <DropdownMenuItem onSelect={() => handleApprove(review.id)}>
-                          <Check className="mr-2 h-4 w-4" /> Duyệt
-                        </DropdownMenuItem>
-                      )}
-                      {review.status === 'approved' && (
-                        <DropdownMenuItem onSelect={() => handleHide(review.id)}>
-                          <X className="mr-2 h-4 w-4" /> Ẩn
-                        </DropdownMenuItem>
-                      )}
-                      {!review.reply && (
+                <TableRow key={review.id} className="group">
+                  <TableCell className="font-medium">{review.productName}</TableCell>
+                  <TableCell>{review.userName}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      {renderStars(review.rating)}
+                      <span className="text-sm text-muted-foreground ml-1">({review.rating})</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="max-w-[300px]">
+                    <p className="text-sm text-muted-foreground truncate">{review.comment}</p>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {new Date(review.date).toLocaleDateString('vi-VN')}
+                  </TableCell>
+                  <TableCell>
+                    <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium", getStatusColor(review.status))}>
+                      {getStatusLabel(review.status)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
                         <DropdownMenuItem onSelect={() => {
                           setSelectedReview(review);
-                          setIsReplyOpen(true);
+                          setIsDetailOpen(true);
                         }}>
-                          <MessageSquare className="mr-2 h-4 w-4" /> Phản hồi
+                          <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
                         </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
-                        onSelect={() => handleDelete(review.id)}
-                      >
-                        Xóa
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))
+                        {review.status === 'pending' && (
+                          <DropdownMenuItem onSelect={() => handleApprove(review.id)}>
+                            <Check className="mr-2 h-4 w-4" /> Duyệt
+                          </DropdownMenuItem>
+                        )}
+                        {review.status === 'approved' && (
+                          <DropdownMenuItem onSelect={() => handleHide(review.id)}>
+                            <X className="mr-2 h-4 w-4" /> Ẩn
+                          </DropdownMenuItem>
+                        )}
+                        {!review.reply && (
+                          <DropdownMenuItem onSelect={() => {
+                            setSelectedReview(review);
+                            setIsReplyOpen(true);
+                          }}>
+                            <MessageSquare className="mr-2 h-4 w-4" /> Phản hồi
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onSelect={() => handleDelete(review.id)}
+                        >
+                          Xóa
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>
@@ -394,13 +403,32 @@ export function ReviewsPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Phản hồi</Label>
+              <div className="flex items-center justify-between">
+                <Label>Phản hồi</Label>
+                <span className={cn(
+                  "text-xs",
+                  replyText.length > 2000 ? "text-red-600 font-medium" : "text-muted-foreground"
+                )}>
+                  {replyText.length}/2000
+                </span>
+              </div>
               <Textarea
                 value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
+                onChange={(e) => {
+                  setReplyText(e.target.value);
+                  if (replyError && e.target.value.length <= 2000) {
+                    setReplyError(null);
+                  }
+                }}
                 placeholder="Cảm ơn bạn đã đánh giá..."
-                className="min-h-[100px]"
+                className={cn(
+                  "min-h-[100px]",
+                  replyText.length > 2000 && "border-red-500 focus-visible:ring-red-500"
+                )}
               />
+              {replyError && (
+                <p className="text-sm text-red-600">{replyError}</p>
+              )}
             </div>
           </div>
           <DialogFooter>

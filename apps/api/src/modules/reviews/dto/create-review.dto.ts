@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsNumber, Min, Max, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, Min, Max, IsOptional, MaxLength } from 'class-validator';
 
 export class CreateReviewDto {
   @IsString()
@@ -20,6 +20,7 @@ export class CreateReviewDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(2000, { message: 'Comment must not exceed 2000 characters' })
   comment?: string;
 }
 

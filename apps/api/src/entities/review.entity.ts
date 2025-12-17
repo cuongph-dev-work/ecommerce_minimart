@@ -32,13 +32,13 @@ export class Review {
   @Property({ type: 'int' })
   rating!: number; // 1-5, validated in DTO
 
-  @Property({ nullable: true })
+  @Property({ type: 'text', nullable: true })
   comment?: string;
 
   @Enum(() => ReviewStatus)
   status: ReviewStatus = ReviewStatus.PENDING;
 
-  @Property({ nullable: true })
+  @Property({ type: 'text', nullable: true })
   adminResponse?: string;
 
   @Property({ default: 0 })

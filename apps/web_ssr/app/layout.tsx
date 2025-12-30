@@ -128,7 +128,7 @@ export default async function RootLayout({
   };
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Google Analytics */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-NC0DJ2H94Z" />
@@ -150,7 +150,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationStructuredData) }}
         />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <I18nProvider>
           <SettingsProvider>
             <CartProvider>

@@ -282,7 +282,7 @@ export function StoresPage() {
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button className="hidden bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
+            <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
               <Plus className="mr-2 h-4 w-4" /> Thêm cửa hàng
             </Button>
           </DialogTrigger>

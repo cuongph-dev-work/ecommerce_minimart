@@ -642,6 +642,43 @@ export function CartPage() {
                 </label>
               </div>
 
+              {/* Map Section - Mobile only, shown before Order Notes */}
+              {selectedStore && (
+                <div className="md:hidden">
+                  <div className="bg-gray-100 rounded-xl overflow-hidden h-[300px]">
+                    {(() => {
+                      const lat = parseFloat(String(selectedStore.lat));
+                      const lng = parseFloat(String(selectedStore.lng));
+                      if (!isNaN(lat) && !isNaN(lng)) {
+                        const mapUrl = `https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
+                        const safeUrl = sanitizeUrl(mapUrl);
+                        return safeUrl ? (
+                          <iframe
+                            width="100%"
+                            height="100%"
+                            frameBorder="0"
+                            style={{ border: 0 }}
+                            src={safeUrl}
+                            allowFullScreen
+                            title={t('cart.map_title', { storeName: selectedStore.name })}
+                            referrerPolicy="no-referrer-when-downgrade"
+                          />
+                        ) : null;
+                      }
+                      return null;
+                    })()}
+                  </div>
+                  <div className="mt-3 p-4 bg-white rounded-xl border">
+                    <h4 className="mb-2 flex items-center gap-2">
+                      <MapPin className="h-5 w-5 text-red-500" />
+                      {t('cart.pickup_location_label')}
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-1">{selectedStore.name}</p>
+                    <p className="text-xs text-gray-500">{selectedStore.address}</p>
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="block mb-2">{t('cart.order_notes')}</label>
                 <textarea
@@ -679,7 +716,7 @@ export function CartPage() {
               </div>
             </form>
 
-            {/* Map Section */}
+            {/* Map Section - Desktop only */}
             {selectedStore && (
               <div className="hidden md:block">
                 <div className="sticky top-4">

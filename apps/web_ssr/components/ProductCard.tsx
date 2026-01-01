@@ -172,11 +172,11 @@ export const ProductCard = memo(function ProductCard({
               formatPrice(product.price)
             )}
           </div>
-          {(product.soldCount ?? 0) > 0 ? (
+          {/* {(product.soldCount ?? 0) > 0 ? (
             <div className="text-[10px] text-gray-500">
               {t('home.sold_count', { count: product.soldCount })}
             </div>
-          ) : null}
+          ) : null} */}
         </div>
 
         {/* Add to Cart Button */}

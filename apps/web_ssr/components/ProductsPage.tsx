@@ -661,7 +661,7 @@ export function ProductsPage() {
             </div>
 
             {/* Active Filters Display */}
-            {hasActiveFilters && (
+            {/* {hasActiveFilters && (
               <div className="flex flex-wrap gap-2 mb-6">
                 {searchQuery && (
                   <Badge variant="secondary" className="gap-1">
@@ -704,7 +704,7 @@ export function ProductsPage() {
                   </Badge>
                 )}
               </div>
-            )}
+            )} */}
 
             {/* Loading Skeleton */}
             {loading && isInitialLoading ? (

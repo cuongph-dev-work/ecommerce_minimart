@@ -34,6 +34,8 @@ export function useInfiniteProductList({ initialLimit = 20 }: UseInfiniteProduct
       const params = {
         page: currentPage,
         limit: initialLimit,
+        sortBy: 'review_count',
+        sortOrder: 'desc' as const,
       };
 
       const result = await productsService.getAll(params, signal);

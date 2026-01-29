@@ -32,7 +32,7 @@ export class QueryProductDto extends PaginationDto {
 
   @IsOptional()
   @IsString()
-  @IsEnum(['name', 'price', 'created_at', 'sold'])
+  @IsEnum(['name', 'price', 'created_at', 'updated_at', 'sold', 'rating', 'discount', 'review_count'])
   sortBy?: string;
 
   @IsOptional()

@@ -128,12 +128,17 @@ export class ProductsService {
     }
 
     // Sort
-    let orderByField = sortBy;
-    if (sortBy === 'created_at') {
-      orderByField = 'createdAt';
-    } else if (sortBy === 'sold') {
-      orderByField = 'soldCount';
-    }
+    const sortFieldMap: Record<string, string> = {
+      created_at: 'createdAt',
+      updated_at: 'updatedAt',
+      sold: 'soldCount',
+      name: 'name',
+      price: 'price',
+      rating: 'rating',
+      discount: 'discount',
+      review_count: 'reviewCount',
+    };
+    const orderByField = sortFieldMap[sortBy] ?? 'createdAt';
     const orderBy: any = { [orderByField]: sortOrder === 'asc' ? 'ASC' : 'DESC' };
 
     // Pagination

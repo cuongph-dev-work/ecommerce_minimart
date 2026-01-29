@@ -20,5 +20,15 @@ export class QueryReviewDto extends PaginationDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsEnum(['created_at', 'updated_at', 'rating'])
+  sortBy?: 'created_at' | 'updated_at' | 'rating';
+
+  @IsOptional()
+  @IsString()
+  @IsEnum(['asc', 'desc'])
+  sortOrder?: 'asc' | 'desc';
 }
 

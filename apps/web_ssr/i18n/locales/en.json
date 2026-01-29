@@ -59,6 +59,7 @@
         "price_desc": "Price: High to Low",
         "name_asc": "Name A-Z",
         "popular": "Most Popular",
+        "reviews": "Most Reviews",
         "brand": "Brand",
         "brand_label": "Brand:",
         "select_brand": "Select brand",

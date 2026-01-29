@@ -39,7 +39,7 @@ export class ReviewsService {
   }
 
   async findAll(query: QueryReviewDto) {
-    const { page = 1, limit = 20, productId, rating, status } = query;
+    const { page = 1, limit = 20, productId, rating, status, sortBy = 'created_at', sortOrder = 'desc' } = query;
 
     const where: any = {};
 
@@ -66,9 +66,12 @@ export class ReviewsService {
 
     const offset = (page - 1) * limit;
 
+    const orderByField = sortBy === 'created_at' ? 'createdAt' : sortBy === 'updated_at' ? 'updatedAt' : 'rating';
+    const orderBy = { [orderByField]: sortOrder === 'asc' ? 'ASC' : 'DESC' };
+
     const [reviews, total] = await this.em.findAndCount(Review, where, {
       populate: ['product', 'user'],
-      orderBy: { createdAt: 'DESC' },
+      orderBy,
       limit,
       offset,
     });

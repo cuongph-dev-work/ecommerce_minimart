@@ -62,7 +62,7 @@ export function ProductsPage() {
   const [isInitialLoad, setIsInitialLoad] = useState(true); // Track initial load to prevent URL update loop
   const isUpdatingFromUrlRef = useRef(false); // Track if category is being updated from URL (use ref to avoid re-renders)
   const [selectedBrand, setSelectedBrand] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('default');
+  const [sortBy, setSortBy] = useState<string>('reviews');
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [showFilterBlock, setShowFilterBlock] = useState(false);
   const [showSearchButton, setShowSearchButton] = useState(false); // Control button visibility
@@ -282,6 +282,10 @@ export function ProductsPage() {
               break;
             case 'popular':
               params.sortBy = 'sold';
+              params.sortOrder = 'desc';
+              break;
+            case 'reviews':
+              params.sortBy = 'review_count';
               params.sortOrder = 'desc';
               break;
           }
@@ -615,6 +619,7 @@ export function ProductsPage() {
                       <SelectItem value="price-desc">{t('products.price_desc')}</SelectItem>
                       <SelectItem value="name-asc">{t('products.name_asc')}</SelectItem>
                       <SelectItem value="popular">{t('products.popular')}</SelectItem>
+                      <SelectItem value="reviews">{t('products.reviews')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -691,6 +696,7 @@ export function ProductsPage() {
                     {sortBy === 'price-desc' && t('products.price_desc')}
                     {sortBy === 'name-asc' && t('products.name_asc')}
                     {sortBy === 'popular' && t('products.popular')}
+                    {sortBy === 'reviews' && t('products.reviews')}
                     <X 
                       className="h-3 w-3 cursor-pointer" 
                       onClick={() => setSortBy('default')}
@@ -822,6 +828,7 @@ export function ProductsPage() {
                     { value: 'price-desc', label: t('products.price_desc') },
                     { value: 'name-asc', label: t('products.name_asc') },
                     { value: 'popular', label: t('products.popular') },
+                    { value: 'reviews', label: t('products.reviews') },
                   ].map((option) => (
                     <button
                       key={option.value}
